@@ -290,9 +290,9 @@ class MainWindow(QMainWindow):
 
             self._current_project_path = path
             self._update_window_title()
-            self._console.success(f"Project saved to {path}")
+            self._console.write_success(f"Project saved to {path}")
         except Exception as e:
-            self._console.error(f"Failed to save project: {e}")
+            self._console.write_error(f"Failed to save project: {e}")
             QMessageBox.critical(self, "Save Error", f"Failed to save project:\n{e}")
 
     def _open_project(self) -> None:
@@ -342,16 +342,37 @@ class MainWindow(QMainWindow):
             self._results_view.clear()
             self._plot_view.clear()
             self._model_history.clear()
-            self._console.success(f"Project loaded from {path}")
+            self._console.write_success(f"Project loaded from {path}")
             
             # Automatically run the script to repopulate results and plots
             self._run_all_script()
 
         except Exception as e:
-            self._console.error(f"Failed to open project: {e}")
+            self._console.write_error(f"Failed to open project: {e}")
             QMessageBox.critical(self, "Load Error", f"Failed to open project:\n{e}")
 
     # ── Data import ──────────────────────────────────────────────────────
+
+    def _robust_read_csv(self, path: str) -> tuple[pd.DataFrame, str | None]:
+        """Attempt to read a CSV with fallback encodings if UTF-8 fails."""
+        encodings_to_try = ["utf-8", "latin1", "cp1252", "iso-8859-15", "utf-16"]
+        
+        last_error = None
+        for enc in encodings_to_try:
+            try:
+                df = pd.read_csv(path, encoding=enc, low_memory=False)
+                if enc != "utf-8":
+                    self._console.write_info(f"Loaded successfully using '{enc}' encoding fallback.")
+                # We only return the encoding if it wasn't the default (utf-8 is standard)
+                return df, enc if enc != "utf-8" else None
+            except UnicodeDecodeError as e:
+                last_error = e
+                self._console.write_info(f"Failed to read as '{enc}', trying fallback...")
+            except Exception as e:
+                # Other exceptions (file not found, out of memory) should immediately fail
+                raise e
+                
+        raise ValueError(f"Could not decode CSV file. Tried encodings: {encodings_to_try}. Last error: {last_error}")
 
     def _import_any(self) -> None:
         """Open file dialog for any supported format."""
@@ -378,8 +399,9 @@ class MainWindow(QMainWindow):
             self._status_bar.show_progress(0, 0, "Loading data...")
             QApplication.processEvents()
 
+            used_encoding = None
             if ext == ".csv":
-                df = pd.read_csv(path, low_memory=False)
+                df, used_encoding = self._robust_read_csv(path)
             elif ext in (".xlsx", ".xls"):
                 df = pd.read_excel(path)
             elif ext == ".json":
@@ -395,8 +417,12 @@ class MainWindow(QMainWindow):
             self._console.write_success(f"Loaded {len(df):,} rows × {len(df.columns)} columns from {Path(path).name}")
 
             # Generate code in script editor
+            csv_code = f"df = pd.read_csv(r'{path}', low_memory=False)"
+            if used_encoding:
+                csv_code = f"df = pd.read_csv(r'{path}', encoding='{used_encoding}', low_memory=False)"
+                
             code_map = {
-                ".csv": f"df = pd.read_csv(r'{path}', low_memory=False)",
+                ".csv": csv_code,
                 ".xlsx": f"df = pd.read_excel(r'{path}')",
                 ".xls": f"df = pd.read_excel(r'{path}')",
                 ".json": f"df = pd.read_json(r'{path}')",
@@ -417,9 +443,16 @@ class MainWindow(QMainWindow):
                 self._status_bar.show_progress(0, 0, "Loading CSV...")
                 QApplication.processEvents()
 
-                df = pd.read_csv(path, low_memory=False)
+                df, used_encoding = self._robust_read_csv(path)
                 self._data_view.load_dataframe(df)
                 self._console.write_success(f"Loaded {len(df):,} rows × {len(df.columns)} cols")
+                
+                # Append to script manually since _import_any handles its own
+                if used_encoding:
+                    self._script_editor.append_code(f"df = pd.read_csv(r'{path}', encoding='{used_encoding}', low_memory=False)")
+                else:
+                    self._script_editor.append_code(f"df = pd.read_csv(r'{path}', low_memory=False)")
+                    
             except Exception as e:
                 self._console.write_error(str(e))
             finally:
