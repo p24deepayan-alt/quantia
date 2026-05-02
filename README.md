@@ -72,7 +72,8 @@ python -m quantia
 2.  **Explore:** Click on variables in the left panel to see quick summaries in the console.
 3.  **Analyze:** Select tools from the `Data`, `Statistics`, `Machine Learning`, or `Visualize` menus.
 4.  **Review:** Check the generated code in the **Script Editor** tab and the results in the **Results** or **Plots** tabs.
-5.  **Export:** Save your workflow using `Report -> Generate Report` or `Report -> Export Script`.
+5.  **Save:** Save your session as a `.quantia` project file (`File -> Save Project`) so you can resume your work later.
+6.  **Export:** Create a professional output using `Report -> Generate Report` or `Report -> Export Script`.
 
 For a full breakdown of features, check out `Help -> User Manual` or the `Help -> Guided Analysis Wizard` within the app.
 

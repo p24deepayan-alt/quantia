@@ -32,7 +32,7 @@ code. All computation runs locally &mdash; no internet or cloud services require
 <table>
 <tr><th>Area</th><th>Description</th></tr>
 <tr><td><b>Menu Bar</b></td><td>File, Edit, Data, Statistics, Machine Learning, Visualize, Report, Help</td></tr>
-<tr><td><b>Toolbar</b></td><td>Quick-access buttons: Undo, Redo, Import Data, Run Script</td></tr>
+<tr><td><b>Toolbar</b></td><td>Quick-access buttons: New, Open, Save, Undo, Redo, Import Data, Run Script</td></tr>
 <tr><td><b>Variable Panel</b> (left dock)</td><td>Lists all columns in the active dataset. Click a variable to see a quick summary in the Console.</td></tr>
 <tr><td><b>Central Tabs</b></td><td><b>Data View</b> (spreadsheet), <b>Script Editor</b> (Python code), <b>Results</b> (test output tables), <b>Workflow</b>, <b>Plots</b> (charts)</td></tr>
 <tr><td><b>Console</b> (bottom dock)</td><td>Shows command log, success/error messages, and variable summaries</td></tr>
@@ -41,7 +41,17 @@ code. All computation runs locally &mdash; no internet or cloud services require
 
 <hr>
 <h2>2 &mdash; File Menu</h2>
-<h3>2.1 Importing Data</h3>
+
+<h3>2.1 Project Management</h3>
+<p>Quantia uses <code>.quantia</code> archive files to persist your workflow across sessions.</p>
+<ul>
+<li><code>New Project (Ctrl+N)</code>: Clears the current dataset, script, and undo/redo history to start fresh.</li>
+<li><code>Open Project... (Ctrl+O)</code>: Loads a saved <code>.quantia</code> file. The dataset is restored, the script is loaded, and Quantia automatically re-runs the code to repopulate your results and plots.</li>
+<li><code>Save Project (Ctrl+S)</code>: Packages your current dataset (as Parquet), your script, and your undo history into a compact <code>.quantia</code> archive.</li>
+<li><code>Save Project As... (Ctrl+Shift+S)</code>: Saves the current project to a new location.</li>
+</ul>
+
+<h3>2.2 Importing Data</h3>
 <p><code>File &rarr; Import Data &rarr; ...</code></p>
 <table>
 <tr><th>Format</th><th>Extensions</th><th>Notes</th></tr>
@@ -52,12 +62,12 @@ code. All computation runs locally &mdash; no internet or cloud services require
 </table>
 <p>The toolbar <b>Import Data</b> button opens a combined dialog that auto-detects format by extension.</p>
 
-<h3>2.2 Exporting Data</h3>
+<h3>2.3 Exporting Data</h3>
 <p><code>File &rarr; Export Data&hellip;</code></p>
 <p>Save the current (possibly transformed) DataFrame to CSV, Excel (.xlsx), JSON, or Parquet.
 The format is determined by the file extension you choose in the Save dialog.</p>
 
-<h3>2.3 Exit</h3>
+<h3>2.4 Exit</h3>
 <p><code>Ctrl+Q</code> or <code>File &rarr; Exit</code></p>
 
 <hr>
