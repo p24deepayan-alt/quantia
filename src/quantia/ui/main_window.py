@@ -354,38 +354,47 @@ class MainWindow(QMainWindow):
     # ── Data import ──────────────────────────────────────────────────────
 
     def _robust_read_csv(self, path: str) -> tuple[pd.DataFrame, str | None]:
-        """Attempt to read a CSV automatically detecting encoding if UTF-8 fails."""
+        """Attempt to read a CSV with smart default fallbacks before AI detection."""
+        # 1. Try standard utf-8
         try:
-            # First, try standard utf-8 as it's the most common and fastest
             df = pd.read_csv(path, encoding='utf-8', low_memory=False)
             return df, None
         except UnicodeDecodeError:
-            self._console.write_info("UTF-8 decoding failed, running automatic encoding detection...")
+            pass
+
+        # 2. Try cp1252 (Windows-1252) - fixes 99% of western datasets with ™, ½, etc.
+        try:
+            df = pd.read_csv(path, encoding='cp1252', low_memory=False)
+            self._console.write_info("Loaded successfully using 'cp1252' smart fallback.")
+            return df, 'cp1252'
+        except UnicodeDecodeError:
+            pass
             
-            try:
-                import charset_normalizer
-                
-                # Read a sample of the file to guess encoding
-                with open(path, 'rb') as f:
-                    # Read first 1MB to guess (usually plenty)
-                    raw_data = f.read(1024 * 1024)
-                
-                result = charset_normalizer.from_bytes(raw_data).best()
-                if not result or not result.encoding:
-                    raise ValueError("Could not detect file encoding automatically.")
-                
-                detected_encoding = result.encoding
-                self._console.write_info(f"Detected encoding: '{detected_encoding}' (Language: {result.language}).")
-                
-                df = pd.read_csv(path, encoding=detected_encoding, low_memory=False)
-                return df, detected_encoding
-                
-            except ImportError:
-                self._console.write_warning("charset-normalizer not installed. Falling back to latin1.")
-                df = pd.read_csv(path, encoding="latin1", low_memory=False)
-                return df, "latin1"
-            except Exception as e:
-                raise ValueError(f"Failed to decode CSV file even with automatic detection: {e}")
+        # 3. Fallback to AI Guesser for Asian scripts, UTF-16, etc.
+        self._console.write_info("Smart fallbacks failed, running automatic encoding detection...")
+        try:
+            import charset_normalizer
+            
+            # Read a sample of the file to guess encoding
+            with open(path, 'rb') as f:
+                # Read first 1MB to guess
+                raw_data = f.read(1024 * 1024)
+            
+            result = charset_normalizer.from_bytes(raw_data).best()
+            if not result or not result.encoding:
+                raise ValueError("Could not detect file encoding automatically.")
+            
+            detected_encoding = result.encoding
+            self._console.write_info(f"Detected encoding: '{detected_encoding}' (Language: {result.language}).")
+            
+            df = pd.read_csv(path, encoding=detected_encoding, low_memory=False)
+            return df, detected_encoding
+            
+        except Exception as e:
+            # 4. Absolute last resort: latin1 mathematically cannot fail decoding
+            self._console.write_warning(f"Detection failed ({e}). Forcing 'latin1' absolute fallback.")
+            df = pd.read_csv(path, encoding="latin1", low_memory=False)
+            return df, "latin1"
 
     def _import_any(self) -> None:
         """Open file dialog for any supported format."""
