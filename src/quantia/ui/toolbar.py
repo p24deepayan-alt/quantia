@@ -16,7 +16,6 @@ class QuantiaToolbar(QToolBar):
     """Main application toolbar with Feather icons."""
 
     # Signals emitted when toolbar buttons are clicked
-    new_project = Signal()
     open_project = Signal()
     save_project = Signal()
     
@@ -33,7 +32,6 @@ class QuantiaToolbar(QToolBar):
         icon_color = "#2D3E50"
 
         # ── File operations ──────────────────────────────────────────────
-        self._add_action("file-plus", icon_color, "New Project", "New Project (Ctrl+N)", self.new_project)
         self._add_action("folder", icon_color, "Open Project", "Open Project (Ctrl+O)", self.open_project)
         self._add_action("save", icon_color, "Save Project", "Save Project (Ctrl+S)", self.save_project)
 

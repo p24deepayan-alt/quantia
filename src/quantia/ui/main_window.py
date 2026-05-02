@@ -156,11 +156,9 @@ class MainWindow(QMainWindow):
 
     def _connect_signals(self) -> None:
         # Menu bar
-        self._menu_bar.new_project.connect(self._new_project)
         self._menu_bar.open_project.connect(self._open_project)
         self._menu_bar.save_project.connect(self._save_project)
         self._menu_bar.save_as.connect(self._save_project_as)
-        self._toolbar.new_project.connect(self._new_project)
         self._toolbar.open_project.connect(self._open_project)
         self._toolbar.save_project.connect(self._save_project)
 
@@ -249,29 +247,6 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(f"Quantia — {name}")
         else:
             self.setWindowTitle("Quantia — Untitled")
-
-    def _new_project(self) -> None:
-        if not self._data_view.model.dataframe.empty:
-            ans = QMessageBox.question(
-                self,
-                "New Project",
-                "Are you sure you want to start a new project? Unsaved changes will be lost.",
-            )
-            if ans != QMessageBox.StandardButton.Yes:
-                return
-
-        self._data_view.load_dataframe(pd.DataFrame())
-        self._script_editor.set_text("# Quantia Analysis Script\n\nimport pandas as pd\nimport numpy as np\n\n# Data will be loaded from the project file\ndf = pd.DataFrame()\n")
-        self._results_view.clear()
-        self._plot_view.clear()
-        self._undo_stack.clear()
-        self._redo_stack.clear()
-        self._model_history.clear()
-        self._variable_panel.populate([])
-        self._console.clear()
-        self._console.info("Started new project.")
-        self._current_project_path = None
-        self._update_window_title()
 
     def _save_project(self) -> None:
         if not self._current_project_path:

@@ -18,7 +18,6 @@ class QuantiaMenuBar(QMenuBar):
 
     # ── Signals ──────────────────────────────────────────────────────────
     # File
-    new_project = Signal()
     open_project = Signal()
     save_project = Signal()
     save_as = Signal()
@@ -103,7 +102,6 @@ class QuantiaMenuBar(QMenuBar):
     def _build_file_menu(self, ic: str) -> None:
         menu = self.addMenu("&File")
 
-        self._add(menu, "New Project", self.new_project, "file-plus", ic, QKeySequence("Ctrl+N"))
         self._add(menu, "Open Project…", self.open_project, "folder", ic, QKeySequence("Ctrl+O"))
         self._add(menu, "Save Project", self.save_project, "save", ic, QKeySequence("Ctrl+S"))
         self._add(menu, "Save Project As…", self.save_as, "copy", ic, QKeySequence("Ctrl+Shift+S"))

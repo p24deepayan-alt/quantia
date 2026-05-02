@@ -371,6 +371,12 @@ class ScriptEditorWidget(QWidget):
     def set_dark_mode(self, dark: bool) -> None:
         self._editor.set_dark_mode(dark)
 
+    def set_text(self, text: str) -> None:
+        self._editor.setPlainText(text)
+
+    def get_text(self) -> str:
+        return self._editor.toPlainText()
+
     @property
     def editor(self) -> CodeEditor:
         return self._editor
