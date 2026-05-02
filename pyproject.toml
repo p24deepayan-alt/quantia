@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantia"
+version = "0.1.0"
+description = "Offline no-code statistical desktop application"
+requires-python = ">=3.11"
+dependencies = [
+    "PySide6>=6.7",
+    "pandas>=2.1",
+    "pyarrow>=14.0",
+    "numpy>=1.26",
+    "psutil>=5.9",
+    "openpyxl>=3.1",
+    "scipy>=1.11",
+    "statsmodels>=0.14",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pytest>=8.0",
+]
+
+[project.scripts]
+quantia = "quantia.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+strict = true

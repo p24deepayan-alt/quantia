@@ -1,0 +1,1 @@
+"""Quantia dockable panel widgets."""
