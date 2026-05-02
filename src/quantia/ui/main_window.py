@@ -251,7 +251,7 @@ class MainWindow(QMainWindow):
             self.setWindowTitle("Quantia — Untitled")
 
     def _new_project(self) -> None:
-        if not self._data_view.df.empty:
+        if not self._data_view.model.dataframe.empty:
             ans = QMessageBox.question(
                 self,
                 "New Project",
@@ -260,7 +260,7 @@ class MainWindow(QMainWindow):
             if ans != QMessageBox.StandardButton.Yes:
                 return
 
-        self._data_view.set_dataframe(pd.DataFrame())
+        self._data_view.load_dataframe(pd.DataFrame())
         self._script_editor.set_text("# Quantia Analysis Script\n\nimport pandas as pd\nimport numpy as np\n\n# Data will be loaded from the project file\ndf = pd.DataFrame()\n")
         self._results_view.clear()
         self._plot_view.clear()
@@ -292,9 +292,9 @@ class MainWindow(QMainWindow):
         try:
             with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
                 # Save Dataframe
-                if not self._data_view.df.empty:
+                if not self._data_view.model.dataframe.empty:
                     df_bytes = io.BytesIO()
-                    self._data_view.df.to_parquet(df_bytes)
+                    self._data_view.model.dataframe.to_parquet(df_bytes)
                     zf.writestr("data.parquet", df_bytes.getvalue())
                 
                 # Save Script
@@ -333,10 +333,10 @@ class MainWindow(QMainWindow):
                 if "data.parquet" in zf.namelist():
                     df_bytes = io.BytesIO(zf.read("data.parquet"))
                     df = pd.read_parquet(df_bytes)
-                    self._data_view.set_dataframe(df)
+                    self._data_view.load_dataframe(df)
                     self._variable_panel.populate(df.columns.tolist())
                 else:
-                    self._data_view.set_dataframe(pd.DataFrame())
+                    self._data_view.load_dataframe(pd.DataFrame())
                     self._variable_panel.populate([])
 
                 # Load Script
