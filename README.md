@@ -76,6 +76,28 @@ python -m quantia
 
 For a full breakdown of features, check out `Help -> User Manual` or the `Help -> Guided Analysis Wizard` within the app.
 
+## Project Structure
+
+```text
+quantia/
+├── reference/                # Documentation and logo assets
+├── src/
+│   └── quantia/
+│       ├── core/             # Core data models and backend logic
+│       ├── theme/            # PySide6 stylesheets and color palettes
+│       ├── ui/
+│       │   ├── central/      # Main workspace tabs (Data, Script, Results, Plots)
+│       │   ├── dialogs/      # All analysis and operational popups (Stats, ML, Viz)
+│       │   ├── panels/       # Dockable side panels (Variable List, Console)
+│       │   ├── main_window.py# Main application window assembly
+│       │   ├── menu_bar.py   # Application menu structure and routing
+│       │   └── toolbar.py    # Quick access tools
+│       ├── app.py            # Application initialization
+│       └── __main__.py       # Entry point
+├── pyproject.toml            # Dependencies and project metadata
+└── README.md                 # Project documentation
+```
+
 ## Architecture
 
 Quantia is built using:
