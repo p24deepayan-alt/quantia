@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from collections import deque
 from pathlib import Path
+import zipfile
+import io
 
 import pandas as pd
 from PySide6.QtCore import Qt, QSize
@@ -86,7 +88,8 @@ class MainWindow(QMainWindow):
         self._model_history = []
 
         # ── Window setup ─────────────────────────────────────────────────
-        self.setWindowTitle("Quantia")
+        self._current_project_path: str | None = None
+        self._update_window_title()
         self.setMinimumSize(1024, 700)
         self.resize(1400, 900)
 
@@ -153,6 +156,14 @@ class MainWindow(QMainWindow):
 
     def _connect_signals(self) -> None:
         # Menu bar
+        self._menu_bar.new_project.connect(self._new_project)
+        self._menu_bar.open_project.connect(self._open_project)
+        self._menu_bar.save_project.connect(self._save_project)
+        self._menu_bar.save_as.connect(self._save_project_as)
+        self._toolbar.new_project.connect(self._new_project)
+        self._toolbar.open_project.connect(self._open_project)
+        self._toolbar.save_project.connect(self._save_project)
+
         self._menu_bar.import_csv.connect(self._import_csv)
         self._menu_bar.import_excel.connect(self._import_excel)
         self._menu_bar.import_json.connect(self._import_json)
@@ -229,6 +240,141 @@ class MainWindow(QMainWindow):
         # Script editor signals
         self._script_editor.run_code.connect(self._execute_code)
         self._script_editor.run_selection.connect(self._execute_code)
+
+    # ── Project Management ───────────────────────────────────────────────
+
+    def _update_window_title(self) -> None:
+        if self._current_project_path:
+            name = Path(self._current_project_path).name
+            self.setWindowTitle(f"Quantia — {name}")
+        else:
+            self.setWindowTitle("Quantia — Untitled")
+
+    def _new_project(self) -> None:
+        if not self._data_view.df.empty:
+            ans = QMessageBox.question(
+                self,
+                "New Project",
+                "Are you sure you want to start a new project? Unsaved changes will be lost.",
+            )
+            if ans != QMessageBox.StandardButton.Yes:
+                return
+
+        self._data_view.set_dataframe(pd.DataFrame())
+        self._script_editor.set_text("# Quantia Analysis Script\n\nimport pandas as pd\nimport numpy as np\n\n# Data will be loaded from the project file\ndf = pd.DataFrame()\n")
+        self._results_view.clear()
+        self._plot_view.clear()
+        self._undo_stack.clear()
+        self._redo_stack.clear()
+        self._model_history.clear()
+        self._variable_panel.populate([])
+        self._console.clear()
+        self._console.info("Started new project.")
+        self._current_project_path = None
+        self._update_window_title()
+
+    def _save_project(self) -> None:
+        if not self._current_project_path:
+            self._save_project_as()
+        else:
+            self._write_project_file(self._current_project_path)
+
+    def _save_project_as(self) -> None:
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Project As", "", "Quantia Project (*.quantia)"
+        )
+        if path:
+            if not path.endswith(".quantia"):
+                path += ".quantia"
+            self._write_project_file(path)
+
+    def _write_project_file(self, path: str) -> None:
+        try:
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                # Save Dataframe
+                if not self._data_view.df.empty:
+                    df_bytes = io.BytesIO()
+                    self._data_view.df.to_parquet(df_bytes)
+                    zf.writestr("data.parquet", df_bytes.getvalue())
+                
+                # Save Script
+                script_text = self._script_editor.get_text()
+                zf.writestr("script.py", script_text)
+
+                # Save Undo stack
+                for i, df in enumerate(self._undo_stack):
+                    df_bytes = io.BytesIO()
+                    df.to_parquet(df_bytes)
+                    zf.writestr(f"undo_{i}.parquet", df_bytes.getvalue())
+
+                # Save Redo stack
+                for i, df in enumerate(self._redo_stack):
+                    df_bytes = io.BytesIO()
+                    df.to_parquet(df_bytes)
+                    zf.writestr(f"redo_{i}.parquet", df_bytes.getvalue())
+
+            self._current_project_path = path
+            self._update_window_title()
+            self._console.success(f"Project saved to {path}")
+        except Exception as e:
+            self._console.error(f"Failed to save project: {e}")
+            QMessageBox.critical(self, "Save Error", f"Failed to save project:\n{e}")
+
+    def _open_project(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Open Project", "", "Quantia Project (*.quantia)"
+        )
+        if not path:
+            return
+
+        try:
+            with zipfile.ZipFile(path, "r") as zf:
+                # Load Dataframe
+                if "data.parquet" in zf.namelist():
+                    df_bytes = io.BytesIO(zf.read("data.parquet"))
+                    df = pd.read_parquet(df_bytes)
+                    self._data_view.set_dataframe(df)
+                    self._variable_panel.populate(df.columns.tolist())
+                else:
+                    self._data_view.set_dataframe(pd.DataFrame())
+                    self._variable_panel.populate([])
+
+                # Load Script
+                if "script.py" in zf.namelist():
+                    script_text = zf.read("script.py").decode("utf-8")
+                    self._script_editor.set_text(script_text)
+
+                # Load Undo stack
+                self._undo_stack.clear()
+                undo_files = [n for n in zf.namelist() if n.startswith("undo_") and n.endswith(".parquet")]
+                undo_files.sort()  # Should preserve order since names are like undo_0.parquet
+                for n in undo_files:
+                    df_bytes = io.BytesIO(zf.read(n))
+                    self._undo_stack.append(pd.read_parquet(df_bytes))
+
+                # Load Redo stack
+                self._redo_stack.clear()
+                redo_files = [n for n in zf.namelist() if n.startswith("redo_") and n.endswith(".parquet")]
+                redo_files.sort()
+                for n in redo_files:
+                    df_bytes = io.BytesIO(zf.read(n))
+                    self._redo_stack.append(pd.read_parquet(df_bytes))
+
+            self._current_project_path = path
+            self._update_window_title()
+            
+            # Clear outputs and auto-run
+            self._results_view.clear()
+            self._plot_view.clear()
+            self._model_history.clear()
+            self._console.success(f"Project loaded from {path}")
+            
+            # Automatically run the script to repopulate results and plots
+            self._run_all_script()
+
+        except Exception as e:
+            self._console.error(f"Failed to open project: {e}")
+            QMessageBox.critical(self, "Load Error", f"Failed to open project:\n{e}")
 
     # ── Data import ──────────────────────────────────────────────────────
 
