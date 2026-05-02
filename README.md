@@ -53,8 +53,8 @@ Quantia is designed to provide powerful data analysis and modeling capabilities 
 
 4.  **Install dependencies:**
     ```bash
-    pip install -e .
-    # Note: Ensure scikit-learn, matplotlib, and seaborn are installed if not automatically pulled in.
+    pip install PySide6 pandas pyarrow scipy statsmodels scikit-learn charset-normalizer
+    # Note: Ensure matplotlib and seaborn are installed if not automatically pulled in.
     pip install scikit-learn matplotlib seaborn
     ```
 

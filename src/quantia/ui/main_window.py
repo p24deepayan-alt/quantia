@@ -354,25 +354,38 @@ class MainWindow(QMainWindow):
     # ── Data import ──────────────────────────────────────────────────────
 
     def _robust_read_csv(self, path: str) -> tuple[pd.DataFrame, str | None]:
-        """Attempt to read a CSV with fallback encodings if UTF-8 fails."""
-        encodings_to_try = ["utf-8", "latin1", "cp1252", "iso-8859-15", "utf-16"]
-        
-        last_error = None
-        for enc in encodings_to_try:
+        """Attempt to read a CSV automatically detecting encoding if UTF-8 fails."""
+        try:
+            # First, try standard utf-8 as it's the most common and fastest
+            df = pd.read_csv(path, encoding='utf-8', low_memory=False)
+            return df, None
+        except UnicodeDecodeError:
+            self._console.write_info("UTF-8 decoding failed, running automatic encoding detection...")
+            
             try:
-                df = pd.read_csv(path, encoding=enc, low_memory=False)
-                if enc != "utf-8":
-                    self._console.write_info(f"Loaded successfully using '{enc}' encoding fallback.")
-                # We only return the encoding if it wasn't the default (utf-8 is standard)
-                return df, enc if enc != "utf-8" else None
-            except UnicodeDecodeError as e:
-                last_error = e
-                self._console.write_info(f"Failed to read as '{enc}', trying fallback...")
-            except Exception as e:
-                # Other exceptions (file not found, out of memory) should immediately fail
-                raise e
+                import charset_normalizer
                 
-        raise ValueError(f"Could not decode CSV file. Tried encodings: {encodings_to_try}. Last error: {last_error}")
+                # Read a sample of the file to guess encoding
+                with open(path, 'rb') as f:
+                    # Read first 1MB to guess (usually plenty)
+                    raw_data = f.read(1024 * 1024)
+                
+                result = charset_normalizer.from_bytes(raw_data).best()
+                if not result or not result.encoding:
+                    raise ValueError("Could not detect file encoding automatically.")
+                
+                detected_encoding = result.encoding
+                self._console.write_info(f"Detected encoding: '{detected_encoding}' (Language: {result.language}).")
+                
+                df = pd.read_csv(path, encoding=detected_encoding, low_memory=False)
+                return df, detected_encoding
+                
+            except ImportError:
+                self._console.write_warning("charset-normalizer not installed. Falling back to latin1.")
+                df = pd.read_csv(path, encoding="latin1", low_memory=False)
+                return df, "latin1"
+            except Exception as e:
+                raise ValueError(f"Failed to decode CSV file even with automatic detection: {e}")
 
     def _import_any(self) -> None:
         """Open file dialog for any supported format."""
