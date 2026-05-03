@@ -39,6 +39,7 @@ from quantia.ui.central.data_view import DataViewWidget
 from quantia.ui.central.script_editor import ScriptEditorWidget
 from quantia.ui.central.results_view import ResultsViewWidget
 from quantia.ui.central.plot_view import PlotViewWidget
+from quantia.ui.central.workflow import WorkflowTab
 from quantia.ui.dialogs.descriptive import DescriptiveStatsDialog
 from quantia.ui.dialogs.ttest import TTestDialog
 from quantia.ui.dialogs.regression import LinearRegressionDialog
@@ -133,11 +134,9 @@ class MainWindow(QMainWindow):
         self._results_view = ResultsViewWidget()
         self._tabs.addTab(self._results_view, feather_icon("list", "#000000", 14), "Results")
 
-        # Workflow tab (placeholder)
-        workflow_placeholder = QLabel("Workflow Builder — coming in Phase 5")
-        workflow_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        workflow_placeholder.setStyleSheet("font-size: 14px; color: #6B7280;")
-        self._tabs.addTab(workflow_placeholder, feather_icon("share-2", "#000000", 14), "Workflow")
+        # Workflow tab
+        self._workflow_view = WorkflowTab()
+        self._tabs.addTab(self._workflow_view, feather_icon("share-2", "#000000", 14), "Workflow")
 
         # Plots tab
         self._plot_view = PlotViewWidget()
