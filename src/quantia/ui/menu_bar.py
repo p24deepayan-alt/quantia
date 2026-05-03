@@ -48,6 +48,7 @@ class QuantiaMenuBar(QMenuBar):
     
     # Conditional
     if_else = Signal()
+    pivot_table = Signal()
 
     # Statistics
     descriptive_stats = Signal()
@@ -60,6 +61,7 @@ class QuantiaMenuBar(QMenuBar):
     nonparametric = Signal()
 
     # ML Classification
+    model_compare = Signal()
     cls_random_forest = Signal()
     cls_gradient_boosting = Signal()
     cls_decision_tree = Signal()
@@ -74,6 +76,9 @@ class QuantiaMenuBar(QMenuBar):
     clu_hierarchical = Signal()
     clu_dbscan = Signal()
     clu_gmm = Signal()
+
+    # Dimensionality Reduction
+    pca = Signal()
 
     # Visualize
     histogram = Signal()
@@ -154,6 +159,7 @@ class QuantiaMenuBar(QMenuBar):
         self._add(string_menu, "Concatenate Columns…", self.concat_cols, "link", ic)
         
         self._add(menu, "If / Else (Conditional)…", self.if_else, "git-branch", ic)
+        self._add(menu, "Pivot Table / Group By…", self.pivot_table, "grid", ic)
 
     # ── Statistics ───────────────────────────────────────────────────────
 
@@ -181,6 +187,8 @@ class QuantiaMenuBar(QMenuBar):
         cls_menu = menu.addMenu("Classification")
         cls_menu.setIcon(feather_icon("cpu", ic, 14))
         cls_menu.setProperty("icon_name", "cpu")
+        self._add(cls_menu, "Compare Models…", self.model_compare, "bar-chart-2", ic)
+        cls_menu.addSeparator()
         self._add(cls_menu, "Random Forest…", self.cls_random_forest, "cpu", ic)
         self._add(cls_menu, "Gradient Boosting…", self.cls_gradient_boosting, "cpu", ic)
         self._add(cls_menu, "Decision Tree…", self.cls_decision_tree, "cpu", ic)
@@ -197,6 +205,11 @@ class QuantiaMenuBar(QMenuBar):
         self._add(clu_menu, "Hierarchical…", self.clu_hierarchical, "share-2", ic)
         self._add(clu_menu, "DBSCAN…", self.clu_dbscan, "share-2", ic)
         self._add(clu_menu, "Gaussian Mixture Model (GMM)…", self.clu_gmm, "share-2", ic)
+
+        dim_menu = menu.addMenu("Dimensionality Reduction")
+        dim_menu.setIcon(feather_icon("minimize-2", ic, 14))
+        dim_menu.setProperty("icon_name", "minimize-2")
+        self._add(dim_menu, "Principal Component Analysis (PCA)…", self.pca, "minimize-2", ic)
 
     # ── Visualize ────────────────────────────────────────────────────────
 

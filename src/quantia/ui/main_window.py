@@ -53,6 +53,7 @@ from quantia.ui.dialogs.string_format import StringFormatDialog
 from quantia.ui.dialogs.find_replace import FindReplaceDialog
 from quantia.ui.dialogs.concat_cols import ConcatColsDialog
 from quantia.ui.dialogs.if_else import IfElseDialog
+from quantia.ui.dialogs.pivot_table import PivotTableDialog
 from quantia.ui.dialogs.histogram import HistogramDialog
 from quantia.ui.dialogs.scatter import ScatterPlotDialog
 from quantia.ui.dialogs.boxplot import BoxPlotDialog
@@ -69,9 +70,11 @@ from quantia.ui.dialogs.classification import (
     RandomForestDialog, GradientBoostingDialog, DecisionTreeDialog,
     SVMDialog, KNNDialog, LDADialog, QDADialog, NaiveBayesDialog
 )
+from quantia.ui.dialogs.model_compare import ModelComparisonDialog
 from quantia.ui.dialogs.clustering import (
     KMeansDialog, HierarchicalDialog, DBSCANDialog, GMMDialog
 )
+from quantia.ui.dialogs.pca import PCADialog
 from quantia.ui.dialogs.report import ReportDialog
 from quantia.ui.dialogs.help import UserManualDialog, GuidedWizardDialog
 
@@ -192,6 +195,7 @@ class MainWindow(QMainWindow):
         self._menu_bar.regression_logistic.connect(self._show_logistic_regression)
         
         # ML Classification
+        self._menu_bar.model_compare.connect(self._show_model_compare)
         self._menu_bar.cls_random_forest.connect(self._show_cls_random_forest)
         self._menu_bar.cls_gradient_boosting.connect(self._show_cls_gradient_boosting)
         self._menu_bar.cls_decision_tree.connect(self._show_cls_decision_tree)
@@ -206,6 +210,7 @@ class MainWindow(QMainWindow):
         self._menu_bar.clu_hierarchical.connect(self._show_clu_hierarchical)
         self._menu_bar.clu_dbscan.connect(self._show_clu_dbscan)
         self._menu_bar.clu_gmm.connect(self._show_clu_gmm)
+        self._menu_bar.pca.connect(self._show_pca)
 
         # Data menu signals
         self._menu_bar.clean_data.connect(self._show_clean_data)
@@ -219,6 +224,7 @@ class MainWindow(QMainWindow):
         self._menu_bar.find_replace.connect(self._show_find_replace)
         self._menu_bar.concat_cols.connect(self._show_concat_cols)
         self._menu_bar.if_else.connect(self._show_if_else)
+        self._menu_bar.pivot_table.connect(self._show_pivot_table)
 
         # Visualize menu signals
         self._menu_bar.histogram.connect(self._show_histogram)
@@ -721,6 +727,9 @@ class MainWindow(QMainWindow):
     def _show_if_else(self) -> None:
         self._show_data_dialog(IfElseDialog)
 
+    def _show_pivot_table(self) -> None:
+        self._show_data_dialog(PivotTableDialog)
+
     # ── Statistics Dialogs ───────────────────────────────────────────────
 
     def _show_descriptive_stats(self) -> None:
@@ -839,6 +848,9 @@ class MainWindow(QMainWindow):
 
     # ── ML Classification Handlers ──────────────────────────────────────────
     
+    def _show_model_compare(self) -> None:
+        self._show_data_dialog(ModelComparisonDialog)
+
     def _show_cls_random_forest(self) -> None:
         self._show_data_dialog(RandomForestDialog)
 
@@ -876,6 +888,9 @@ class MainWindow(QMainWindow):
 
     def _show_clu_gmm(self) -> None:
         self._show_data_dialog(GMMDialog)
+
+    def _show_pca(self) -> None:
+        self._show_data_dialog(PCADialog)
 
     # ── Export & Report ──────────────────────────────────────────────────
 
