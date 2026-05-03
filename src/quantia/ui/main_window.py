@@ -80,7 +80,7 @@ from quantia.ui.dialogs.help import UserManualDialog, GuidedWizardDialog
 
 
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-_LOGO_PATH = _PROJECT_ROOT / "reference" / "logo" / "69e99e05-da76-4624-b75e-3f64158aa657_removalai_preview.png"
+_ICON_PATH = _PROJECT_ROOT / "reference" / "logo" / "Quantia_icon.ico"
 
 
 class MainWindow(QMainWindow):
@@ -101,8 +101,8 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1024, 700)
         self.resize(1400, 900)
 
-        if _LOGO_PATH.exists():
-            self.setWindowIcon(QIcon(str(_LOGO_PATH)))
+        if _ICON_PATH.exists():
+            self.setWindowIcon(QIcon(str(_ICON_PATH)))
 
         # ── Menu bar ─────────────────────────────────────────────────────
         self._menu_bar = QuantiaMenuBar(self)

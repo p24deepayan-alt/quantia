@@ -5,7 +5,7 @@
 Quantia is designed to provide powerful data analysis and modeling capabilities without requiring you to write code or upload your data to the cloud. Every action performed through the graphical interface is automatically translated into reproducible Python code.
 
 <p align="center">
-  <img src="reference/logo/69e99e05-da76-4624-b75e-3f64158aa657_removalai_preview.png" width="200" alt="Quantia Logo">
+  <img src="reference/logo/Quantia_logo.png" width="200" alt="Quantia Logo">
 </p>
 
 ## Features

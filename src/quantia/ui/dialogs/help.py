@@ -377,7 +377,7 @@ class UserManualDialog(QDialog):
         browser.setOpenExternalLinks(True)
 
         # Load logo into the document's resource cache
-        logo_path = Path(__file__).parent.parent.parent.parent.parent / "reference" / "logo" / "69e99e05-da76-4624-b75e-3f64158aa657_removalai_preview.png"
+        logo_path = Path(__file__).parent.parent.parent.parent.parent / "reference" / "logo" / "Quantia_logo.png"
         if logo_path.exists():
             from PySide6.QtCore import QUrl
             from PySide6.QtGui import QImage, QTextDocument
