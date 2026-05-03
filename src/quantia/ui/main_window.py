@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 
 from quantia.theme.palette import Theme, get_stylesheet
 from quantia.ui.icons import feather_icon
+from quantia.utils.resources import resource_path
 from quantia.ui.menu_bar import QuantiaMenuBar
 from quantia.ui.toolbar import QuantiaToolbar
 from quantia.ui.status_bar import QuantiaStatusBar
@@ -80,8 +81,7 @@ from quantia.ui.dialogs.report import ReportDialog
 from quantia.ui.dialogs.help import UserManualDialog, GuidedWizardDialog
 
 
-_PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-_ICON_PATH = _PROJECT_ROOT / "reference" / "logo" / "Quantia_icon.ico"
+_ICON_PATH = resource_path("reference/logo/Quantia_icon.ico")
 
 
 class MainWindow(QMainWindow):

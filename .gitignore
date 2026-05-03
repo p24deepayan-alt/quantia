@@ -30,3 +30,6 @@ desktop.ini
 # Distribution
 *.tar.gz
 *.whl
+installer/*.exe
+installer/*.msi
+!installer/*.iss

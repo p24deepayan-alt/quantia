@@ -12,8 +12,9 @@ from PySide6.QtGui import QPainter, QColor, QImage
 
 # Feather icons are at reference/logo/feather-icons/ relative to project root.
 # At runtime we resolve from the package location.
-_PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-_ICON_DIR = _PROJECT_ROOT / "reference" / "logo" / "feather-icons"
+from quantia.utils.resources import resource_path
+
+_ICON_DIR = resource_path("reference/logo/feather-icons")
 
 
 @lru_cache(maxsize=256)

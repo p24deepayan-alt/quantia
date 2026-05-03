@@ -9,7 +9,9 @@ from __future__ import annotations
 from enum import Enum
 from pathlib import Path
 
-_THEME_DIR = Path(__file__).parent
+from quantia.utils.resources import resource_path
+
+_THEME_DIR = resource_path("quantia/theme")
 
 
 class Theme(Enum):
