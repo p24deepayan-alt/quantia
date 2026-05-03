@@ -39,6 +39,15 @@ class QuantiaMenuBar(QMenuBar):
     type_convert = Signal()
     filter_data = Signal()
     merge_join = Signal()
+    
+    # String Operations
+    text_extract = Signal()
+    string_format = Signal()
+    find_replace = Signal()
+    concat_cols = Signal()
+    
+    # Conditional
+    if_else = Signal()
 
     # Statistics
     descriptive_stats = Signal()
@@ -136,6 +145,15 @@ class QuantiaMenuBar(QMenuBar):
         self._add(menu, "Filter Data (Subset Rows)…", self.filter_data, "scissors", ic)
         menu.addSeparator()
         self._add(menu, "Merge / Join…", self.merge_join, "git-merge", ic)
+        
+        string_menu = menu.addMenu("String Operations")
+        string_menu.setIcon(feather_icon("type", ic, 14))
+        self._add(string_menu, "Text Before / After…", self.text_extract, "scissors", ic)
+        self._add(string_menu, "Change Case & Trim…", self.string_format, "type", ic)
+        self._add(string_menu, "Find & Replace…", self.find_replace, "search", ic)
+        self._add(string_menu, "Concatenate Columns…", self.concat_cols, "link", ic)
+        
+        self._add(menu, "If / Else (Conditional)…", self.if_else, "git-branch", ic)
 
     # ── Statistics ───────────────────────────────────────────────────────
 

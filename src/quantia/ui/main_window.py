@@ -48,6 +48,11 @@ from quantia.ui.dialogs.transform import TransformDataDialog
 from quantia.ui.dialogs.type_convert import TypeConvertDialog
 from quantia.ui.dialogs.filter_data import FilterDataDialog
 from quantia.ui.dialogs.merge_join import MergeJoinDialog
+from quantia.ui.dialogs.text_extract import TextExtractDialog
+from quantia.ui.dialogs.string_format import StringFormatDialog
+from quantia.ui.dialogs.find_replace import FindReplaceDialog
+from quantia.ui.dialogs.concat_cols import ConcatColsDialog
+from quantia.ui.dialogs.if_else import IfElseDialog
 from quantia.ui.dialogs.histogram import HistogramDialog
 from quantia.ui.dialogs.scatter import ScatterPlotDialog
 from quantia.ui.dialogs.boxplot import BoxPlotDialog
@@ -208,6 +213,12 @@ class MainWindow(QMainWindow):
         self._menu_bar.type_convert.connect(self._show_type_convert)
         self._menu_bar.filter_data.connect(self._show_filter_data)
         self._menu_bar.merge_join.connect(self._show_merge_join)
+        
+        self._menu_bar.text_extract.connect(self._show_text_extract)
+        self._menu_bar.string_format.connect(self._show_string_format)
+        self._menu_bar.find_replace.connect(self._show_find_replace)
+        self._menu_bar.concat_cols.connect(self._show_concat_cols)
+        self._menu_bar.if_else.connect(self._show_if_else)
 
         # Visualize menu signals
         self._menu_bar.histogram.connect(self._show_histogram)
@@ -694,6 +705,21 @@ class MainWindow(QMainWindow):
 
     def _show_merge_join(self) -> None:
         self._show_data_dialog(MergeJoinDialog)
+
+    def _show_text_extract(self) -> None:
+        self._show_data_dialog(TextExtractDialog)
+
+    def _show_string_format(self) -> None:
+        self._show_data_dialog(StringFormatDialog)
+
+    def _show_find_replace(self) -> None:
+        self._show_data_dialog(FindReplaceDialog)
+
+    def _show_concat_cols(self) -> None:
+        self._show_data_dialog(ConcatColsDialog)
+
+    def _show_if_else(self) -> None:
+        self._show_data_dialog(IfElseDialog)
 
     # ── Statistics Dialogs ───────────────────────────────────────────────
 

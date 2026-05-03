@@ -10,13 +10,17 @@ import pandas as pd
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QDoubleSpinBox,
     QGroupBox,
+    QHBoxLayout,
     QLabel,
     QListWidget,
     QMessageBox,
+    QPushButton,
     QVBoxLayout,
-    QDoubleSpinBox,
+    QWidget,
 )
+import itertools
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
@@ -38,6 +42,50 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         self.list_independent = QListWidget()
         row_indep = self._create_selector_row("Independent Variables (X):", self.list_independent, multi_select=True)
         layout.addWidget(row_indep)
+
+        # Interaction Terms Section
+        lbl_inter = QLabel("Interaction Terms (X1 * X2):")
+        layout.addWidget(lbl_inter)
+        
+        inter_container = QWidget()
+        h_inter = QHBoxLayout(inter_container)
+        h_inter.setContentsMargins(0,0,0,0)
+        
+        self.list_interactions = QListWidget()
+        h_inter.addWidget(self.list_interactions)
+        
+        btn_layout = QVBoxLayout()
+        self.btn_add_inter = QPushButton("Add 2-Way\nInteractions")
+        self.btn_add_inter.clicked.connect(self._add_interaction)
+        self.btn_remove_inter = QPushButton("Remove")
+        self.btn_remove_inter.clicked.connect(self._remove_interaction)
+        btn_layout.addWidget(self.btn_add_inter)
+        btn_layout.addWidget(self.btn_remove_inter)
+        btn_layout.addStretch()
+        h_inter.addLayout(btn_layout)
+        
+        layout.addWidget(inter_container)
+
+    def _add_interaction(self) -> None:
+        items = self.list_independent.selectedItems()
+        if len(items) < 2:
+            QMessageBox.warning(self, "Invalid Selection", "Please select at least 2 variables in the Independent Variables (X) list to create an interaction term.")
+            return
+            
+        vars_selected = [item.text() for item in items]
+        pairs = list(itertools.combinations(vars_selected, 2))
+        
+        existing = [self.list_interactions.item(i).text() for i in range(self.list_interactions.count())]
+        
+        for p1, p2 in pairs:
+            term1 = f"{p1} * {p2}"
+            term2 = f"{p2} * {p1}"
+            if term1 not in existing and term2 not in existing:
+                self.list_interactions.addItem(term1)
+                
+    def _remove_interaction(self) -> None:
+        for item in self.list_interactions.selectedItems():
+            self.list_interactions.takeItem(self.list_interactions.row(item))
 
     def build_options(self, layout: QVBoxLayout) -> None:
         """Add options for the regression."""
@@ -93,13 +141,20 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         """Generate the Python code to run the logistic regression."""
         dep_var = self.list_dependent.item(0).text() if self.list_dependent.count() > 0 else None
         indep_vars = [self.list_independent.item(i).text() for i in range(self.list_independent.count())]
+        inter_vars = [self.list_interactions.item(i).text() for i in range(self.list_interactions.count())]
 
         if not dep_var:
             QMessageBox.warning(self, "Missing Input", "Please select a Dependent Variable (Y).")
             return ""
-        if not indep_vars:
+        if not indep_vars and not inter_vars:
             QMessageBox.warning(self, "Missing Input", "Please select at least one Independent Variable (X).")
             return ""
+
+        # Enforce marginality at data level: constituents must be in indep_vars
+        for ivar in inter_vars:
+            v1, v2 = ivar.split(' * ')
+            if v1 not in indep_vars: indep_vars.append(v1)
+            if v2 not in indep_vars: indep_vars.append(v2)
 
         include_intercept = self.chk_intercept.isChecked()
         threshold = self.spin_threshold.value()
@@ -109,9 +164,10 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         plot_style = self.cmb_style.currentText()
 
         indep_str = ", ".join(f"'{v}'" for v in indep_vars)
+        inter_str = ", ".join(f"'{v}'" for v in inter_vars)
 
         code = [
-            f"# Logistic Regression: {dep_var} ~ {', '.join(indep_vars)}",
+            f"# Logistic Regression: {dep_var} ~ {', '.join(indep_vars + inter_vars)}",
             "import statsmodels.api as sm",
             "import pandas as pd",
             "import numpy as np",
@@ -140,7 +196,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             "X_all = pd.get_dummies(X_all, drop_first=True, dtype=float)",
         ]
 
-        if stepwise:
+        if inter_vars or stepwise:
             code.append("")
             code.append("# Group dummy columns by their original categorical variable")
             code.append(f"original_vars = [{indep_str}]")
@@ -151,8 +207,27 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             code.append("    else:")
             code.append("        var_groups[v] = [c for c in X_all.columns if c.startswith(f'{v}_')]")
             code.append("")
+            
+        if inter_vars:
+            code.append("# Create interaction columns")
+            code.append(f"interaction_vars = [{inter_str}]")
+            code.append("for ivar in interaction_vars:")
+            code.append("    v1, v2 = ivar.split(' * ')")
+            code.append("    inter_cols = []")
+            code.append("    for c1 in var_groups[v1]:")
+            code.append("        for c2 in var_groups[v2]:")
+            code.append("            col_name = f'{c1}:{c2}'")
+            code.append("            X_all[col_name] = X_all[c1] * X_all[c2]")
+            code.append("            inter_cols.append(col_name)")
+            code.append("    var_groups[ivar] = inter_cols")
+            code.append("")
+
+        if stepwise:
             code.append("# Perform Bidirectional Stepwise Selection (Variables kept together)")
-            code.append("available_vars = original_vars")
+            if inter_vars:
+                code.append("available_vars = original_vars + interaction_vars")
+            else:
+                code.append("available_vars = original_vars")
             code.append("current_vars = []") # Start empty for bidirectional
             
             code.append("while True:")
@@ -167,7 +242,15 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("        res_curr = None")
                 code.append("    ")
                 code.append("    # 1. Try adding the most significant variable (LR-test for blocks)")
-                code.append("    candidates_add = [v for v in available_vars if v not in current_vars]")
+                code.append("    candidates_add = []")
+                code.append("    for v in available_vars:")
+                code.append("        if v not in current_vars:")
+                code.append("            if ' * ' in v:")
+                code.append("                p1, p2 = v.split(' * ')")
+                code.append("                if p1 in current_vars and p2 in current_vars:")
+                code.append("                    candidates_add.append(v)")
+                code.append("            else:")
+                code.append("                candidates_add.append(v)")
                 code.append("    best_p = 0.05")
                 code.append("    best_v = None")
                 code.append("    for v in candidates_add:")
@@ -197,6 +280,13 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("        max_p = -1")
                 code.append("        worst_v = None")
                 code.append("        for v in current_vars:")
+                code.append("            can_drop = True")
+                code.append("            for cv in current_vars:")
+                code.append("                if ' * ' in cv and v in cv.split(' * '):")
+                code.append("                    can_drop = False")
+                code.append("                    break")
+                code.append("            if not can_drop:")
+                code.append("                continue")
                 code.append("            test_vars = [cv for cv in current_vars if cv != v]")
                 code.append("            test_cols = [c for ov in test_vars for c in var_groups[ov]]")
                 code.append(f"            test_X = sm.add_constant(X_all[test_cols]) if {include_intercept} and test_cols else X_all[test_cols] if test_cols else None")
@@ -227,7 +317,15 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("        best_score = np.inf")
                 code.append("    ")
                 code.append("    # 1. Try adding a variable")
-                code.append("    candidates_add = [v for v in available_vars if v not in current_vars]")
+                code.append("    candidates_add = []")
+                code.append("    for v in available_vars:")
+                code.append("        if v not in current_vars:")
+                code.append("            if ' * ' in v:")
+                code.append("                p1, p2 = v.split(' * ')")
+                code.append("                if p1 in current_vars and p2 in current_vars:")
+                code.append("                    candidates_add.append(v)")
+                code.append("            else:")
+                code.append("                candidates_add.append(v)")
                 code.append("    best_v = None")
                 code.append("    for v in candidates_add:")
                 code.append("        test_vars = current_vars + [v]")
@@ -250,6 +348,13 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("    # 2. Try dropping a variable")
                 code.append("    if len(current_vars) > 1:")
                 code.append("        for v in current_vars:")
+                code.append("            can_drop = True")
+                code.append("            for cv in current_vars:")
+                code.append("                if ' * ' in cv and v in cv.split(' * '):")
+                code.append("                    can_drop = False")
+                code.append("                    break")
+                code.append("            if not can_drop:")
+                code.append("                continue")
                 code.append("            test_vars = [cv for cv in current_vars if cv != v]")
                 code.append("            test_cols = [c for ov in test_vars for c in var_groups[ov]]")
                 code.append(f"            test_X = sm.add_constant(X_all[test_cols]) if {include_intercept} else X_all[test_cols]")
@@ -269,7 +374,11 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             code.append("final_cols = [c for ov in current_vars for c in var_groups[ov]]")
             code.append("X = X_all[final_cols] if final_cols else pd.DataFrame(index=X_all.index)")
         else:
-            code.append("X = X_all")
+            code.append("if 'var_groups' in locals() or 'var_groups' in globals():")
+            code.append("    final_cols = [c for ov in (indep_vars + interaction_vars if 'interaction_vars' in locals() else indep_vars) for c in var_groups[ov]]")
+            code.append("    X = X_all[final_cols] if final_cols else pd.DataFrame(index=X_all.index)")
+            code.append("else:")
+            code.append("    X = X_all")
 
         if include_intercept:
             code.append("X = sm.add_constant(X)")
