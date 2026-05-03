@@ -118,6 +118,14 @@ The format is determined by the file extension you choose in the Save dialog.</p
 <li>Supports inner, left, right, and outer joins on selected key columns</li>
 </ul>
 
+<h3>4.6 Pivot Table / Group-By</h3>
+<p><code>Data &rarr; Pivot Table / Group By&hellip;</code></p>
+<ul>
+<li>Aggregate values by categorical columns (Sum, Mean, Count, etc.)</li>
+<li>Optionally pivot a column to create a cross-tabulated table</li>
+<li>Choose to display the result or replace the current dataset</li>
+</ul>
+
 <hr>
 <h2>5 &mdash; Statistics Menu</h2>
 
@@ -187,6 +195,7 @@ Reports: &chi;&sup2; statistic, p-value, degrees of freedom, Cram&eacute;r's V e
 <li>Configure algorithm-specific hyperparameters</li>
 <li>View results: accuracy, confusion matrix, classification report, ROC curve</li>
 </ol>
+<p><b>Model Comparison:</b> <code>ML &rarr; Classification &rarr; Compare Models...</code> lets you run up to 8 models simultaneously and view a ranked metrics table (Accuracy, F1, AUC, etc.) alongside an overlapping ROC curve plot.</p>
 
 <table>
 <tr><th>Algorithm</th><th>Key Parameters</th><th>Notes</th></tr>
@@ -200,7 +209,15 @@ Reports: &chi;&sup2; statistic, p-value, degrees of freedom, Cram&eacute;r's V e
 <tr><td><b>Naive Bayes</b></td><td>var_smoothing</td><td>Gaussian Naive Bayes; optional scaling</td></tr>
 </table>
 
-<h3>6.3 Clustering (Unsupervised)</h3>
+<h3>6.3 Dimensionality Reduction</h3>
+<p><code>ML &rarr; Dimensionality Reduction &rarr; Principal Component Analysis (PCA)&hellip;</code></p>
+<ul>
+<li>Reduces the number of features while retaining variance</li>
+<li>Generates Scree plot, Biplot (first 2 components), and Explained Variance table</li>
+<li>Optionally appends the calculated Principal Components (PC1, PC2...) back to the dataset</li>
+</ul>
+
+<h3>6.4 Clustering (Unsupervised)</h3>
 <p>All clustering methods share a common workflow:</p>
 <ol>
 <li>Select feature columns (numeric only)</li>

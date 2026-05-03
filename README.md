@@ -15,10 +15,11 @@ Quantia is designed to provide powerful data analysis and modeling capabilities 
 *   **📊 Comprehensive Statistics:** Descriptive statistics, t-tests (independent, paired, one-sample), ANOVA, Non-parametric tests (Mann-Whitney, Wilcoxon, Kruskal-Wallis), Correlation (Pearson, Spearman, Kendall), and Chi-square.
 *   **🤖 Machine Learning:** 
     *   **Regression:** Linear and Logistic (with stepwise selection).
-    *   **Classification:** Random Forest, Gradient Boosting, Decision Tree, SVM, KNN, LDA, QDA, Naive Bayes.
+    *   **Classification:** Random Forest, Gradient Boosting, Decision Tree, SVM, KNN, LDA, QDA, Naive Bayes (plus a **Model Comparison Dashboard** to evaluate up to 8 models simultaneously).
     *   **Clustering:** K-Means, Hierarchical, DBSCAN, GMM (with automatic PCA for visualization).
+    *   **Dimensionality Reduction:** Principal Component Analysis (PCA) with Scree plots, Biplots, and dataset appending.
 *   **📈 Visualizations:** Histograms, Box Plots, Scatter Plots, Violin Plots, Q-Q Plots, Line Charts, Bar Charts, and Heatmaps.
-*   **🗄️ Data Operations:** Import/Export (CSV, Excel, JSON, Parquet), Data Cleaning (drop NA, impute), Transformations, Type Conversions, Filtering, and Merging/Joining.
+*   **🗄️ Data Operations:** Import/Export (CSV, Excel, JSON, Parquet), Data Cleaning (drop NA, impute), Transformations, Type Conversions, Filtering, Merging/Joining, and **Pivot Table / Group-By Aggregation**.
 *   **📑 Professional Reporting:** Generate browser-quality HTML or PDF reports (via headless Edge/Chrome) containing dataset summaries, statistical results, and generated Python code.
 
 ## Installation
