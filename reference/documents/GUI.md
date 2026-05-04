@@ -334,7 +334,9 @@ Each plot type shares a common dialog:
 Tabs:
 
 - **General**: Default import folder, autosave interval (minutes), memory limit (GB)
-- **GPU**: “Enable GPU” checkbox, select device (auto / CUDA / DirectML / Metal / CPU)
+- **Compute**: Radio buttons for compute backend selection:
+  - **CPU - single core**: Sequential execution.
+  - **CPU - Multi core**: Parallel execution using all available CPU cores. (Shows warning about compute power usage)
 - **Scripting**: Default language (Python only), font size, indentation spaces
 - **Appearance**: Theme (Light / Dark / High Contrast), accent colour picker
 - **Report**: Default template (APA, Minimal), default DPI for images (300)

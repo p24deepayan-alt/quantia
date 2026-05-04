@@ -161,7 +161,12 @@ class BaseClusteringDialog(BaseAnalysisDialog):
             code.append("html_output.append('<h4>Cluster Profiles (Averages)</h4>')")
             code.append("html_output.append(summary_table.to_html(classes='table table-sm table-striped'))")
             
-        code.append("display_html('\\n'.join(html_output))")
+            code.append("if 'display_html' in globals():")
+            code.append("    display_html('\\n'.join(html_output))")
+            code.append("elif 'show_result' in globals():")
+            code.append(f"    show_result('{self.windowTitle()}', '\\n'.join(html_output))")
+            code.append("else:")
+            code.append("    print('\\n'.join(html_output))")
         code.append("")
         
         plots_to_draw = []

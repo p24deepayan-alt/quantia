@@ -1,9 +1,11 @@
 import pandas as pd
 from PySide6.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QLabel, QComboBox, 
-    QListWidget, QAbstractItemView, QCheckBox, QGroupBox, QSpinBox, QDoubleSpinBox, QWidget, QFormLayout
+    QListWidget, QAbstractItemView, QCheckBox, QGroupBox, QSpinBox, QDoubleSpinBox, QWidget, QFormLayout,
+    QMessageBox
 )
 from PySide6.QtCore import Qt
+from quantia.core.settings import SettingsManager, ComputeMode
 from .base import BaseAnalysisDialog
 
 class BaseClassificationDialog(BaseAnalysisDialog):
@@ -16,20 +18,16 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         
     def _build_selectors(self, layout):
         # Target Variable
-        layout.addWidget(QLabel("Target Variable (Y):"))
-        self.list_y = QListWidget()
-        self.list_y.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.list_y.addItems(self.df.columns)
-        layout.addWidget(self.list_y)
+        self.list_dependent = QListWidget()
+        row_y = self._create_selector_row("Target Variable (Y):", self.list_dependent, multi_select=False)
+        layout.addWidget(row_y)
         
         # Features
-        layout.addWidget(QLabel("Features (X):"))
-        self.list_x = QListWidget()
-        self.list_x.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
-        self.list_x.addItems(self.df.columns)
-        layout.addWidget(self.list_x)
+        self.list_independent = QListWidget()
+        row_x = self._create_selector_row("Features (X):", self.list_independent, multi_select=True)
+        layout.addWidget(row_x)
         
-    def _build_options(self, layout):
+    def build_options(self, layout):
         # Validation Group
         val_group = QGroupBox("Validation")
         val_layout = QVBoxLayout()
@@ -48,94 +46,80 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         prep_group = QGroupBox("Preprocessing")
         prep_layout = QVBoxLayout()
         self.chk_scale = QCheckBox("Scale Data (StandardScaler)")
-        if self._mandatory_scaling:
-            self.chk_scale.setChecked(True)
-            self.chk_scale.setEnabled(False)
-            self.chk_scale.setToolTip("Scaling is mandatory for this algorithm.")
-        else:
-            self.chk_scale.setChecked(False)
+        self.chk_scale.setChecked(self._mandatory_scaling)
+        if self._mandatory_scaling: self.chk_scale.setEnabled(False)
         prep_layout.addWidget(self.chk_scale)
         prep_group.setLayout(prep_layout)
         layout.addWidget(prep_group)
         
-        # Hyperparameters Group (subclasses can populate this)
-        self.hyper_group = QGroupBox("Hyperparameters")
-        self.hyper_layout = QFormLayout()
-        self._build_hyperparameters(self.hyper_layout)
-        self.hyper_group.setLayout(self.hyper_layout)
-        if self.hyper_layout.rowCount() > 0:
-            layout.addWidget(self.hyper_group)
-        else:
-            self.hyper_group.hide()
-            
         # Outputs Group
         out_group = QGroupBox("Outputs")
         out_layout = QVBoxLayout()
         self.chk_report = QCheckBox("Classification Report")
         self.chk_report.setChecked(True)
-        out_layout.addWidget(self.chk_report)
-        
         self.chk_cm = QCheckBox("Confusion Matrix")
-        self.chk_cm.setChecked(True)
-        out_layout.addWidget(self.chk_cm)
-        
-        self.chk_roc = QCheckBox("ROC Curve (Binary only)")
-        self.chk_roc.setChecked(True)
-        out_layout.addWidget(self.chk_roc)
-        
+        self.chk_roc = QCheckBox("ROC Curve")
         self.chk_feat_imp = QCheckBox("Feature Importance")
-        self.chk_feat_imp.setChecked(True)
-        if not self._supports_feature_importance:
-            self.chk_feat_imp.setEnabled(False)
-            self.chk_feat_imp.setChecked(False)
+        self.chk_feat_imp.setEnabled(self._supports_feature_importance)
+        out_layout.addWidget(self.chk_report)
+        out_layout.addWidget(self.chk_cm)
+        out_layout.addWidget(self.chk_roc)
         out_layout.addWidget(self.chk_feat_imp)
-        
         out_group.setLayout(out_layout)
         layout.addWidget(out_group)
         
+        # Hyperparameters (Subclasses)
+        self.hp_group = QGroupBox("Hyperparameters")
+        hp_layout = QFormLayout()
+        self._build_hyperparameters(hp_layout)
+        self.hp_group.setLayout(hp_layout)
+        layout.addWidget(self.hp_group)
+
     def _build_hyperparameters(self, layout):
-        """Override this in subclasses to add hyperparameters to the form layout."""
         pass
-        
-    def _get_model_init_code(self):
-        """Override to return the scikit-learn model initialization code."""
-        return "model = None # Override in subclass"
         
     def _get_imports(self):
         """Override to return model-specific imports."""
         return []
-        
+
+    def _get_model_init_code(self):
+        """Override to return model initialization code."""
+        return "model = None"
+
+    def _get_model_train_code(self):
+        return [
+            "# Initialize and Train Model",
+            self._get_model_init_code(),
+            "model.fit(X_train, y_train)"
+        ]
+
     def generate_code(self):
-        if not self.list_y.selectedItems() or not self.list_x.selectedItems():
-            return "# Please select Target (Y) and at least one Feature (X)."
+        if self.list_dependent.count() == 0:
+            QMessageBox.warning(self, "Missing Input", "Please select a Target Variable (Y).")
+            return ""
+        if self.list_independent.count() == 0:
+            QMessageBox.warning(self, "Missing Input", "Please select at least one Feature (X).")
+            return ""
             
-        target = self.list_y.selectedItems()[0].text()
-        features = [item.text() for item in self.list_x.selectedItems()]
+        target = self.list_dependent.item(0).text()
+        features = [self.list_independent.item(i).text() for i in range(self.list_independent.count())]
         test_size = self.spin_test_size.value() / 100.0
         scale_data = self.chk_scale.isChecked()
         
-        feature_list_str = ", ".join(f"'{f}'" for f in features)
-        
-        imports = [
+        code = [
             "import pandas as pd",
             "import numpy as np",
             "import matplotlib.pyplot as plt",
             "import seaborn as sns",
+            "import io",
+            "import base64",
             "from sklearn.model_selection import train_test_split",
             "from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc"
         ]
-        
-        if scale_data:
-            imports.append("from sklearn.preprocessing import StandardScaler")
-            
-        imports.extend(self._get_imports())
-        
-        code = imports + [""]
-        code.append(f"# Prepare Data for {self.windowTitle()}")
-        code.append(f"features = [{feature_list_str}]")
-        code.append(f"target = '{target}'")
-        code.append("X = df[features].copy()")
-        code.append("y = df[target].copy()")
+        code.extend(self._get_imports())
+        code.append("")
+        code.append(f"X = df[[{', '.join([f'\"{f}\"' for f in features])}]]")
+        code.append(f"y = df['{target}']")
         code.append("")
         
         code.append("# Handle categorical features")
@@ -148,16 +132,15 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         
         if scale_data:
             code.append("# Scale Data")
+            code.append("from sklearn.preprocessing import StandardScaler")
             code.append("scaler = StandardScaler()")
             code.append("X_train = scaler.fit_transform(X_train)")
             code.append("X_test = scaler.transform(X_test)")
-            code.append("X_train = pd.DataFrame(X_train, columns=X.columns) # Retain column names")
+            code.append("X_train = pd.DataFrame(X_train, columns=X.columns)")
             code.append("X_test = pd.DataFrame(X_test, columns=X.columns)")
             code.append("")
             
-        code.append("# Initialize and Train Model")
-        code.append(self._get_model_init_code())
-        code.append("model.fit(X_train, y_train)")
+        code.extend(self._get_model_train_code())
         code.append("")
         
         code.append("# Predictions")
@@ -165,7 +148,7 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         code.append("try:")
         code.append("    y_prob = model.predict_proba(X_test)")
         code.append("except AttributeError:")
-        code.append("    y_prob = None # Model doesn't support probability estimates")
+        code.append("    y_prob = None")
         code.append("")
         
         # HTML Report building
@@ -180,69 +163,75 @@ class BaseClassificationDialog(BaseAnalysisDialog):
             code.append("html_output.append('<h4>Classification Report</h4>')")
             code.append("html_output.append(report_df.to_html(classes='table table-sm table-striped'))")
             
-        code.append("display_html('\\n'.join(html_output))")
+        code.append("")
+        code.append("# Build plots_to_draw dynamically inside the generated script")
+        code.append("plots_to_draw = []")
+        if self.chk_cm.isChecked(): code.append("plots_to_draw.append('cm')")
+        if self.chk_roc.isChecked(): code.append("if len(np.unique(y)) == 2: plots_to_draw.append('roc')")
+        if self.chk_feat_imp.isChecked() and self._supports_feature_importance: code.append("plots_to_draw.append('feat_imp')")
+        
+        code.append("if plots_to_draw:")
+        code.append(f"    fig, axes = plt.subplots(1, len(plots_to_draw), figsize=(5 * len(plots_to_draw), 5))")
+        code.append("    if len(plots_to_draw) == 1: axes = [axes]")
+        code.append("    ax_idx = 0")
         code.append("")
         
-        plots_to_draw = []
-        if self.chk_cm.isChecked(): plots_to_draw.append("cm")
-        if self.chk_roc.isChecked(): plots_to_draw.append("roc")
-        if self.chk_feat_imp.isChecked() and self._supports_feature_importance: plots_to_draw.append("feat_imp")
-        
-        if plots_to_draw:
-            code.append(f"fig, axes = plt.subplots(1, {len(plots_to_draw)}, figsize=({5 * len(plots_to_draw)}, 5))")
-            code.append(f"if {len(plots_to_draw)} == 1: axes = [axes]")
-            code.append("ax_idx = 0")
-            code.append("")
+        if self.chk_cm.isChecked():
+            code.append("    # Confusion Matrix (dynamic check)")
+            code.append("    if 'cm' in plots_to_draw:")
+            code.append("        cm = confusion_matrix(y_test, y_pred)")
+            code.append("        classes = model.classes_")
+            code.append("        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=axes[ax_idx], xticklabels=classes, yticklabels=classes)")
+            code.append("        axes[ax_idx].set_title('Confusion Matrix')")
+            code.append("        axes[ax_idx].set_xlabel('Predicted')")
+            code.append("        axes[ax_idx].set_ylabel('Actual')")
+            code.append("        ax_idx += 1")
             
-            if self.chk_cm.isChecked():
-                code.append("# Confusion Matrix")
-                code.append("cm = confusion_matrix(y_test, y_pred)")
-                code.append("sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=axes[ax_idx])")
-                code.append("axes[ax_idx].set_title('Confusion Matrix')")
-                code.append("axes[ax_idx].set_xlabel('Predicted')")
-                code.append("axes[ax_idx].set_ylabel('Actual')")
-                code.append("ax_idx += 1")
-                code.append("")
-                
-            if self.chk_roc.isChecked():
-                code.append("# ROC Curve")
-                code.append("if len(np.unique(y)) == 2 and y_prob is not None:")
-                code.append("    # Convert y_test to binary if it's not already (for ROC)")
-                code.append("    classes = model.classes_")
-                code.append("    pos_class = classes[1] # Assume second class is positive")
-                code.append("    y_test_bin = (y_test == pos_class).astype(int)")
-                code.append("    fpr, tpr, _ = roc_curve(y_test_bin, y_prob[:, 1])")
-                code.append("    roc_auc = auc(fpr, tpr)")
-                code.append("    axes[ax_idx].plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')")
-                code.append("    axes[ax_idx].plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')")
-                code.append("    axes[ax_idx].set_xlim([0.0, 1.0])")
-                code.append("    axes[ax_idx].set_ylim([0.0, 1.05])")
-                code.append("    axes[ax_idx].set_xlabel('False Positive Rate')")
-                code.append("    axes[ax_idx].set_ylabel('True Positive Rate')")
-                code.append("    axes[ax_idx].set_title(f'ROC Curve (Positive: {pos_class})')")
-                code.append("    axes[ax_idx].legend(loc='lower right')")
-                code.append("else:")
-                code.append("    axes[ax_idx].text(0.5, 0.5, 'ROC only supported\\nfor binary targets\\nwith probabilities', ha='center', va='center')")
-                code.append("    axes[ax_idx].set_title('ROC Curve')")
-                code.append("ax_idx += 1")
-                code.append("")
-                
-            if self.chk_feat_imp.isChecked() and self._supports_feature_importance:
-                code.append("# Feature Importance")
-                code.append("if hasattr(model, 'feature_importances_'):")
-                code.append("    importances = model.feature_importances_")
-                code.append("    indices = np.argsort(importances)[::-1][:15] # Top 15")
-                code.append("    axes[ax_idx].bar(range(len(indices)), importances[indices], align='center')")
-                code.append("    axes[ax_idx].set_xticks(range(len(indices)))")
-                code.append("    axes[ax_idx].set_xticklabels(X.columns[indices], rotation=45, ha='right')")
-                code.append("    axes[ax_idx].set_title('Top Feature Importances')")
-                code.append("else:")
-                code.append("    axes[ax_idx].text(0.5, 0.5, 'Feature Importance\\nNot Available', ha='center', va='center')")
-                code.append("ax_idx += 1")
-                
-            code.append("plt.tight_layout()")
-            code.append("plt.show()")
+        if self.chk_roc.isChecked():
+            code.append("    # ROC Curve (dynamic check)")
+            code.append("    if 'roc' in plots_to_draw:")
+            code.append("        classes = model.classes_")
+            code.append("        pos_class = classes[1]")
+            code.append("        y_test_bin = (y_test == pos_class).astype(int)")
+            code.append("        fpr, tpr, _ = roc_curve(y_test_bin, y_prob[:, 1])")
+            code.append("        roc_auc = auc(fpr, tpr)")
+            code.append("        axes[ax_idx].plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {{roc_auc:.2f}})')")
+            code.append("        axes[ax_idx].plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')")
+            code.append("        axes[ax_idx].set_xlim([0.0, 1.0])")
+            code.append("        axes[ax_idx].set_ylim([0.0, 1.05])")
+            code.append("        axes[ax_idx].set_xlabel('False Positive Rate')")
+            code.append("        axes[ax_idx].set_ylabel('True Positive Rate')")
+            code.append("        axes[ax_idx].set_title(f'ROC Curve (Positive: {{pos_class}})')")
+            code.append("        axes[ax_idx].legend(loc='lower right')")
+            code.append("        ax_idx += 1")
             
+        if self.chk_feat_imp.isChecked() and self._supports_feature_importance:
+            code.append("    # Feature Importance (dynamic check)")
+            code.append("    if 'feat_imp' in plots_to_draw and hasattr(model, 'feature_importances_'):")
+            code.append("        importances = model.feature_importances_")
+            code.append("        indices = np.argsort(importances)[::-1][:15]")
+            code.append("        axes[ax_idx].bar(range(len(indices)), importances[indices], align='center')")
+            code.append("        axes[ax_idx].set_xticks(range(len(indices)))")
+            code.append("        axes[ax_idx].set_xticklabels([X.columns[i] for i in indices], rotation=45, ha='right')")
+            code.append("        axes[ax_idx].set_title('Top Feature Importances')")
+            code.append("        ax_idx += 1")
+            
+        code.append("    plt.tight_layout()")
+        code.append("    buf = io.BytesIO()")
+        code.append("    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')")
+        code.append("    buf.seek(0)")
+        code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+        code.append("    plt.close()")
+        code.append("    html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"max-width:100%;\"/></div>')")
+
+        code.append("")
+        code.append("if 'display_html' in globals():")
+        code.append("    display_html('\\n'.join(html_output))")
+        code.append("elif 'show_result' in globals():")
+        code.append(f"    show_result('{self.windowTitle()}', '\\n'.join(html_output))")
+        code.append("else:")
+        code.append("    print('\\n'.join(html_output))")
+        code.append("")            
         return "\n".join(code)
 
 class RandomForestDialog(BaseClassificationDialog):
@@ -255,12 +244,40 @@ class RandomForestDialog(BaseClassificationDialog):
         self.spin_estimators.setValue(100)
         self.spin_estimators.setSingleStep(10)
         layout.addRow("N Estimators:", self.spin_estimators)
+        # Criterion
+        self.cmb_criterion = QComboBox()
+        self.cmb_criterion.addItems(["gini", "entropy", "log_loss"])
+        layout.addRow("Criterion:", self.cmb_criterion)
+        # Max Depth
+        self.chk_auto_depth = QCheckBox("Automatic (Unlimited)")
+        self.chk_auto_depth.setChecked(True)
+        self.spin_depth = QSpinBox()
+        self.spin_depth.setRange(1, 100)
+        self.spin_depth.setValue(10)
+        self.spin_depth.setEnabled(False)
+        self.chk_auto_depth.toggled.connect(self.spin_depth.setDisabled)
+        depth_layout = QHBoxLayout()
+        depth_layout.addWidget(self.chk_auto_depth)
+        depth_layout.addWidget(self.spin_depth)
+        layout.addRow("Max Depth:", depth_layout)
         
     def _get_imports(self):
         return ["from sklearn.ensemble import RandomForestClassifier"]
         
     def _get_model_init_code(self):
-        return f"model = RandomForestClassifier(n_estimators={self.spin_estimators.value()}, random_state=42)"
+        settings = SettingsManager()
+        mode = settings.compute_mode
+        n_jobs = 1
+        if mode == ComputeMode.CPU_MULTI:
+            n_jobs = -1
+        depth = "None" if self.chk_auto_depth.isChecked() else self.spin_depth.value()
+        return (f"model = RandomForestClassifier(\n"
+                f"    n_estimators={self.spin_estimators.value()}, \n"
+                f"    criterion='{self.cmb_criterion.currentText()}', \n"
+                f"    max_depth={depth}, \n"
+                f"    n_jobs={n_jobs}, \n"
+                f"    random_state=42\n"
+                f")")
 
 class GradientBoostingDialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):
@@ -277,31 +294,107 @@ class GradientBoostingDialog(BaseClassificationDialog):
         self.spin_lr.setValue(0.1)
         self.spin_lr.setSingleStep(0.05)
         layout.addRow("Learning Rate:", self.spin_lr)
+
+        self.spin_depth = QSpinBox()
+        self.spin_depth.setRange(1, 100)
+        self.spin_depth.setValue(3)
+        layout.addRow("Max Depth:", self.spin_depth)
         
     def _get_imports(self):
         return ["from sklearn.ensemble import GradientBoostingClassifier"]
         
     def _get_model_init_code(self):
-        return f"model = GradientBoostingClassifier(n_estimators={self.spin_estimators.value()}, learning_rate={self.spin_lr.value()}, random_state=42)"
+        return (f"model = GradientBoostingClassifier(\n"
+                f"    n_estimators={self.spin_estimators.value()}, \n"
+                f"    learning_rate={self.spin_lr.value()}, \n"
+                f"    max_depth={self.spin_depth.value()}, \n"
+                f"    random_state=42\n"
+                f")")
 
 class DecisionTreeDialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):
         super().__init__("Decision Tree Classifier", df, parent, supports_feature_importance=True)
         
     def _build_hyperparameters(self, layout):
+        # Criterion
+        self.cmb_criterion = QComboBox()
+        self.cmb_criterion.addItems(["gini", "entropy", "log_loss"])
+        layout.addRow("Criterion:", self.cmb_criterion)
+
+        # Max Depth
+        self.chk_auto_depth = QCheckBox("Automatic (Unlimited)")
+        self.chk_auto_depth.setChecked(True)
         self.spin_depth = QSpinBox()
-        self.spin_depth.setRange(0, 100) # 0 means None
-        self.spin_depth.setValue(0)
-        self.spin_depth.setSpecialValueText("None (Unlimited)")
-        layout.addRow("Max Depth:", self.spin_depth)
+        self.spin_depth.setRange(1, 100)
+        self.spin_depth.setValue(10)
+        self.spin_depth.setEnabled(False)
+        self.chk_auto_depth.toggled.connect(self.spin_depth.setDisabled)
+        
+        depth_layout = QHBoxLayout()
+        depth_layout.addWidget(self.chk_auto_depth)
+        depth_layout.addWidget(self.spin_depth)
+        layout.addRow("Max Depth:", depth_layout)
+
+        # Pruning
+        self.chk_auto_ccp = QCheckBox("Optimize (CV)")
+        self.chk_auto_ccp.setChecked(False)
+        self.spin_ccp = QDoubleSpinBox()
+        self.spin_ccp.setRange(0.0, 1.0)
+        self.spin_ccp.setValue(0.0)
+        self.spin_ccp.setSingleStep(0.01)
+        self.spin_ccp.setDecimals(3)
+        self.chk_auto_ccp.toggled.connect(self.spin_ccp.setDisabled)
+        
+        prune_layout = QHBoxLayout()
+        prune_layout.addWidget(self.chk_auto_ccp)
+        prune_layout.addWidget(self.spin_ccp)
+        layout.addRow("Pruning (ccp_alpha):", prune_layout)
+
+        # Min Samples Split
+        self.spin_min_split = QSpinBox()
+        self.spin_min_split.setRange(2, 100)
+        self.spin_min_split.setValue(2)
+        layout.addRow("Min Samples Split:", self.spin_min_split)
         
     def _get_imports(self):
         return ["from sklearn.tree import DecisionTreeClassifier"]
         
     def _get_model_init_code(self):
-        depth = self.spin_depth.value()
-        depth_val = depth if depth > 0 else "None"
-        return f"model = DecisionTreeClassifier(max_depth={depth_val}, random_state=42)"
+        depth = "None" if self.chk_auto_depth.isChecked() else self.spin_depth.value()
+        return (f"model = DecisionTreeClassifier(\n"
+                f"    criterion='{self.cmb_criterion.currentText()}', \n"
+                f"    max_depth={depth}, \n"
+                f"    ccp_alpha={self.spin_ccp.value()}, \n"
+                f"    min_samples_split={self.spin_min_split.value()}, \n"
+                f"    random_state=42\n"
+                f")")
+
+    def _get_model_train_code(self):
+        if not self.chk_auto_ccp.isChecked():
+            return super()._get_model_train_code()
+            
+        depth = "None" if self.chk_auto_depth.isChecked() else self.spin_depth.value()
+        
+        code = [
+            "# Optimize CCP Alpha via Cross-Validation",
+            "from sklearn.model_selection import GridSearchCV",
+            "if 'html_output' not in locals(): html_output = []",
+            f"base_tree = DecisionTreeClassifier(criterion='{self.cmb_criterion.currentText()}', max_depth={depth}, min_samples_split={self.spin_min_split.value()}, random_state=42)",
+            "",
+            "# Compute pruning path to find candidate alphas",
+            "path = base_tree.cost_complexity_pruning_path(X_train, y_train)",
+            "ccp_alphas = path.ccp_alphas",
+            "",
+            "# Grid search over the candidates",
+            "grid_search = GridSearchCV(base_tree, param_grid={'ccp_alpha': ccp_alphas}, cv=5, scoring='f1_weighted')",
+            "grid_search.fit(X_train, y_train)",
+            "",
+            "model = grid_search.best_estimator_",
+            "optimal_alpha = grid_search.best_params_['ccp_alpha']",
+            "print(f'Optimal ccp_alpha found: {optimal_alpha:.4f}')",
+            "html_output.append(f'<p><b>Optimal ccp_alpha found via CV:</b> {optimal_alpha:.4f}</p>')"
+        ]
+        return code
 
 class SVMDialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):
@@ -316,12 +409,23 @@ class SVMDialog(BaseClassificationDialog):
         self.spin_c.setRange(0.01, 1000.0)
         self.spin_c.setValue(1.0)
         layout.addRow("C (Regularization):", self.spin_c)
+
+        # Gamma
+        self.cmb_gamma = QComboBox()
+        self.cmb_gamma.addItems(["scale", "auto"])
+        layout.addRow("Gamma:", self.cmb_gamma)
         
     def _get_imports(self):
         return ["from sklearn.svm import SVC"]
         
     def _get_model_init_code(self):
-        return f"model = SVC(kernel='{self.cmb_kernel.currentText()}', C={self.spin_c.value()}, probability=True, random_state=42)"
+        return (f"model = SVC(\n"
+                f"    kernel='{self.cmb_kernel.currentText()}', \n"
+                f"    C={self.spin_c.value()}, \n"
+                f"    gamma='{self.cmb_gamma.currentText()}', \n"
+                f"    probability=True, \n"
+                f"    random_state=42\n"
+                f")")
 
 class KNNDialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):
@@ -336,12 +440,27 @@ class KNNDialog(BaseClassificationDialog):
         self.cmb_weights = QComboBox()
         self.cmb_weights.addItems(["uniform", "distance"])
         layout.addRow("Weights:", self.cmb_weights)
+
+        self.cmb_algorithm = QComboBox()
+        self.cmb_algorithm.addItems(["auto", "ball_tree", "kd_tree", "brute"])
+        layout.addRow("Algorithm:", self.cmb_algorithm)
         
     def _get_imports(self):
         return ["from sklearn.neighbors import KNeighborsClassifier"]
         
     def _get_model_init_code(self):
-        return f"model = KNeighborsClassifier(n_neighbors={self.spin_neighbors.value()}, weights='{self.cmb_weights.currentText()}')"
+        settings = SettingsManager()
+        mode = settings.compute_mode
+        n_jobs = 1
+        if mode == ComputeMode.CPU_MULTI:
+            n_jobs = -1
+            
+        return (f"model = KNeighborsClassifier(\n"
+                f"    n_neighbors={self.spin_neighbors.value()}, \n"
+                f"    weights='{self.cmb_weights.currentText()}', \n"
+                f"    algorithm='{self.cmb_algorithm.currentText()}', \n"
+                f"    n_jobs={n_jobs}\n"
+                f")")
 
 class LDADialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):

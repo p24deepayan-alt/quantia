@@ -29,12 +29,12 @@ class ModelComparisonDialog(BaseAnalysisDialog):
         self.btn_help.clicked.connect(self._show_help)
 
     def _build_selectors(self, layout: QVBoxLayout) -> None:
-        self.list_y = QListWidget()
-        row_y = self._create_selector_row("Target Variable (Y) [Binary]:", self.list_y, multi_select=False)
+        self.list_dependent = QListWidget()
+        row_y = self._create_selector_row("Target Variable (Y) [Binary]:", self.list_dependent, multi_select=False)
         layout.addWidget(row_y)
 
-        self.list_x = QListWidget()
-        row_x = self._create_selector_row("Features (X):", self.list_x, multi_select=True)
+        self.list_independent = QListWidget()
+        row_x = self._create_selector_row("Features (X):", self.list_independent, multi_select=True)
         layout.addWidget(row_x)
 
     def build_options(self, layout: QVBoxLayout) -> None:
@@ -98,12 +98,12 @@ class ModelComparisonDialog(BaseAnalysisDialog):
         layout.addWidget(group_out)
 
     def generate_code(self) -> str:
-        if self.list_y.count() == 0 or self.list_x.count() == 0:
+        if self.list_dependent.count() == 0 or self.list_independent.count() == 0:
             QMessageBox.warning(self, "Missing Input", "Please select Target (Y) and at least one Feature (X).")
             return ""
 
-        target = self.list_y.item(0).text()
-        features = [self.list_x.item(i).text() for i in range(self.list_x.count())]
+        target = self.list_dependent.item(0).text()
+        features = [self.list_independent.item(i).text() for i in range(self.list_independent.count())]
         test_size = self.spin_test_size.value() / 100.0
         
         selected_models = [name for name, chk in self.chk_models.items() if chk.isChecked()]
@@ -214,7 +214,12 @@ class ModelComparisonDialog(BaseAnalysisDialog):
         code.append("if self.chk_table.isChecked():".replace('self.chk_table.isChecked()', 'True' if self.chk_table.isChecked() else 'False'))
         code.append("    html_output.append('<h4>Ranked by F1 Score</h4>')")
         code.append("    html_output.append(comp_df.to_html(classes='table table-sm table-hover table-striped'))")
-        code.append("display_html('\\n'.join(html_output))")
+        code.append("if 'display_html' in globals():")
+        code.append("    display_html('\\n'.join(html_output))")
+        code.append("elif 'show_result' in globals():")
+        code.append(f"    show_result('Model Comparison', '\\n'.join(html_output))")
+        code.append("else:")
+        code.append("    print('\\n'.join(html_output))")
 
         if self.chk_roc.isChecked():
             code.append("\n# ROC Overlay Plot")

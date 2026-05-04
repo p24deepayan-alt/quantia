@@ -81,6 +81,7 @@ from quantia.ui.dialogs.clustering import (
 from quantia.ui.dialogs.pca import PCADialog
 from quantia.ui.dialogs.report import ReportDialog
 from quantia.ui.dialogs.help import UserManualDialog, GuidedWizardDialog
+from quantia.ui.dialogs.preferences import PreferencesDialog
 
 
 _ICON_PATH = resource_path("reference/logo/Quantia_icon.ico")
@@ -119,11 +120,11 @@ class MainWindow(QMainWindow):
         self._status_bar = QuantiaStatusBar(self)
         self.setStatusBar(self._status_bar)
         
-        # GPU Detection (Phase 1)
-        if is_nvidia_gpu_available():
-            self._status_bar.set_gpu_status(get_gpu_info())
-        else:
-            self._status_bar.set_gpu_status("None")
+        # Initialize compute mode from settings
+        from quantia.core.settings import SettingsManager, ComputeMode
+        settings = SettingsManager()
+        mode_text = "CPU - single core" if settings.compute_mode == ComputeMode.CPU_SINGLE else "CPU - Multi core"
+        self._status_bar.set_compute_mode(mode_text)
 
         # ── Central tab widget ───────────────────────────────────────────
         self._tabs = QTabWidget()
@@ -192,8 +193,10 @@ class MainWindow(QMainWindow):
         # Undo / Redo
         self._menu_bar.undo.connect(self._undo)
         self._menu_bar.redo.connect(self._redo)
+        self._menu_bar.preferences.connect(self._show_preferences)
         self._toolbar.undo_action.connect(self._undo)
         self._toolbar.redo_action.connect(self._redo)
+        self._toolbar.preferences.connect(self._show_preferences)
 
         self._menu_bar.descriptive_stats.connect(self._show_descriptive_stats)
         self._menu_bar.ttest.connect(self._show_ttest)
@@ -706,6 +709,7 @@ class MainWindow(QMainWindow):
 
         # Build a namespace with the current dataframe available
         import numpy as np
+        import scipy
         import scipy.stats
         
         namespace = {
@@ -715,6 +719,7 @@ class MainWindow(QMainWindow):
             "df": self._data_view.get_dataframe(),
             "show_result": _show_result,
             "show_plot": _show_plot,
+            "display_html": lambda html: _show_result("Analysis Result", html),
         }
 
         stdout_capture = io.StringIO()
@@ -1043,6 +1048,16 @@ class MainWindow(QMainWindow):
 
         dialog = ReportDialog(df, script, results_html, self)
         dialog.exec()
+
+    def _show_preferences(self) -> None:
+        """Open the Preferences dialog."""
+        dialog = PreferencesDialog(self)
+        if dialog.exec():
+            # Refresh compute mode display in status bar
+            from quantia.core.settings import SettingsManager, ComputeMode
+            settings = SettingsManager()
+            mode_text = "CPU - single core" if settings.compute_mode == ComputeMode.CPU_SINGLE else "CPU - Multi core"
+            self._status_bar.set_compute_mode(mode_text)
 
     # ── About dialog ─────────────────────────────────────────────────────
 

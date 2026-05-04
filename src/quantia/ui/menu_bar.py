@@ -32,6 +32,7 @@ class QuantiaMenuBar(QMenuBar):
     # Edit
     undo = Signal()
     redo = Signal()
+    preferences = Signal()
 
     # Data
     clean_data = Signal()
@@ -143,6 +144,8 @@ class QuantiaMenuBar(QMenuBar):
         menu = self.addMenu("&Edit")
         self._add(menu, "Undo", self.undo, "rotate-ccw", ic, QKeySequence.StandardKey.Undo)
         self._add(menu, "Redo", self.redo, "rotate-cw", ic, QKeySequence.StandardKey.Redo)
+        menu.addSeparator()
+        self._add(menu, "Preferences", self.preferences, "settings", ic)
 
     # ── View ─────────────────────────────────────────────────────────────
 

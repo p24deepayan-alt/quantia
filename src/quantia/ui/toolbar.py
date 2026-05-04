@@ -24,6 +24,7 @@ class QuantiaToolbar(QToolBar):
     import_data = Signal()
     run_script = Signal()
     toggle_theme = Signal()
+    preferences = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__("Main Toolbar", parent)
@@ -51,6 +52,11 @@ class QuantiaToolbar(QToolBar):
 
         # ── Script operations ────────────────────────────────────────────
         self._add_action("play", "#26A69A", "Run Script", "Run Script (F5)", self.run_script)
+
+        self.addSeparator()
+
+        # ── Preferences ──────────────────────────────────────────────────
+        self._add_action("settings", icon_color, "Preferences", "Preferences", self.preferences)
 
         # Toolbar ends here (removed theme toggle)
 

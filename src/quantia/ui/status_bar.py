@@ -36,10 +36,10 @@ class QuantiaStatusBar(QStatusBar):
         sep2.setStyleSheet("color: #888888;")
         self.addWidget(sep2)
 
-        # ── GPU status ───────────────────────────────────────────────────
-        self._gpu_label = QLabel("CPU only")
-        self._gpu_label.setToolTip("GPU acceleration status")
-        self.addWidget(self._gpu_label)
+        # ── Compute status ───────────────────────────────────────────────
+        self._compute_label = QLabel("CPU - single core")
+        self._compute_label.setToolTip("Compute backend status")
+        self.addWidget(self._compute_label)
 
         # ── Spacer ───────────────────────────────────────────────────────
         spacer = QWidget()
@@ -73,8 +73,8 @@ class QuantiaStatusBar(QStatusBar):
     def clear_dataset_info(self) -> None:
         self._dataset_label.setText("No data loaded")
 
-    def set_gpu_status(self, device: str) -> None:
-        self._gpu_label.setText(f"GPU: {device}")
+    def set_compute_mode(self, mode: str) -> None:
+        self._compute_label.setText(mode)
 
     def show_progress(self, value: int, maximum: int = 100, text: str = "") -> None:
         self._progress.setMaximum(maximum)

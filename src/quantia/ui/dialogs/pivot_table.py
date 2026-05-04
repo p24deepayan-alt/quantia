@@ -146,7 +146,12 @@ class PivotTableDialog(BaseAnalysisDialog):
             code.append(f"html_output.append('<h3>Pivot Table / Group By Results</h3>')")
             code.append(f"html_output.append('<p><b>Aggregation:</b> {self.cmb_agg.currentText()}</p>')")
             code.append(f"html_output.append({result_var}.to_html(classes='table table-sm table-striped'))")
-            code.append("display_html('\\n'.join(html_output))")
+            code.append("if 'display_html' in globals():")
+            code.append("    display_html('\\n'.join(html_output))")
+            code.append("elif 'show_result' in globals():")
+            code.append(f"    show_result('Pivot Table Results', '\\n'.join(html_output))")
+            code.append("else:")
+            code.append("    print('\\n'.join(html_output))")
 
         return "\n".join(code)
 
