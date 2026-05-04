@@ -20,7 +20,7 @@ a = Analysis(
     datas=[
         ('reference/logo', 'reference/logo'),
         ('reference/fonts', 'reference/fonts'),
-        ('src/quantia/theme', 'quantia/theme'),
+        ('src/quantia/theme', 'src/quantia/theme'),
     ],
     hiddenimports=hiddenimports,
     hookspath=[],

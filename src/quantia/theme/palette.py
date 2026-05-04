@@ -11,7 +11,7 @@ from pathlib import Path
 
 from quantia.utils.resources import resource_path
 
-_THEME_DIR = resource_path("quantia/theme")
+_THEME_DIR = resource_path("src/quantia/theme")
 
 
 class Theme(Enum):
