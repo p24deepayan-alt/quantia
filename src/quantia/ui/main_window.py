@@ -32,6 +32,7 @@ from quantia.theme.palette import Theme, get_stylesheet
 from quantia.ui.icons import feather_icon
 from quantia.utils.paths import get_data_dir, get_workspaces_dir, get_quantia_root, get_scripts_dir
 from quantia.utils.resources import resource_path
+from quantia.utils.gpu import is_nvidia_gpu_available, get_gpu_info, get_cuda_version
 from quantia.ui.menu_bar import QuantiaMenuBar
 from quantia.ui.toolbar import QuantiaToolbar
 from quantia.ui.status_bar import QuantiaStatusBar
@@ -114,9 +115,14 @@ class MainWindow(QMainWindow):
         self._toolbar = QuantiaToolbar(self)
         self.addToolBar(self._toolbar)
 
-        # ── Status bar ───────────────────────────────────────────────────
         self._status_bar = QuantiaStatusBar(self)
         self.setStatusBar(self._status_bar)
+        
+        # GPU Detection (Phase 1)
+        if is_nvidia_gpu_available():
+            self._status_bar.set_gpu_status(get_gpu_info())
+        else:
+            self._status_bar.set_gpu_status("None")
 
         # ── Central tab widget ───────────────────────────────────────────
         self._tabs = QTabWidget()
@@ -973,6 +979,7 @@ class MainWindow(QMainWindow):
             "<p>Version 0.1.1</p>"
             "<p>A fully offline, no-code statistical desktop application.</p>"
             "<p>Built with PySide6 (Qt6), pandas, numpy, scipy.</p>"
+            f"<p style='color:#64748B; font-size:9pt;'>GPU: {get_gpu_info()} (CUDA {get_cuda_version()})</p>"
         )
 
     def _show_user_manual(self) -> None:
