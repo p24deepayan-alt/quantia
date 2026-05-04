@@ -81,7 +81,6 @@ from quantia.ui.dialogs.clustering import (
 from quantia.ui.dialogs.pca import PCADialog
 from quantia.ui.dialogs.report import ReportDialog
 from quantia.ui.dialogs.help import UserManualDialog, GuidedWizardDialog
-from quantia.ui.dialogs.command_palette import CommandPaletteDialog
 
 
 _ICON_PATH = resource_path("reference/logo/Quantia_icon.ico")
@@ -152,8 +151,6 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self._tabs)
         
-        # ── Command Palette (Alpha) ──────────────────────────────────────
-        self._init_command_palette()
 
         # ── Left dock: Variable List ─────────────────────────────────────
         self._variable_panel = VariableListPanel(self)
@@ -253,6 +250,7 @@ class MainWindow(QMainWindow):
         self._menu_bar.export_data.connect(self._export_data)
         self._menu_bar.export_script.connect(self._export_script)
         self._menu_bar.generate_report.connect(self._generate_report)
+        self._menu_bar.toggle_theme.connect(self._toggle_theme)
 
         # Statistics menu signals
         self._toolbar.import_data.connect(self._import_any)
@@ -288,7 +286,7 @@ class MainWindow(QMainWindow):
         # 1. Update toolbar, menu bar and panels
         self._toolbar.refresh_icons(text_color)
         self._menu_bar.refresh_icons(text_color)
-        self._variable_panel.refresh_icons(text_color)
+        self._variable_panel.refresh_theme(new_theme)
         self._plot_view.refresh_theme(new_theme)
         
         # 2. Update Central Tabs Icons
@@ -320,61 +318,6 @@ class MainWindow(QMainWindow):
         # 6. Success message
         self._status_bar.showMessage(f"Switched to {new_theme.value} mode", 3000)
 
-    def _init_command_palette(self) -> None:
-        """Register keyboard shortcut and command list for the palette."""
-        self._palette_action = QAction(self)
-        self._palette_action.setShortcut(QKeySequence("Ctrl+K"))
-        self._palette_action.triggered.connect(self._show_command_palette)
-        self.addAction(self._palette_action)
-        
-        # Command Registry
-        self._commands = [
-            {"id": "import_csv", "label": "File: Import CSV", "icon": "file-plus"},
-            {"id": "save_project", "label": "File: Save Project", "icon": "save"},
-            {"id": "clean_data", "label": "Data: Clean Data / Missing Values", "icon": "wind"},
-            {"id": "linear_reg", "label": "Analysis: Linear Regression", "icon": "trending-up"},
-            {"id": "logit_reg", "label": "Analysis: Logistic Regression", "icon": "activity"},
-            {"id": "pca", "label": "Analysis: Principal Component Analysis (PCA)", "icon": "layers"},
-            {"id": "kmeans", "label": "Analysis: K-Means Clustering", "icon": "target"},
-            {"id": "t_test", "label": "Analysis: T-Test (Compare Means)", "icon": "divide"},
-            {"id": "anova", "label": "Analysis: ANOVA / Model Comparison", "icon": "grid"},
-            {"id": "plot_hist", "label": "Plot: Histogram", "icon": "bar-chart-2"},
-            {"id": "plot_scatter", "label": "Plot: Scatter Plot", "icon": "maximize-2"},
-            {"id": "toggle_theme", "label": "UI: Toggle Light/Dark Mode", "icon": "moon"},
-            {"id": "show_manual", "label": "Help: Open User Manual", "icon": "book-open"},
-        ]
-
-    def _show_command_palette(self) -> None:
-        """Open the command palette in the center of the window."""
-        dialog = CommandPaletteDialog(self._commands, self)
-        dialog.command_triggered.connect(self._handle_palette_command)
-        
-        # Position in center
-        geom = self.geometry()
-        x = geom.x() + (geom.width() - dialog.width()) // 2
-        y = geom.y() + 100 # Near top
-        dialog.move(x, y)
-        dialog.exec()
-
-    def _handle_palette_command(self, cmd_id: str) -> None:
-        """Route the selected command to its handler."""
-        handlers = {
-            "import_csv": self._import_csv,
-            "save_project": self._save_project,
-            "clean_data": self._open_clean_dialog,
-            "linear_reg": self._open_regression_dialog,
-            "logit_reg": self._open_logit_dialog,
-            "pca": self._open_pca_dialog,
-            "kmeans": self._open_kmeans_dialog,
-            "t_test": self._open_ttest_dialog,
-            "anova": self._open_anova_dialog,
-            "plot_hist": self._open_histogram_dialog,
-            "plot_scatter": self._open_scatter_dialog,
-            "toggle_theme": self._toggle_theme,
-            "show_manual": self._show_user_manual,
-        }
-        if cmd_id in handlers:
-            handlers[cmd_id]()
 
     def _update_window_title(self) -> None:
         if self._current_project_path:

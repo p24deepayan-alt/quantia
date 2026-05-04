@@ -52,13 +52,7 @@ class QuantiaToolbar(QToolBar):
         # ── Script operations ────────────────────────────────────────────
         self._add_action("play", "#26A69A", "Run Script", "Run Script (F5)", self.run_script)
 
-        # ── Theme Toggle (Far Right) ─────────────────────────────────────
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        spacer.setStyleSheet("background: transparent;")
-        self.addWidget(spacer)
-        
-        self._add_action("moon", icon_color, "Toggle Theme", "Switch Light/Dark Mode", self.toggle_theme)
+        # Toolbar ends here (removed theme toggle)
 
     def refresh_icons(self, color: str) -> None:
         """Update all toolbar icons to a new colour."""
@@ -69,12 +63,6 @@ class QuantiaToolbar(QToolBar):
             
             if name == "play":
                 icon_color = "#26A69A"
-            elif name in ["moon", "sun"]:
-                # Swap moon/sun icons depending on theme
-                is_dark = color == "#E8EBF0" # text_primary in dark theme
-                name = "sun" if is_dark else "moon"
-                action.setProperty("icon_name", name)
-                icon_color = "#FFC107" if is_dark else color # Amber for sun
             else:
                 icon_color = color
                 

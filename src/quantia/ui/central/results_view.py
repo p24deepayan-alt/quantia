@@ -7,6 +7,7 @@ supporting both rich text strings and pandas DataFrames.
 from __future__ import annotations
 
 import pandas as pd
+from typing import Any
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (

@@ -11,6 +11,7 @@ Dockable bottom panel showing script output with coloured messages:
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor, QFont

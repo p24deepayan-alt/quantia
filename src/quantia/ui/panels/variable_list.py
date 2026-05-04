@@ -127,8 +127,32 @@ class VariableListPanel(QDockWidget):
 
         self._summary.setText(f"{len(columns_info)} variables")
 
+    def refresh_theme(self, theme: Any) -> None:
+        """Update colors and stabilize layout for the current theme."""
+        from quantia.theme.palette import PALETTE
+        p = PALETTE[theme]
+        
+        self._chrome_icon_color = p["text_primary"]
+        
+        # Stabilize search bar
+        self._search.setStyleSheet(f"""
+            background-color: {p['surface_primary']};
+            color: {p['text_primary']};
+            border: 1px solid {p['border']};
+            border-bottom: none;
+            padding: 4px 10px;
+        """)
+        self._search.setFixedHeight(34)
+        
+        # Update summary label
+        self._summary.setStyleSheet(f"padding: 4px 8px; font-size: 11px; color: {p['text_secondary']}; border-top: 1px solid {p['border']};")
+        self._summary.setFixedHeight(24)
+        
+        # Stabilize tree headers
+        self._tree.header().setFixedHeight(30)
+
     def refresh_icons(self, color: str) -> None:
-        """Update the icon colour used for chrome elements (context menu)."""
+        """Deprecated: Use refresh_theme instead."""
         self._chrome_icon_color = color
 
     def clear_variables(self) -> None:

@@ -63,8 +63,8 @@ class DataViewWidget(QWidget):
         layout.setSpacing(0)
 
         # ── Info bar (above table, like Excel's formula bar area) ─────────
-        info_bar = QWidget()
-        info_layout = QHBoxLayout(info_bar)
+        self._info_bar = QWidget()
+        info_layout = QHBoxLayout(self._info_bar)
         info_layout.setContentsMargins(8, 4, 8, 4)
         info_layout.setSpacing(8)
 
@@ -88,7 +88,7 @@ class DataViewWidget(QWidget):
         
         info_layout.addWidget(QLabel()) # Spacer
 
-        layout.addWidget(info_bar)
+        layout.addWidget(self._info_bar)
 
         # ── Table view ───────────────────────────────────────────────────
         self._model = PandasTableModel()
@@ -250,6 +250,12 @@ class DataViewWidget(QWidget):
         for action in self._search_bar.actions():
             self._search_bar.removeAction(action)
         self._search_bar.addAction(feather_icon("search", p["text_secondary"], 16), QLineEdit.ActionPosition.LeadingPosition)
+        
+        # Enforce exact heights to prevent jumping
+        self._info_bar.setFixedHeight(38)
+        self._cell_ref.setFixedHeight(30)
+        self._cell_value.setFixedHeight(30)
+        self._search_bar.setFixedHeight(30)
         
         # Update table alternating colors
         self._table.setAlternatingRowColors(True)

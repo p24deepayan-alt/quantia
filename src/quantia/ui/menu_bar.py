@@ -90,6 +90,9 @@ class QuantiaMenuBar(QMenuBar):
     bar_chart = Signal()
     heatmap = Signal()
 
+    # View
+    toggle_theme = Signal()
+
     # Report
     generate_report = Signal()
     export_script = Signal()
@@ -104,6 +107,7 @@ class QuantiaMenuBar(QMenuBar):
         ic = "#2D3E50"  # icon colour for light theme
         self._build_file_menu(ic)
         self._build_edit_menu(ic)
+        self._build_view_menu(ic)
         self._build_data_menu(ic)
         self._build_statistics_menu(ic)
         self._build_ml_menu(ic)
@@ -139,6 +143,13 @@ class QuantiaMenuBar(QMenuBar):
         menu = self.addMenu("&Edit")
         self._add(menu, "Undo", self.undo, "rotate-ccw", ic, QKeySequence.StandardKey.Undo)
         self._add(menu, "Redo", self.redo, "rotate-cw", ic, QKeySequence.StandardKey.Redo)
+
+    # ── View ─────────────────────────────────────────────────────────────
+
+    def _build_view_menu(self, ic: str) -> None:
+        menu = self.addMenu("&View")
+        self._add(menu, "Toggle Light/Dark Mode", self.toggle_theme, "moon", ic)
+        menu.actions()[0].setProperty("icon_name", "moon") # For refresh_icons
 
     # ── Data ─────────────────────────────────────────────────────────────
 
