@@ -23,7 +23,7 @@ class QuantiaApp(QApplication):
 
         # ── Application metadata ─────────────────────────────────────────
         self.setApplicationName("Quantia")
-        self.setApplicationVersion("0.1")
+        self.setApplicationVersion("0.1.1")
         self.setOrganizationName("Quantia")
 
         # ── Load fonts ───────────────────────────────────────────────────

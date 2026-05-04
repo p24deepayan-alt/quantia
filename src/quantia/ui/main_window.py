@@ -970,7 +970,7 @@ class MainWindow(QMainWindow):
             "About Quantia",
             "<h2>Quantia</h2>"
 
-            "<p>Version 0.1</p>"
+            "<p>Version 0.1.1</p>"
             "<p>A fully offline, no-code statistical desktop application.</p>"
             "<p>Built with PySide6 (Qt6), pandas, numpy, scipy.</p>"
         )
