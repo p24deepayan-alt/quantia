@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 from quantia.theme.palette import Theme, get_stylesheet
 from quantia.ui.icons import feather_icon
 from quantia.utils.paths import get_data_dir, get_workspaces_dir, get_quantia_root, get_scripts_dir
+from quantia.utils.resources import resource_path
 from quantia.ui.menu_bar import QuantiaMenuBar
 from quantia.ui.toolbar import QuantiaToolbar
 from quantia.ui.status_bar import QuantiaStatusBar
