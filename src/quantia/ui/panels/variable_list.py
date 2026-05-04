@@ -127,7 +127,7 @@ class VariableListPanel(QDockWidget):
 
         self._summary.setText(f"{len(columns_info)} variables")
 
-    def set_icon_color(self, color: str) -> None:
+    def refresh_icons(self, color: str) -> None:
         """Update the icon colour used for chrome elements (context menu)."""
         self._chrome_icon_color = color
 

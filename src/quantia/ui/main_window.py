@@ -113,6 +113,7 @@ class MainWindow(QMainWindow):
 
         # ── Toolbar ──────────────────────────────────────────────────────
         self._toolbar = QuantiaToolbar(self)
+        self._toolbar.toggle_theme.connect(self._toggle_theme)
         self.addToolBar(self._toolbar)
 
         self._status_bar = QuantiaStatusBar(self)
@@ -263,6 +264,38 @@ class MainWindow(QMainWindow):
         self._script_editor.run_selection.connect(self._execute_code)
 
     # ── Project Management ───────────────────────────────────────────────
+
+    def _toggle_theme(self) -> None:
+        """Switch between Light and Dark modes and refresh all components."""
+        from PySide6.QtWidgets import QApplication
+        from quantia.app import QuantiaApp
+        from quantia.theme.palette import PALETTE
+        
+        app = QApplication.instance()
+        if not isinstance(app, QuantiaApp):
+            return
+            
+        new_theme = app.toggle_theme()
+        palette = PALETTE[new_theme]
+        text_color = palette["text_primary"]
+        
+        # 1. Update toolbar and panels
+        self._toolbar.refresh_icons(text_color)
+        self._variable_panel.refresh_icons(text_color)
+        self._plot_view.set_icon_color(text_color)
+        
+        # 2. Update Matplotlib global style
+        import matplotlib.pyplot as plt
+        if new_theme == Theme.DARK:
+            plt.style.use('dark_background')
+        else:
+            plt.style.use('default')
+            
+        # 3. Update Results View
+        self._results_view.refresh_theme()
+        
+        # 4. Success message
+        self._status_bar.showMessage(f"Switched to {new_theme.value} mode", 3000)
 
     def _update_window_title(self) -> None:
         if self._current_project_path:

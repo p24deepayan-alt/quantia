@@ -23,6 +23,7 @@ class QuantiaToolbar(QToolBar):
     redo_action = Signal()
     import_data = Signal()
     run_script = Signal()
+    toggle_theme = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__("Main Toolbar", parent)
@@ -51,14 +52,32 @@ class QuantiaToolbar(QToolBar):
         # ── Script operations ────────────────────────────────────────────
         self._add_action("play", "#26A69A", "Run Script", "Run Script (F5)", self.run_script)
 
+        # ── Theme Toggle (Far Right) ─────────────────────────────────────
+        spacer = QWidget()
+        spacer.setSizePolicy(QWidget.sizePolicy().Expanding, QWidget.sizePolicy().Preferred)
+        self.addWidget(spacer)
+        
+        self._add_action("moon", icon_color, "Toggle Theme", "Switch Light/Dark Mode", self.toggle_theme)
+
     def refresh_icons(self, color: str) -> None:
         """Update all toolbar icons to a new colour."""
         for action in self.actions():
             name = action.property("icon_name")
-            if name:
-                # Use special teal for play button if it was play
-                icon_color = "#26A69A" if name == "play" else color
-                action.setIcon(feather_icon(name, icon_color))
+            if not name:
+                continue
+            
+            if name == "play":
+                icon_color = "#26A69A"
+            elif name in ["moon", "sun"]:
+                # Swap moon/sun icons depending on theme
+                is_dark = color == "#E8EBF0" # text_primary in dark theme
+                name = "sun" if is_dark else "moon"
+                action.setProperty("icon_name", name)
+                icon_color = "#FFC107" if is_dark else color # Amber for sun
+            else:
+                icon_color = color
+                
+            action.setIcon(feather_icon(name, icon_color))
 
     def _add_action(self, icon_name: str, color: str, text: str, tip: str, signal: Signal) -> None:
         """Helper to add a toolbar action and store its icon name."""

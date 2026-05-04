@@ -17,6 +17,7 @@ class QuantiaApp(QApplication):
 
     def __init__(self, argv: list[str] | None = None) -> None:
         super().__init__(argv or sys.argv)
+        self._current_theme = Theme.LIGHT
 
         # ── Base style ───────────────────────────────────────────────────
         self.setStyle("Fusion")
@@ -42,6 +43,18 @@ class QuantiaApp(QApplication):
         pass
 
     def apply_theme(self, theme: Theme) -> None:
-        """Apply a theme stylesheet globally."""
+        """Apply a QSS theme and update global state."""
+        self._current_theme = theme
         qss = get_stylesheet(theme)
-        self.setStyleSheet(qss)
+        if qss:
+            self.setStyleSheet(qss)
+        
+    def toggle_theme(self) -> Theme:
+        """Switch between Light and Dark themes and return the new theme."""
+        new_theme = Theme.DARK if self._current_theme == Theme.LIGHT else Theme.LIGHT
+        self.apply_theme(new_theme)
+        return new_theme
+
+    def get_current_theme(self) -> Theme:
+        """Return the currently active theme."""
+        return self._current_theme

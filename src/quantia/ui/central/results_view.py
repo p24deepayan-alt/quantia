@@ -64,18 +64,48 @@ class ResultsViewWidget(QWidget):
             widget = self._create_text_view(str(content))
             icon_name = "file-text"
 
+        # Store the original content for theme refreshing
+        widget.setProperty("raw_content", content)
+
         idx = self._tabs.addTab(widget, feather_icon(icon_name, self._chrome_icon_color, 14), title)
         self._tabs.setCurrentIndex(idx)
+
+    def refresh_theme(self) -> None:
+        """Update the icon colour for toolbar and existing tabs."""
+        from PySide6.QtWidgets import QApplication
+        from quantia.app import QuantiaApp
+        from quantia.theme.palette import PALETTE, Theme
+        
+        app = QApplication.instance()
+        if not isinstance(app, QuantiaApp): return
+        
+        theme = app.get_current_theme()
+        palette = PALETTE[theme]
+        color = palette["text_primary"]
+        
+        self.set_icon_color(color)
+        
+        # Update existing tabs content and background
+        for i in range(self._tabs.count()):
+            widget = self._tabs.widget(i)
+            raw = widget.property("raw_content")
+            
+            if isinstance(widget, QTextBrowser):
+                bg = palette["bg_card"]
+                widget.setStyleSheet(f"QTextBrowser {{ background-color: {bg}; padding: 20px; border: none; border-radius: 8px; }}")
+                # Re-render with new theme
+                self._update_text_browser_content(widget, str(raw), theme)
+            elif isinstance(widget, QTableView):
+                bg = palette["bg_secondary"]
+                widget.setStyleSheet(f"QTableView {{ background-color: {bg}; border: none; }}")
 
     def set_icon_color(self, color: str) -> None:
         """Update the icon colour for toolbar and existing tabs."""
         self._chrome_icon_color = color
-        # btn_clear uses red, so we leave it.
         
         # Update existing tabs
         for i in range(self._tabs.count()):
             widget = self._tabs.widget(i)
-            # We don't store the icon_name, but we can guess from the widget type
             if isinstance(widget, QTableView):
                 icon_name = "grid"
             else:
@@ -93,38 +123,56 @@ class ResultsViewWidget(QWidget):
         table.setSortingEnabled(True)
         table.horizontalHeader().setStretchLastSection(True)
 
-        # Apply Shift+Scroll horizontal scrolling
         filter_obj = ShiftScrollFilter(table)
         table.viewport().installEventFilter(filter_obj)
-        # Store a reference so it isn't garbage collected
         table._shift_scroll_filter = filter_obj
         
-        # Style to differentiate from main data view
-        table.setStyleSheet("QTableView { background-color: #FAFAFA; }")
+        from PySide6.QtWidgets import QApplication
+        from quantia.app import QuantiaApp
+        from quantia.theme.palette import PALETTE
+        app = QApplication.instance()
+        theme = app.get_current_theme() if isinstance(app, QuantiaApp) else Theme.LIGHT
+        bg = PALETTE[theme]["bg_secondary"]
+        table.setStyleSheet(f"QTableView {{ background-color: {bg}; border: none; }}")
         return table
 
     def _create_text_view(self, text: str) -> QTextBrowser:
         """Creates a readonly text view for strings (like summaries)."""
         browser = QTextBrowser()
-        browser.setStyleSheet("QTextBrowser { background-color: #FFFFFF; padding: 12px; border: none; }")
+        
+        from PySide6.QtWidgets import QApplication
+        from quantia.app import QuantiaApp
+        from quantia.theme.palette import PALETTE
+        app = QApplication.instance()
+        theme = app.get_current_theme() if isinstance(app, QuantiaApp) else Theme.LIGHT
+        bg = PALETTE[theme]["bg_card"]
+        
+        browser.setStyleSheet(f"QTextBrowser {{ background-color: {bg}; padding: 20px; border: none; border-radius: 8px; }}")
+        self._update_text_browser_content(browser, text, theme)
+        return browser
+
+    def _update_text_browser_content(self, browser: QTextBrowser, text: str, theme: Theme) -> None:
+        """Render content into the browser with theme-aware CSS."""
+        from quantia.theme.palette import PALETTE
+        p = PALETTE[theme]
         
         if "<table" in text.lower() or "<html" in text.lower() or "<div" in text.lower():
-            base_css = """<style>
-                body { font-family: 'Segoe UI', sans-serif; color: #1E293B; background: #FFFFFF; }
-                table { border-collapse: collapse; width: 100%; }
-                .simpletable { margin-bottom: 12px; }
-                .simpletable td, .simpletable th { padding: 5px 10px; font-family: Consolas, monospace; font-size: 10pt; }
-                .simpletable th { border-bottom: 2px solid #CBD5E1; color: #475569; font-weight: 700; }
-                .simpletable td { border-bottom: 1px solid #F1F5F9; color: #334155; }
+            # Premium Card Styling
+            base_css = f"""<style>
+                body {{ font-family: 'Segoe UI', sans-serif; color: {p['text_primary']}; background: transparent; line-height: 1.5; }}
+                h2, h3 {{ color: {p['brand_primary']}; margin-top: 0; }}
+                table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; background: {p['bg_secondary']}; border-radius: 6px; overflow: hidden; }}
+                th {{ padding: 10px 12px; font-size: 9pt; font-weight: 700; color: {p['text_secondary']}; border-bottom: 2px solid {p['border_light']}; text-align: left; background: {p['bg_secondary']}; }}
+                td {{ padding: 8px 12px; border-bottom: 1px solid {p['border_light']}; font-family: 'Fira Code', 'Consolas', monospace; font-size: 10pt; color: {p['text_primary']}; }}
+                .simpletable th {{ background: {p['bg_secondary']}; }}
+                .highlight {{ color: {p['brand_primary']}; font-weight: 700; }}
             </style>"""
             browser.setHtml(base_css + text)
         else:
-            font = QFont("Consolas", 10)
-            font.setStyleHint(QFont.StyleHint.Monospace)
+            font = QFont("Fira Code", 10)
+            if font.family() != "Fira Code": font = QFont("Consolas", 10)
             browser.setFont(font)
             browser.setPlainText(text)
-            
-        return browser
 
     def _close_tab(self, index: int) -> None:
         self._tabs.removeTab(index)
