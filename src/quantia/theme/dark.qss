@@ -127,6 +127,10 @@ QStatusBar QLabel {
     font-size: 11px;
 }
 
+QLabel {
+    color: #E8EBF0;
+}
+
 /* ── Dock Widgets ────────────────────────────────────────────────────────── */
 
 QDockWidget {
@@ -347,8 +351,8 @@ QPushButton {
     border-radius: 4px;
     padding: 6px 16px;
     min-height: 20px;
-    color: #E8EBF0;
-    font-weight: 500;
+    color: #FFFFFF;
+    font-weight: 600;
 }
 
 QPushButton:hover {

@@ -77,6 +77,17 @@ class DataViewWidget(QWidget):
         self._cell_value.setPlaceholderText("Select a cell to view its value")
         info_layout.addWidget(self._cell_value)
 
+        # ── Quick Search ────────────────────────────────────────────────
+        self._search_bar = QLineEdit()
+        self._search_bar.setPlaceholderText("Search rows...")
+        self._search_bar.setFixedWidth(250)
+        self._search_bar.setClearButtonEnabled(True)
+        self._search_bar.addAction(feather_icon("search", "#94A3B8", 14), QLineEdit.ActionPosition.LeadingPosition)
+        self._search_bar.textChanged.connect(self._on_search_changed)
+        info_layout.addWidget(self._search_bar)
+        
+        info_layout.addWidget(QLabel()) # Spacer
+
         layout.addWidget(info_bar)
 
         # ── Table view ───────────────────────────────────────────────────
@@ -109,12 +120,12 @@ class DataViewWidget(QWidget):
 
         # Vertical header (row numbers)
         v_header = self._table.verticalHeader()
-        v_header.setDefaultSectionSize(24)
         v_header.setMinimumWidth(50)
 
         layout.addWidget(self._table)
         
         self._chrome_icon_color = "#2D3E50"
+        self.refresh_theme() # Apply initial theme colors
 
     # ── Public API ───────────────────────────────────────────────────────
 
@@ -187,6 +198,62 @@ class DataViewWidget(QWidget):
 
         menu.exec(self._table.viewport().mapToGlobal(pos))
 
+    def refresh_theme(self) -> None:
+        """Update colors for the current theme."""
+        from PySide6.QtWidgets import QApplication
+        from quantia.app import QuantiaApp
+        from quantia.theme.palette import PALETTE, Theme
+        
+        app = QApplication.instance()
+        theme = app.get_current_theme() if isinstance(app, QuantiaApp) else Theme.LIGHT
+        p = PALETTE[theme]
+        
+        self._chrome_icon_color = p["text_primary"]
+        
+        # Update Info Bar background
+        bg = p["surface_secondary"]
+        self.setStyleSheet(f"background-color: {p['surface_primary']};")
+        # Structural stabilization + colors
+        search_style = f"""
+            background-color: {p['surface_tertiary']}; 
+            color: {p['text_primary']}; 
+            border: 1px solid {p['border']};
+            border-radius: 6px;
+            padding-left: 28px;
+            padding-right: 12px;
+            height: 30px;
+        """
+        self._search_bar.setStyleSheet(search_style)
+        
+        ref_style = f"""
+            font-weight: 600; 
+            color: {p['brand_primary'] if 'brand_primary' in p else p['accent']};
+            background-color: {p['surface_tertiary']};
+            border: 1px solid {p['border']};
+            border-radius: 6px;
+            padding: 0px 12px;
+            height: 30px;
+        """
+        self._cell_ref.setStyleSheet(ref_style)
+        
+        # Stabilize cell value as well
+        self._cell_value.setStyleSheet(f"""
+            background-color: {p['surface_tertiary']}; 
+            color: {p['text_primary']}; 
+            border: 1px solid {p['border']};
+            border-radius: 6px;
+            padding: 0px 12px;
+            height: 30px;
+        """)
+        
+        # Update Search Icon
+        for action in self._search_bar.actions():
+            self._search_bar.removeAction(action)
+        self._search_bar.addAction(feather_icon("search", p["text_secondary"], 16), QLineEdit.ActionPosition.LeadingPosition)
+        
+        # Update table alternating colors
+        self._table.setAlternatingRowColors(True)
+        
     def set_icon_color(self, color: str) -> None:
         """Update the icon colour for chrome elements (context menu)."""
         self._chrome_icon_color = color
@@ -207,3 +274,7 @@ class DataViewWidget(QWidget):
         clipboard = QApplication.clipboard()
         if clipboard is not None:
             clipboard.setText(str(value) if pd.notna(value) else "")
+
+    def _on_search_changed(self, text: str) -> None:
+        """Filter the table rows based on search text."""
+        self._proxy.setFilterFixedString(text)

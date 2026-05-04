@@ -79,6 +79,13 @@ class PythonHighlighter(QSyntaxHighlighter):
         self._rules: list[tuple[re.Pattern, QTextCharFormat]] = []
         self._build_rules()
 
+    def set_dark_mode(self, dark: bool) -> None:
+        """Update colors for dark or light mode and re-highlight."""
+        self._dark = dark
+        self._rules = []  # Clear old rules
+        self._build_rules()
+        self.rehighlight()
+
     def _build_rules(self) -> None:
         if self._dark:
             kw_color = "#C792EA"       # purple — keywords
@@ -191,8 +198,22 @@ class CodeEditor(QPlainTextEdit):
         self._highlight_current_line()
 
     def set_dark_mode(self, dark: bool) -> None:
-        """Switch syntax colours for dark/light theme."""
-        self._highlighter = PythonHighlighter(self.document(), dark=dark)
+        """Switch syntax colours and editor UI for dark/light theme."""
+        self._highlighter.set_dark_mode(dark)
+        
+        # Update colors from palette
+        from quantia.theme.palette import PALETTE, Theme
+        p = PALETTE[Theme.DARK if dark else Theme.LIGHT]
+        
+        # Selection highlight
+        self._current_line_color = QColor(p["surface_tertiary"])
+        
+        # Line number area colors
+        self._line_area_bg = QColor(p["surface_secondary"])
+        self._line_number_color = QColor(p["text_secondary"])
+        
+        self._update_line_area_width(0)
+        self._highlight_current_line()
 
     # ── Line number area ─────────────────────────────────────────────────
 
@@ -221,7 +242,8 @@ class CodeEditor(QPlainTextEdit):
 
     def paint_line_numbers(self, event) -> None:
         painter = QPainter(self._line_area)
-        painter.fillRect(event.rect(), QColor("#E8EBF0"))
+        bg_color = getattr(self, "_line_area_bg", QColor("#E8EBF0"))
+        painter.fillRect(event.rect(), bg_color)
 
         block = self.firstVisibleBlock()
         block_number = block.blockNumber()
@@ -231,7 +253,7 @@ class CodeEditor(QPlainTextEdit):
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
                 number = str(block_number + 1)
-                painter.setPen(QColor("#9CA3AF"))
+                painter.setPen(getattr(self, "_line_number_color", QColor("#9CA3AF")))
                 painter.drawText(
                     0, top,
                     self._line_area.width() - 4, self.fontMetrics().height(),
@@ -250,7 +272,7 @@ class CodeEditor(QPlainTextEdit):
         selections = []
         if not self.isReadOnly():
             selection = QTextEdit.ExtraSelection()
-            line_color = QColor("#F0F2F5")
+            line_color = getattr(self, "_current_line_color", QColor("#F0F2F5"))
             selection.format.setBackground(line_color)
             selection.format.setProperty(QTextCharFormat.Property.FullWidthSelection, True)
             selection.cursor = self.textCursor()
@@ -371,6 +393,29 @@ class ScriptEditorWidget(QWidget):
 
     def set_dark_mode(self, dark: bool) -> None:
         self._editor.set_dark_mode(dark)
+
+    def refresh_theme(self, theme: Any) -> None:
+        """Update editor colors for the current theme."""
+        from quantia.theme.palette import Theme, PALETTE
+        is_dark = (theme == Theme.DARK)
+        self._editor.set_dark_mode(is_dark)
+        
+        # Sync palette colors for labels and toolbar
+        p = PALETTE[theme]
+        self._pos_label.setStyleSheet(f"font-size: 11px; color: {p['text_secondary']};")
+        
+        # Refresh toolbar icons
+        ic = p["text_secondary"]
+        for btn in self.findChildren(QPushButton):
+            tt = btn.toolTip() or ""
+            if "Run All" in tt:
+                btn.setIcon(feather_icon("play", "#26A69A", 16))
+            elif "Run Selection" in tt:
+                btn.setIcon(feather_icon("play-circle", "#009688", 16))
+            elif "Save" in tt:
+                btn.setIcon(feather_icon("save", ic, 16))
+            elif "Clear" in tt:
+                btn.setIcon(feather_icon("trash-2", ic, 16))
 
     def set_text(self, text: str) -> None:
         self._editor.setPlainText(text)

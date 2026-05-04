@@ -17,7 +17,7 @@ import zipfile
 import io
 
 import pandas as pd
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QTimer
 from PySide6.QtGui import QIcon, QKeySequence, QAction
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 
 from quantia.theme.palette import Theme, get_stylesheet
 from quantia.ui.icons import feather_icon
-from quantia.utils.paths import get_data_dir, get_workspaces_dir, get_quantia_root, get_scripts_dir
+from quantia.utils.paths import get_exports_dir, get_workspaces_dir, get_quantia_root, get_scripts_dir
 from quantia.utils.resources import resource_path
 from quantia.utils.gpu import is_nvidia_gpu_available, get_gpu_info, get_cuda_version
 from quantia.ui.menu_bar import QuantiaMenuBar
@@ -81,6 +81,7 @@ from quantia.ui.dialogs.clustering import (
 from quantia.ui.dialogs.pca import PCADialog
 from quantia.ui.dialogs.report import ReportDialog
 from quantia.ui.dialogs.help import UserManualDialog, GuidedWizardDialog
+from quantia.ui.dialogs.command_palette import CommandPaletteDialog
 
 
 _ICON_PATH = resource_path("reference/logo/Quantia_icon.ico")
@@ -146,15 +147,20 @@ class MainWindow(QMainWindow):
         self._workflow_view = WorkflowTab()
         self._tabs.addTab(self._workflow_view, feather_icon("share-2", "#000000", 14), "Workflow")
 
-        # Plots tab
         self._plot_view = PlotViewWidget()
         self._tabs.addTab(self._plot_view, feather_icon("pie-chart", "#000000", 14), "Plots")
 
         self.setCentralWidget(self._tabs)
+        
+        # ── Command Palette (Alpha) ──────────────────────────────────────
+        self._init_command_palette()
 
         # ── Left dock: Variable List ─────────────────────────────────────
         self._variable_panel = VariableListPanel(self)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self._variable_panel)
+
+        # ── Auto-save Heartbeat ──────────────────────────────────────────
+        self._init_autosave()
 
         # ── Bottom dock: Console ─────────────────────────────────────────
         self._console = ConsolePanel(self)
@@ -279,23 +285,96 @@ class MainWindow(QMainWindow):
         palette = PALETTE[new_theme]
         text_color = palette["text_primary"]
         
-        # 1. Update toolbar and panels
+        # 1. Update toolbar, menu bar and panels
         self._toolbar.refresh_icons(text_color)
+        self._menu_bar.refresh_icons(text_color)
         self._variable_panel.refresh_icons(text_color)
-        self._plot_view.set_icon_color(text_color)
+        self._plot_view.refresh_theme(new_theme)
         
-        # 2. Update Matplotlib global style
+        # 2. Update Central Tabs Icons
+        self._tabs.setTabIcon(0, feather_icon("grid", text_color, 14))
+        self._tabs.setTabIcon(1, feather_icon("code", text_color, 14))
+        self._tabs.setTabIcon(2, feather_icon("list", text_color, 14))
+        self._tabs.setTabIcon(3, feather_icon("share-2", text_color, 14))
+        self._tabs.setTabIcon(4, feather_icon("pie-chart", text_color, 14))
+
+        # 3. Update Matplotlib global style
         import matplotlib.pyplot as plt
         if new_theme == Theme.DARK:
             plt.style.use('dark_background')
         else:
             plt.style.use('default')
             
-        # 3. Update Results View
+        # 4. Update Views & Editors
         self._results_view.refresh_theme()
+        self._data_view.refresh_theme()
+        self._script_editor.refresh_theme(new_theme)
+        if hasattr(self._workflow_view, "refresh_theme"):
+            self._workflow_view.refresh_theme(new_theme)
+        if hasattr(self._console, "refresh_theme"):
+            self._console.refresh_theme(new_theme)
+            
+        # 5. Explicitly update window stylesheet to force refresh
+        self.setStyleSheet(get_stylesheet(new_theme))
         
-        # 4. Success message
+        # 6. Success message
         self._status_bar.showMessage(f"Switched to {new_theme.value} mode", 3000)
+
+    def _init_command_palette(self) -> None:
+        """Register keyboard shortcut and command list for the palette."""
+        self._palette_action = QAction(self)
+        self._palette_action.setShortcut(QKeySequence("Ctrl+K"))
+        self._palette_action.triggered.connect(self._show_command_palette)
+        self.addAction(self._palette_action)
+        
+        # Command Registry
+        self._commands = [
+            {"id": "import_csv", "label": "File: Import CSV", "icon": "file-plus"},
+            {"id": "save_project", "label": "File: Save Project", "icon": "save"},
+            {"id": "clean_data", "label": "Data: Clean Data / Missing Values", "icon": "wind"},
+            {"id": "linear_reg", "label": "Analysis: Linear Regression", "icon": "trending-up"},
+            {"id": "logit_reg", "label": "Analysis: Logistic Regression", "icon": "activity"},
+            {"id": "pca", "label": "Analysis: Principal Component Analysis (PCA)", "icon": "layers"},
+            {"id": "kmeans", "label": "Analysis: K-Means Clustering", "icon": "target"},
+            {"id": "t_test", "label": "Analysis: T-Test (Compare Means)", "icon": "divide"},
+            {"id": "anova", "label": "Analysis: ANOVA / Model Comparison", "icon": "grid"},
+            {"id": "plot_hist", "label": "Plot: Histogram", "icon": "bar-chart-2"},
+            {"id": "plot_scatter", "label": "Plot: Scatter Plot", "icon": "maximize-2"},
+            {"id": "toggle_theme", "label": "UI: Toggle Light/Dark Mode", "icon": "moon"},
+            {"id": "show_manual", "label": "Help: Open User Manual", "icon": "book-open"},
+        ]
+
+    def _show_command_palette(self) -> None:
+        """Open the command palette in the center of the window."""
+        dialog = CommandPaletteDialog(self._commands, self)
+        dialog.command_triggered.connect(self._handle_palette_command)
+        
+        # Position in center
+        geom = self.geometry()
+        x = geom.x() + (geom.width() - dialog.width()) // 2
+        y = geom.y() + 100 # Near top
+        dialog.move(x, y)
+        dialog.exec()
+
+    def _handle_palette_command(self, cmd_id: str) -> None:
+        """Route the selected command to its handler."""
+        handlers = {
+            "import_csv": self._import_csv,
+            "save_project": self._save_project,
+            "clean_data": self._open_clean_dialog,
+            "linear_reg": self._open_regression_dialog,
+            "logit_reg": self._open_logit_dialog,
+            "pca": self._open_pca_dialog,
+            "kmeans": self._open_kmeans_dialog,
+            "t_test": self._open_ttest_dialog,
+            "anova": self._open_anova_dialog,
+            "plot_hist": self._open_histogram_dialog,
+            "plot_scatter": self._open_scatter_dialog,
+            "toggle_theme": self._toggle_theme,
+            "show_manual": self._show_user_manual,
+        }
+        if cmd_id in handlers:
+            handlers[cmd_id]()
 
     def _update_window_title(self) -> None:
         if self._current_project_path:
@@ -310,6 +389,26 @@ class MainWindow(QMainWindow):
         else:
             self._write_project_file(self._current_project_path)
 
+    def _init_autosave(self) -> None:
+        """Initialize the background auto-save timer."""
+        self._autosave_timer = QTimer(self)
+        self._autosave_timer.timeout.connect(self._auto_save_heartbeat)
+        # 5 minutes = 300,000 ms. Set to 1 minute for testing/quick protection?
+        # Let's stick to 5 mins as per plan.
+        self._autosave_timer.start(300000)
+
+    def _auto_save_heartbeat(self) -> None:
+        """Silently save the current state to a temporary file."""
+        if self._data_view.model.dataframe.empty:
+            return
+            
+        temp_path = get_workspaces_dir() / ".temp.quantia"
+        try:
+            self._write_project_file(str(temp_path), is_autosave=True)
+            self._status_bar.showMessage("Auto-saved workspace", 2000)
+        except Exception:
+            pass
+
     def _save_project_as(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
             self, "Save Project As", str(get_workspaces_dir()), "Quantia Project (*.quantia)"
@@ -319,7 +418,7 @@ class MainWindow(QMainWindow):
                 path += ".quantia"
             self._write_project_file(path)
 
-    def _write_project_file(self, path: str) -> None:
+    def _write_project_file(self, path: str, is_autosave: bool = False) -> None:
         try:
             with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
                 # Save Dataframe
@@ -344,9 +443,10 @@ class MainWindow(QMainWindow):
                     df.to_parquet(df_bytes)
                     zf.writestr(f"redo_{i}.parquet", df_bytes.getvalue())
 
-            self._current_project_path = path
-            self._update_window_title()
-            self._console.write_success(f"Project saved to {path}")
+            if not is_autosave:
+                self._current_project_path = path
+                self._update_window_title()
+                self._console.write_success(f"Project saved to {path}")
         except Exception as e:
             self._console.write_error(f"Failed to save project: {e}")
             QMessageBox.critical(self, "Save Error", f"Failed to save project:\n{e}")
@@ -943,7 +1043,7 @@ class MainWindow(QMainWindow):
         path, selected_filter = QFileDialog.getSaveFileName(
             self,
             "Export Data",
-            str(get_data_dir()),
+            str(get_exports_dir()),
             "CSV Files (*.csv);;Excel Files (*.xlsx);;JSON Files (*.json);;Parquet Files (*.parquet)",
         )
         if not path:

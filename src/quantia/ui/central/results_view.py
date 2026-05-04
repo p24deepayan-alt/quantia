@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.core.data_model import PandasTableModel
+from quantia.theme.palette import PALETTE, Theme
 from quantia.ui.central.data_view import ShiftScrollFilter
 from quantia.ui.icons import feather_icon
 
@@ -129,7 +130,6 @@ class ResultsViewWidget(QWidget):
         
         from PySide6.QtWidgets import QApplication
         from quantia.app import QuantiaApp
-        from quantia.theme.palette import PALETTE
         app = QApplication.instance()
         theme = app.get_current_theme() if isinstance(app, QuantiaApp) else Theme.LIGHT
         bg = PALETTE[theme]["bg_secondary"]
@@ -142,7 +142,6 @@ class ResultsViewWidget(QWidget):
         
         from PySide6.QtWidgets import QApplication
         from quantia.app import QuantiaApp
-        from quantia.theme.palette import PALETTE
         app = QApplication.instance()
         theme = app.get_current_theme() if isinstance(app, QuantiaApp) else Theme.LIGHT
         bg = PALETTE[theme]["bg_card"]
@@ -153,19 +152,18 @@ class ResultsViewWidget(QWidget):
 
     def _update_text_browser_content(self, browser: QTextBrowser, text: str, theme: Theme) -> None:
         """Render content into the browser with theme-aware CSS."""
-        from quantia.theme.palette import PALETTE
         p = PALETTE[theme]
         
         if "<table" in text.lower() or "<html" in text.lower() or "<div" in text.lower():
             # Premium Card Styling
             base_css = f"""<style>
                 body {{ font-family: 'Segoe UI', sans-serif; color: {p['text_primary']}; background: transparent; line-height: 1.5; }}
-                h2, h3 {{ color: {p['brand_primary']}; margin-top: 0; }}
+                h2, h3 {{ color: {p['accent']}; margin-top: 0; }}
                 table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; background: {p['bg_secondary']}; border-radius: 6px; overflow: hidden; }}
-                th {{ padding: 10px 12px; font-size: 9pt; font-weight: 700; color: {p['text_secondary']}; border-bottom: 2px solid {p['border_light']}; text-align: left; background: {p['bg_secondary']}; }}
-                td {{ padding: 8px 12px; border-bottom: 1px solid {p['border_light']}; font-family: 'Fira Code', 'Consolas', monospace; font-size: 10pt; color: {p['text_primary']}; }}
+                th {{ padding: 10px 12px; font-size: 9pt; font-weight: 700; color: {p['text_secondary']}; border-bottom: 2px solid {p['border']}; text-align: left; background: {p['bg_secondary']}; }}
+                td {{ padding: 8px 12px; border-bottom: 1px solid {p['border']}; font-family: 'Fira Code', 'Consolas', monospace; font-size: 10pt; color: {p['text_primary']}; }}
                 .simpletable th {{ background: {p['bg_secondary']}; }}
-                .highlight {{ color: {p['brand_primary']}; font-weight: 700; }}
+                .highlight {{ color: {p['accent']}; font-weight: 700; }}
             </style>"""
             browser.setHtml(base_css + text)
         else:

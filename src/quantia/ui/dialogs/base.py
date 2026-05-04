@@ -42,6 +42,13 @@ class BaseAnalysisDialog(QDialog):
         self.setMinimumSize(700, 500)
         self._df = df
 
+        from PySide6.QtWidgets import QApplication
+        from quantia.app import QuantiaApp
+        from quantia.theme.palette import PALETTE, Theme
+        app = QApplication.instance()
+        self._theme = app.get_current_theme() if isinstance(app, QuantiaApp) else Theme.LIGHT
+        self._icon_color = PALETTE[self._theme]["text_primary"]
+
         layout = QVBoxLayout(self)
 
         # ── Splitter for Main Content ────────────────────────────────────
@@ -95,7 +102,7 @@ class BaseAnalysisDialog(QDialog):
         self._button_box.addButton(self.btn_cancel, QDialogButtonBox.ButtonRole.RejectRole)
         
         self.btn_help = QPushButton("Help")
-        self.btn_help.setIcon(feather_icon("help-circle", "#2D3E50", 14))
+        self.btn_help.setIcon(feather_icon("help-circle", self._icon_color, 14))
         self._button_box.addButton(self.btn_help, QDialogButtonBox.ButtonRole.HelpRole)
 
         self._button_box.accepted.connect(self._on_run)
@@ -127,27 +134,27 @@ class BaseAnalysisDialog(QDialog):
         btn_layout.addStretch()
         
         btn_add = QPushButton()
-        btn_add.setIcon(feather_icon("chevron-right", "#2D3E50", 16))
+        btn_add.setIcon(feather_icon("chevron-right", self._icon_color, 16))
         btn_add.setToolTip(f"Add to {label_text}")
         btn_add.clicked.connect(lambda: self._move_items(self.list_available, target_list, multi_select))
         btn_layout.addWidget(btn_add)
         
         if multi_select:
             btn_add_all = QPushButton()
-            btn_add_all.setIcon(feather_icon("chevrons-right", "#2D3E50", 16))
+            btn_add_all.setIcon(feather_icon("chevrons-right", self._icon_color, 16))
             btn_add_all.setToolTip(f"Add ALL to {label_text}")
             btn_add_all.clicked.connect(lambda: self._move_all_items(self.list_available, target_list, multi_select))
             btn_layout.addWidget(btn_add_all)
         
         btn_remove = QPushButton()
-        btn_remove.setIcon(feather_icon("chevron-left", "#2D3E50", 16))
+        btn_remove.setIcon(feather_icon("chevron-left", self._icon_color, 16))
         btn_remove.setToolTip(f"Remove from {label_text}")
         btn_remove.clicked.connect(lambda: self._move_items(target_list, self.list_available, True))
         btn_layout.addWidget(btn_remove)
 
         if multi_select:
             btn_remove_all = QPushButton()
-            btn_remove_all.setIcon(feather_icon("chevrons-left", "#2D3E50", 16))
+            btn_remove_all.setIcon(feather_icon("chevrons-left", self._icon_color, 16))
             btn_remove_all.setToolTip(f"Remove ALL from {label_text}")
             btn_remove_all.clicked.connect(lambda: self._move_all_items(target_list, self.list_available, True))
             btn_layout.addWidget(btn_remove_all)

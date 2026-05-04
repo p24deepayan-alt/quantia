@@ -25,9 +25,9 @@ def get_plots_dir() -> Path:
     return d
 
 
-def get_data_dir() -> Path:
+def get_exports_dir() -> Path:
     """Get directory for exported data files."""
-    d = get_quantia_root() / "Exported Data"
+    d = get_quantia_root() / "Exports"
     d.mkdir(exist_ok=True)
     return d
 

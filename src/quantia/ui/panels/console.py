@@ -92,8 +92,25 @@ class ConsolePanel(QDockWidget):
         self._output.setFont(QFont("Fira Code", 12))
         self._output.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         layout.addWidget(self._output)
-
         self.setWidget(container)
+
+    def refresh_theme(self, theme: Any) -> None:
+        """Update colors and icons for the current theme."""
+        from quantia.theme.palette import Theme, PALETTE
+        p = PALETTE[theme]
+        
+        # Update text editor
+        self._output.setStyleSheet(f"background-color: {p['surface_primary']}; color: {p['text_primary']}; border: none;")
+        
+        # Update button bar icons
+        ic = p["text_secondary"]
+        # I'll need to find the buttons. Actually, I can just re-set them if I had references.
+        # But for now, let's just use the children.
+        for btn in self.findChildren(QPushButton):
+            if "Clear" in (btn.toolTip() or ""):
+                btn.setIcon(feather_icon("trash-2", ic, 14))
+            elif "Copy" in (btn.toolTip() or ""):
+                btn.setIcon(feather_icon("copy", ic, 14))
 
         # Welcome message
         self.write_info("Quantia Console — Ready")

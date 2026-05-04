@@ -55,6 +55,7 @@ class QuantiaToolbar(QToolBar):
         # ── Theme Toggle (Far Right) ─────────────────────────────────────
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        spacer.setStyleSheet("background: transparent;")
         self.addWidget(spacer)
         
         self._add_action("moon", icon_color, "Toggle Theme", "Switch Light/Dark Mode", self.toggle_theme)

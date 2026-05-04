@@ -86,7 +86,32 @@ class PandasTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 return str(self._df.columns[section])
-            return str(section + 1)  # 1-indexed row numbers like Excel
+            return str(section + 1)
+
+        if role == Qt.ItemDataRole.DecorationRole and orientation == Qt.Orientation.Horizontal:
+            from quantia.ui.icons import feather_icon
+            from PySide6.QtWidgets import QApplication
+            from quantia.app import QuantiaApp
+            from quantia.theme.palette import PALETTE, Theme
+            
+            # Determine type
+            col_name = self._df.columns[section]
+            dtype = self._df.dtypes.iloc[section]
+            
+            # Get current theme color for icon
+            app = QApplication.instance()
+            theme = app.get_current_theme() if isinstance(app, QuantiaApp) else Theme.LIGHT
+            color = PALETTE[theme]["text_secondary"]
+
+            if pd.api.types.is_numeric_dtype(dtype):
+                return feather_icon("hash", color, 12)
+            elif pd.api.types.is_datetime64_any_dtype(dtype):
+                return feather_icon("calendar", color, 12)
+            elif pd.api.types.is_bool_dtype(dtype):
+                return feather_icon("toggle-right", color, 12)
+            else:
+                # Treat as categorical/string
+                return feather_icon("type", color, 12)
 
         if role == Qt.ItemDataRole.ToolTipRole and orientation == Qt.Orientation.Horizontal:
             col_name = self._df.columns[section]

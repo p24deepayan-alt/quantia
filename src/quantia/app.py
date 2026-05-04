@@ -18,6 +18,27 @@ class QuantiaApp(QApplication):
     def __init__(self, argv: list[str] | None = None) -> None:
         super().__init__(argv or sys.argv)
         self._current_theme = Theme.LIGHT
+        
+        # ── Global Error Handling ────────────────────────────────────────
+        sys.excepthook = self._global_error_handler
+
+    def _global_error_handler(self, exctype, value, traceback_obj) -> None:
+        """Catch-all for any unhandled exceptions in the GUI thread."""
+        import traceback
+        from PySide6.QtWidgets import QMessageBox
+        
+        err_msg = "".join(traceback.format_exception(exctype, value, traceback_obj))
+        print(f"CRITICAL ERROR:\n{err_msg}")
+        
+        # Display a user-friendly crash dialog
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setWindowTitle("Quantia — Unexpected Error")
+        msg.setText("An unexpected error occurred.")
+        msg.setInformativeText("The application encountered a problem and may need to restart.")
+        msg.setDetailedText(err_msg)
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.exec()
 
         # ── Base style ───────────────────────────────────────────────────
         self.setStyle("Fusion")

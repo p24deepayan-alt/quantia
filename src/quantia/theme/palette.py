@@ -55,6 +55,8 @@ PALETTE = {
         "table_alt_row": "#F6F8FA",
         "table_header_bg": "#E8EBF0",
         "selection": "#D0D7F2",
+        "bg_card": "#FFFFFF",
+        "bg_secondary": "#F0F2F5",
     },
     Theme.DARK: {
         "surface_primary": NEAR_BLACK,
@@ -73,6 +75,8 @@ PALETTE = {
         "table_alt_row": "#252538",
         "table_header_bg": "#2D2D44",
         "selection": "#3A3A60",
+        "bg_card": "#252538",
+        "bg_secondary": "#1A1A2A",
     },
 }
 

@@ -71,11 +71,23 @@ class PlotViewWidget(QWidget):
         """Update the icon colour for toolbar and existing tabs."""
         self._chrome_icon_color = color
         self._btn_save.setIcon(feather_icon("download", color, 14))
-        # btn_clear uses red
         
         # Update existing tabs
         for i in range(self._tabs.count()):
             self._tabs.setTabIcon(i, feather_icon("image", color, 14))
+
+    def refresh_theme(self, theme: Any) -> None:
+        """Update background and icons for the current theme."""
+        from quantia.theme.palette import PALETTE
+        p = PALETTE[theme]
+        self.set_icon_color(p["text_primary"])
+        self.setStyleSheet(f"background-color: {p['surface_primary']};")
+        # Ensure tabs also follow theme
+        self._tabs.setStyleSheet(f"background-color: {p['surface_primary']};")
+        
+        # Refresh buttons explicitly
+        self._btn_save.setIcon(feather_icon("download", p["text_secondary"], 14))
+        self._btn_clear.setIcon(feather_icon("trash-2", "#D32F2F", 14))
 
     def _save_current(self) -> None:
         """Save the currently visible plot to a file."""

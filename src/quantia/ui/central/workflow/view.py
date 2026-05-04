@@ -157,6 +157,20 @@ class WorkflowTab(QWidget):
             editor.append_code(script)
             QMessageBox.information(self, "Success", "Workflow executed successfully. Check the Script Editor tab.")
             
+    def refresh_theme(self, theme: Any) -> None:
+        """Update colors for the current theme."""
+        from quantia.theme.palette import Theme, PALETTE
+        p = PALETTE[theme]
+        
+        # Update grid colors on the view
+        self.view.grid_color = QColor(p["border"])
+        
+        # Update scene background
+        self.scene.setBackgroundBrush(QColor(p["surface_primary"]))
+        
+        # Force a redraw on the view
+        self.view.viewport().update()
+
     def _clear_workflow(self) -> None:
         self.scene.clear()
         self.scene._drawing_edge = None
