@@ -7,7 +7,7 @@ New, Open, Save, Undo, Redo | Import, Export | Run Script | Generate Code | Pref
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QToolBar, QWidget
+from PySide6.QtWidgets import QToolBar, QWidget, QSizePolicy
 
 from quantia.ui.icons import feather_icon
 
@@ -54,7 +54,7 @@ class QuantiaToolbar(QToolBar):
 
         # ── Theme Toggle (Far Right) ─────────────────────────────────────
         spacer = QWidget()
-        spacer.setSizePolicy(QWidget.sizePolicy().Expanding, QWidget.sizePolicy().Preferred)
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.addWidget(spacer)
         
         self._add_action("moon", icon_color, "Toggle Theme", "Switch Light/Dark Mode", self.toggle_theme)
