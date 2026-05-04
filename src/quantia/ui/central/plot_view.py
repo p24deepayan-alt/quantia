@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.icons import feather_icon
+from quantia.utils.paths import get_plots_dir
 
 
 class PlotViewWidget(QWidget):
@@ -81,10 +82,6 @@ class PlotViewWidget(QWidget):
         widget = self._tabs.currentWidget()
         if not isinstance(widget, FigureCanvasQTAgg):
             return
-
-from quantia.utils.paths import get_plots_dir
-
-# ... later in the file ...
 
         path, _ = QFileDialog.getSaveFileName(
             self,
