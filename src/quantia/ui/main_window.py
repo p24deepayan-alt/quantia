@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 
 from quantia.theme.palette import Theme, get_stylesheet
 from quantia.ui.icons import feather_icon
-from quantia.utils.resources import resource_path
+from quantia.utils.paths import get_data_dir, get_workspaces_dir, get_quantia_root, get_scripts_dir
 from quantia.ui.menu_bar import QuantiaMenuBar
 from quantia.ui.toolbar import QuantiaToolbar
 from quantia.ui.status_bar import QuantiaStatusBar
@@ -272,7 +272,7 @@ class MainWindow(QMainWindow):
 
     def _save_project_as(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Project As", "", "Quantia Project (*.quantia)"
+            self, "Save Project As", str(get_workspaces_dir()), "Quantia Project (*.quantia)"
         )
         if path:
             if not path.endswith(".quantia"):
@@ -903,7 +903,7 @@ class MainWindow(QMainWindow):
         path, selected_filter = QFileDialog.getSaveFileName(
             self,
             "Export Data",
-            "",
+            str(get_data_dir()),
             "CSV Files (*.csv);;Excel Files (*.xlsx);;JSON Files (*.json);;Parquet Files (*.parquet)",
         )
         if not path:
@@ -941,7 +941,7 @@ class MainWindow(QMainWindow):
             return
 
         path, _ = QFileDialog.getSaveFileName(
-            self, "Export Script", "quantia_script.py", "Python Files (*.py)"
+            self, "Export Script", str(get_scripts_dir()), "Python Files (*.py)"
         )
         if not path:
             return
@@ -969,7 +969,7 @@ class MainWindow(QMainWindow):
             "About Quantia",
             "<h2>Quantia</h2>"
 
-            "<p>Version 0.1.0 (Alpha)</p>"
+            "<p>Version 0.1</p>"
             "<p>A fully offline, no-code statistical desktop application.</p>"
             "<p>Built with PySide6 (Qt6), pandas, numpy, scipy.</p>"
         )

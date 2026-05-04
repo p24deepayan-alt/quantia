@@ -82,10 +82,14 @@ class PlotViewWidget(QWidget):
         if not isinstance(widget, FigureCanvasQTAgg):
             return
 
+from quantia.utils.paths import get_plots_dir
+
+# ... later in the file ...
+
         path, _ = QFileDialog.getSaveFileName(
             self,
             "Save Plot",
-            "",
+            str(get_plots_dir()),
             "PNG Image (*.png);;SVG Vector (*.svg);;PDF Document (*.pdf);;All Files (*)",
         )
         if path:

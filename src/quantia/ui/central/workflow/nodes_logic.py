@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 from PySide6.QtWidgets import QFileDialog, QMessageBox
+from quantia.utils.paths import get_data_dir, get_quantia_root
 
 from quantia.ui.central.workflow.items import NodeItem
 from quantia.ui.dialogs.clean_data import CleanDataDialog
@@ -45,7 +46,7 @@ class LoadCSVNode(BaseLogicNode):
         self.in_port.hide()
         
     def configure(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(None, "Select CSV", "", "CSV Files (*.csv)")
+        path, _ = QFileDialog.getOpenFileName(None, "Select CSV", str(get_quantia_root()), "CSV Files (*.csv)")
         if path:
             self.file_path = path
             self.sub_item.setPlainText(path.split("/")[-1])
@@ -113,7 +114,7 @@ class ExportCSVNode(BaseLogicNode):
         self.out_port.hide()
         
     def configure(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(None, "Save CSV", "", "CSV Files (*.csv)")
+        path, _ = QFileDialog.getSaveFileName(None, "Save CSV", str(get_data_dir()), "CSV Files (*.csv)")
         if path:
             self.file_path = path
             self.sub_item.setPlainText(path.split("/")[-1])

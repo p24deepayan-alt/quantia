@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.icons import feather_icon
+from quantia.utils.paths import get_scripts_dir
 
 
 # ─── Python Syntax Highlighting ──────────────────────────────────────────────
@@ -395,7 +396,7 @@ class ScriptEditorWidget(QWidget):
 
     def _save_script(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Script", "", "Python Files (*.py);;All Files (*)"
+            self, "Save Script", str(get_scripts_dir()), "Python Files (*.py);;All Files (*)"
         )
         if path:
             with open(path, "w", encoding="utf-8") as f:
