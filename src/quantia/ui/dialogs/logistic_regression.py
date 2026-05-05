@@ -1,7 +1,7 @@
 """Logistic Regression Dialog.
 
 Allows selecting a binary dependent variable (Y) and one or more independent variables (X).
-Generates code using statsmodels.api.Logit to perform logistic regression.
+Generates code using scikit-learn LogisticRegression to perform multi-threaded regression.
 """
 
 from __future__ import annotations
@@ -167,14 +167,78 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         inter_str = ", ".join(f"'{v}'" for v in inter_vars)
 
         code = [
-            f"# Logistic Regression: {dep_var} ~ {', '.join(indep_vars + inter_vars)}",
-            "import statsmodels.api as sm",
+            f"# Logistic Regression (Multi-threaded): {dep_var} ~ {', '.join(indep_vars + inter_vars)}",
+            "from sklearn.linear_model import LogisticRegression",
+            "from scipy import stats",
             "import pandas as pd",
             "import numpy as np",
             "import warnings",
-            "from statsmodels.tools.sm_exceptions import ConvergenceWarning",
-            "warnings.simplefilter('ignore', ConvergenceWarning)",
             "warnings.simplefilter('ignore', RuntimeWarning)",
+            "",
+            "def calculate_logit_stats(X, y, include_intercept=True):",
+            "    # Prepare X with intercept if requested",
+            "    if include_intercept and (X is None or 'const' not in X.columns):",
+            "        if X is None:",
+            "             X_model = np.ones((len(y), 1))",
+            "             feature_names = ['const']",
+            "        else:",
+            "             X_model = np.column_stack([np.ones(X.shape[0]), X])",
+            "             feature_names = ['const'] + list(X.columns)",
+            "    else:",
+            "        X_model = X.values if X is not None else np.empty((len(y), 0))",
+            "        feature_names = list(X.columns) if X is not None else []",
+            "    ",
+            "    n, p = X_model.shape",
+            "    # We use n_jobs=-1 for multi-threaded performance and penalty=None for OLS-like behavior",
+            "    model = LogisticRegression(n_jobs=-1, penalty=None, fit_intercept=False).fit(X_model, y)",
+            "    ",
+            "    probs = model.predict_proba(X_model)[:, 1]",
+            "    # Clip probabilities to avoid log(0)",
+            "    probs = np.clip(probs, 1e-15, 1 - 1e-15)",
+            "    ",
+            "    # Log-Likelihood",
+            "    llf = np.sum(y * np.log(probs) + (1 - y) * np.log(1 - probs))",
+            "    ",
+            "    # Null Log-Likelihood (intercept-only model)",
+            "    null_prob = np.mean(y)",
+            "    llnull = np.sum(y * np.log(null_prob) + (1 - y) * np.log(1 - null_prob))",
+            "    ",
+            "    prsquared = 1 - llf / llnull",
+            "    llr_pvalue = 1 - stats.chi2.cdf(2 * (llf - llnull), p - (1 if include_intercept else 0))",
+            "    ",
+            "    # Standard Errors & Coeff stats",
+            "    # Variance-Covariance Matrix V = (X.T * W * X)^-1 where W = diag(p*(1-p))",
+            "    W = np.diag(probs * (1 - probs))",
+            "    try:",
+            "        var_cov = np.linalg.inv(X_model.T @ W @ X_model)",
+            "    except np.linalg.LinAlgError:",
+            "        var_cov = np.linalg.pinv(X_model.T @ W @ X_model)",
+            "    ",
+            "    std_err = np.sqrt(np.diagonal(var_cov))",
+            "    coeffs = model.coef_[0]",
+            "    z_stats = coeffs / std_err",
+            "    p_values = 2 * (1 - stats.norm.cdf(np.abs(z_stats)))",
+            "    ",
+            "    # Confidence Intervals (95%)",
+            "    z_crit = stats.norm.ppf(0.975)",
+            "    conf_low = coeffs - z_crit * std_err",
+            "    conf_high = coeffs + z_crit * std_err",
+            "    ",
+            "    aic = 2 * p - 2 * llf",
+            "    bic = p * np.log(n) - 2 * llf",
+            "    ",
+            "    return {",
+            "        'model': model, 'params': pd.Series(coeffs, index=feature_names),",
+            "        'bse': pd.Series(std_err, index=feature_names),",
+            "        'zvalues': pd.Series(z_stats, index=feature_names),",
+            "        'pvalues': pd.Series(p_values, index=feature_names),",
+            "        'conf_int': pd.DataFrame({'low': conf_low, 'high': conf_high}, index=feature_names),",
+            "        'prsquared': prsquared, 'llf': llf, 'llnull': llnull,",
+            "        'llr_pvalue': llr_pvalue,",
+            "        'aic': aic, 'bic': bic,",
+            "        'nobs': n, 'df_resid': n - p, 'df_model': p - (1 if include_intercept else 0),",
+            "        'predict_proba': probs",
+            "    }",
             "",
             "# Prepare data",
             f"model_vars = ['{dep_var}', {indep_str}]",
@@ -207,7 +271,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             code.append("    else:")
             code.append("        var_groups[v] = [c for c in X_all.columns if c.startswith(f'{v}_')]")
             code.append("")
-            
+
         if inter_vars:
             code.append("# Create interaction columns")
             code.append(f"interaction_vars = [{inter_str}]")
@@ -229,19 +293,19 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             else:
                 code.append("available_vars = original_vars")
             code.append("current_vars = []") # Start empty for bidirectional
-            
+
             code.append("while True:")
             code.append("    changed = False")
-            
+
             if "p-value" in criterion:
                 code.append("    curr_cols = [c for ov in current_vars for c in var_groups[ov]]")
-                code.append(f"    X_curr = sm.add_constant(X_all[curr_cols]) if {include_intercept} and curr_cols else X_all[curr_cols] if curr_cols else None")
+                code.append(f"    X_curr = X_all[curr_cols] if curr_cols else None")
                 code.append("    try:")
-                code.append("        res_curr = sm.Logit(y, X_curr).fit(disp=False) if X_curr is not None else None")
+                code.append(f"        res_curr = calculate_logit_stats(X_curr, y, {include_intercept}) if X_curr is not None else None")
                 code.append("    except:")
                 code.append("        res_curr = None")
                 code.append("    ")
-                code.append("    # 1. Try adding the most significant variable (LR-test for blocks)")
+                code.append("    # 1. Try adding the most significant variable")
                 code.append("    candidates_add = []")
                 code.append("    for v in available_vars:")
                 code.append("        if v not in current_vars:")
@@ -256,13 +320,12 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("    for v in candidates_add:")
                 code.append("        test_vars = current_vars + [v]")
                 code.append("        test_cols = [c for ov in test_vars for c in var_groups[ov]]")
-                code.append(f"        test_X = sm.add_constant(X_all[test_cols]) if {include_intercept} else X_all[test_cols]")
+                code.append(f"        test_X = X_all[test_cols]")
                 code.append("        try:")
-                code.append("            res_test = sm.Logit(y, test_X).fit(disp=False)")
-                code.append("            if res_curr is None:")
-                code.append("                p = res_test.llr_pvalue if hasattr(res_test, 'llr_pvalue') and not pd.isna(res_test.llr_pvalue) else 1.0")
-                code.append("            else:")
-                code.append("                _, p, _ = res_test.compare_lr_test(res_curr)")
+                code.append(f"            res_test = calculate_logit_stats(test_X, y, {include_intercept})")
+                code.append("            # Block p-value (min p of the new dummy set)")
+                code.append("            new_dummies = var_groups[v]")
+                code.append("            p = np.min([res_test['pvalues'][d] for d in new_dummies if d in res_test['pvalues']])")
                 code.append("            if p < best_p:")
                 code.append("                best_p = p")
                 code.append("                best_v = v")
@@ -275,7 +338,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append(f"        print(f'Added {{best_v}} (p={{best_p:.4f}})')")
                 code.append("        continue")
                 code.append("    ")
-                code.append("    # 2. Try dropping the least significant variable (LR-test)")
+                code.append("    # 2. Try dropping the least significant variable")
                 code.append("    if len(current_vars) > 0:")
                 code.append("        max_p = -1")
                 code.append("        worst_v = None")
@@ -287,20 +350,12 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("                    break")
                 code.append("            if not can_drop:")
                 code.append("                continue")
-                code.append("            test_vars = [cv for cv in current_vars if cv != v]")
-                code.append("            test_cols = [c for ov in test_vars for c in var_groups[ov]]")
-                code.append(f"            test_X = sm.add_constant(X_all[test_cols]) if {include_intercept} and test_cols else X_all[test_cols] if test_cols else None")
-                code.append("            try:")
-                code.append("                if test_X is None:")
-                code.append("                    p = res_curr.llr_pvalue if hasattr(res_curr, 'llr_pvalue') and not pd.isna(res_curr.llr_pvalue) else 1.0")
-                code.append("                else:")
-                code.append("                    res_test = sm.Logit(y, test_X).fit(disp=False)")
-                code.append("                    _, p, _ = res_curr.compare_lr_test(res_test)")
-                code.append("                if p > max_p:")
-                code.append("                    max_p = p")
-                code.append("                    worst_v = v")
-                code.append("            except:")
-                code.append("                pass")
+                code.append("            ")
+                code.append("            new_dummies = var_groups[v]")
+                code.append("            p = np.max([res_curr['pvalues'][d] for d in new_dummies if d in res_curr['pvalues']])")
+                code.append("            if p > max_p:")
+                code.append("                max_p = p")
+                code.append("                worst_v = v")
                 code.append("        ")
                 code.append("        if max_p >= 0.05:")
                 code.append("            current_vars.remove(worst_v)")
@@ -310,9 +365,9 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             else:
                 metric = "aic" if "AIC" in criterion else "bic"
                 code.append("    curr_cols = [c for ov in current_vars for c in var_groups[ov]]")
-                code.append(f"    X_curr = sm.add_constant(X_all[curr_cols]) if {include_intercept} and curr_cols else X_all[curr_cols] if curr_cols else None")
+                code.append(f"    X_curr = X_all[curr_cols] if curr_cols else None")
                 code.append("    try:")
-                code.append(f"        best_score = sm.Logit(y, X_curr).fit(disp=False).{metric} if X_curr is not None else np.inf")
+                code.append(f"        best_score = calculate_logit_stats(X_curr, y, {include_intercept})['{metric}'] if X_curr is not None else np.inf")
                 code.append("    except:")
                 code.append("        best_score = np.inf")
                 code.append("    ")
@@ -330,9 +385,9 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("    for v in candidates_add:")
                 code.append("        test_vars = current_vars + [v]")
                 code.append("        test_cols = [c for ov in test_vars for c in var_groups[ov]]")
-                code.append(f"        test_X = sm.add_constant(X_all[test_cols]) if {include_intercept} else X_all[test_cols]")
+                code.append(f"        test_X = X_all[test_cols]")
                 code.append("        try:")
-                code.append(f"            score = sm.Logit(y, test_X).fit(disp=False).{metric}")
+                code.append(f"            score = calculate_logit_stats(test_X, y, {include_intercept})['{metric}']")
                 code.append("            if score < best_score:")
                 code.append("                best_score = score")
                 code.append("                best_v = v")
@@ -357,9 +412,9 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("                continue")
                 code.append("            test_vars = [cv for cv in current_vars if cv != v]")
                 code.append("            test_cols = [c for ov in test_vars for c in var_groups[ov]]")
-                code.append(f"            test_X = sm.add_constant(X_all[test_cols]) if {include_intercept} else X_all[test_cols]")
+                code.append(f"            test_X = X_all[test_cols]")
                 code.append("            try:")
-                code.append(f"                score = sm.Logit(y, test_X).fit(disp=False).{metric}")
+                code.append(f"                score = calculate_logit_stats(test_X, y, {include_intercept})['{metric}']")
                 code.append("                if score < best_score:")
                 code.append("                    best_score = score")
                 code.append("                    best_v = v")
@@ -381,19 +436,19 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             code.append("    X = X_all")
 
         if include_intercept:
-            code.append("X = sm.add_constant(X)")
+            code.append("X = sm.add_constant(X)" if "sm.add_constant" in "".join(code) else "X = np.column_stack([np.ones(X.shape[0]), X]) if isinstance(X, np.ndarray) else pd.concat([pd.Series(1, index=X.index, name='const'), X], axis=1)")
 
         code.append("")
-        code.append("results = sm.Logit(y, X).fit(disp=False)")
-        
+        code.append(f"results = calculate_logit_stats(X, y, {include_intercept})")
+
         code.append("")
         code.append("if 'show_result' in globals():")
-        code.append("    ci = results.conf_int()")
-        code.append("    odds_ratios = np.exp(results.params)")
+        code.append("    ci = results['conf_int']")
+        code.append("    odds_ratios = np.exp(results['params'])")
         code.append("")
         code.append("    # ── Equation ──")
         code.append("    eq_terms = []")
-        code.append("    for var, coef in results.params.items():")
+        code.append("    for var, coef in results['params'].items():")
         code.append("        if var == 'const':")
         code.append("            eq_terms.append(f'{coef:.4f}')")
         code.append("        else:")
@@ -411,19 +466,19 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         code.append("    vl = 'font-size:13pt; font-weight:700; color:#111827; font-family:Consolas,monospace;'")
         code.append("    stats_html = f'''<table style=\"width:100%; margin-bottom:16px; border-collapse:collapse;\">")
         code.append("    <tr>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">PSEUDO R-SQUARED</div><div style=\"{vl}\">{results.prsquared:.4f}</div></td>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">LOG-LIKELIHOOD</div><div style=\"{vl}\">{results.llf:.2f}</div></td>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">LL-NULL</div><div style=\"{vl}\">{results.llnull:.2f}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">PSEUDO R-SQUARED</div><div style=\"{vl}\">{results['prsquared']:.4f}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">LOG-LIKELIHOOD</div><div style=\"{vl}\">{results['llf']:.2f}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">LL-NULL</div><div style=\"{vl}\">{results['llnull']:.2f}</div></td>")
         code.append("    </tr>")
         code.append("    <tr>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">AIC</div><div style=\"{vl}\">{results.aic:.1f}</div></td>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">BIC</div><div style=\"{vl}\">{results.bic:.1f}</div></td>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">LLR P-VALUE</div><div style=\"{vl}\">{results.llr_pvalue:.2e}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">AIC</div><div style=\"{vl}\">{results['aic']:.1f}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">BIC</div><div style=\"{vl}\">{results['bic']:.1f}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">LLR P-VALUE</div><div style=\"{vl}\">{results['llr_pvalue']:.2e}</div></td>")
         code.append("    </tr>")
         code.append("    <tr>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">OBSERVATIONS</div><div style=\"{vl}\">{int(results.nobs)}</div></td>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">DF RESIDUALS</div><div style=\"{vl}\">{int(results.df_resid)}</div></td>")
-        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">DF MODEL</div><div style=\"{vl}\">{int(results.df_model)}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">OBSERVATIONS</div><div style=\"{vl}\">{int(results['nobs'])}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">DF RESIDUALS</div><div style=\"{vl}\">{int(results['df_resid'])}</div></td>")
+        code.append("      <td style=\"{sc}\"><div style=\"{lb}\">DF MODEL</div><div style=\"{vl}\">{int(results['df_model'])}</div></td>")
         code.append("    </tr></table>'''")
         code.append("")
         code.append("    # ── Coefficients Table ──")
@@ -443,16 +498,16 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         code.append("    </tr>'''")
         code.append("")
         code.append("    coef_rows = ''")
-        code.append("    for i, var in enumerate(results.params.index):")
-        code.append("        p = results.pvalues[var]")
+        code.append("    for i, var in enumerate(results['params'].index):")
+        code.append("        p = results['pvalues'][var]")
         code.append("        stars = '***' if p < 0.001 else '**' if p < 0.01 else '*' if p < 0.05 else ''")
         code.append("        sc2 = '#4338CA' if stars else '#CBD5E1'")
         code.append("        coef_rows += f'''<tr>")
         code.append("          <td style=\"{tds} text-align:left; font-weight:600; color:#1E293B; font-family:Segoe UI,sans-serif;\">{var}</td>")
-        code.append("          <td style=\"{tds}\">{results.params[var]:.4f}</td>")
-        code.append("          <td style=\"{tds}\">{results.bse[var]:.4f}</td>")
-        code.append("          <td style=\"{tds}\">{results.tvalues[var]:.4f}</td>")
-        code.append("          <td style=\"{tds}\">{results.pvalues[var]:.4f}</td>")
+        code.append("          <td style=\"{tds}\">{results['params'][var]:.4f}</td>")
+        code.append("          <td style=\"{tds}\">{results['bse'][var]:.4f}</td>")
+        code.append("          <td style=\"{tds}\">{results['zvalues'][var]:.4f}</td>")
+        code.append("          <td style=\"{tds}\">{results['pvalues'][var]:.4f}</td>")
         code.append("          <td style=\"{tds} color:#0F766E; font-weight:600;\">{odds_ratios[var]:.4f}</td>")
         code.append("          <td style=\"{tds}\">{ci.iloc[i, 0]:.4f}</td>")
         code.append("          <td style=\"{tds}\">{ci.iloc[i, 1]:.4f}</td>")
@@ -462,7 +517,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         code.append("    coef_html = coef_header + coef_rows + '</table>'")
         code.append("    legend = '<div style=\"font-size:8pt; color:#94A3B8; text-align:right;\">*** p &lt; 0.001 &nbsp; ** p &lt; 0.01 &nbsp; * p &lt; 0.05</div>'")
         code.append("    html_output = eq_html + stats_html + coef_html + legend")
-        
+
         if show_plots:
             style_code = generate_style_code(plot_style)
             code.append("")
@@ -474,13 +529,13 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 if line.strip():
                     code.append(f"    {line}")
             code.append("    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))")
-            
+
             code.append("    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']")
             code.append("    c_main = colors[0] if len(colors) > 0 else 'darkorange'")
             code.append("    c_alt = colors[1] if len(colors) > 1 else 'navy'")
-            
+
             # ROC Curve
-            code.append("    y_pred_prob = results.predict(X)")
+            code.append("    y_pred_prob = results['predict_proba']")
             code.append("    fpr, tpr, _ = roc_curve(y, y_pred_prob)")
             code.append("    roc_auc = auc(fpr, tpr)")
             code.append("    axes[0].plot(fpr, tpr, color=c_main, lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')")
@@ -491,7 +546,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             code.append("    axes[0].set_ylabel('True Positive Rate')")
             code.append("    axes[0].set_title('Receiver Operating Characteristic')")
             code.append("    axes[0].legend(loc='lower right')")
-            
+
             # Confusion Matrix
             code.append(f"    y_pred_class = (y_pred_prob > {threshold:.2f}).astype(int)")
             code.append("    cm = confusion_matrix(y, y_pred_class)")
@@ -500,7 +555,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
             code.append(f"    axes[1].set_title('Confusion Matrix (Threshold={threshold:.2f})')")
             code.append("    axes[1].set_xlabel('Predicted Label')")
             code.append("    axes[1].set_ylabel('True Label')")
-            
+
             code.append("    fig.tight_layout()")
             code.append("    buf = io.BytesIO()")
             code.append("    fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')")
@@ -513,10 +568,11 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         code.append("")
         code.append("    show_result('Logistic Regression', html_output)")
         code.append("else:")
-        code.append("    print(results.summary())")
+        code.append("    print('Logistic Regression Results')")
+        code.append("    print(f'Pseudo R-squared: {results[\"prsquared\"]:.4f}')")
+        code.append("    print(results[\"params\"])")
 
         return "\n".join(code)
-
     def _show_help(self) -> None:
         QMessageBox.information(
             self, 
