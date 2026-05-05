@@ -141,10 +141,11 @@ class PivotTableDialog(BaseAnalysisDialog):
             code.append(f"\ndf = {result_var}")
             code.append("print(f'Replaced dataset with aggregated results: {df.shape[0]} rows, {df.shape[1]} columns')")
         else:
+            agg_func = self.cmb_agg.currentText()
             code.append("\n# Format Output")
             code.append("html_output = []")
             code.append(f"html_output.append('<h3>Pivot Table / Group By Results</h3>')")
-            code.append(f"html_output.append('<p><b>Aggregation:</b> {self.cmb_agg.currentText()}</p>')")
+            code.append(f"html_output.append('<p><b>Aggregation:</b> {agg_func}</p>')")
             code.append(f"html_output.append({result_var}.to_html(classes='table table-sm table-striped'))")
             code.append("if 'display_html' in globals():")
             code.append("    display_html('\\n'.join(html_output))")

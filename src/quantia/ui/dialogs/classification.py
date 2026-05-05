@@ -151,10 +151,11 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         code.append("    y_prob = None")
         code.append("")
         
+        title = self.windowTitle()
         # HTML Report building
         code.append("# Format Output")
         code.append("html_output = []")
-        code.append(f"html_output.append('<h3>{self.windowTitle()}</h3>')")
+        code.append(f"html_output.append('<h3>{title}</h3>')")
         code.append(f"html_output.append('<p><b>Target:</b> {target}<br><b>Features:</b> {len(features)} selected<br><b>Test Size:</b> {test_size:.0%}</p>')")
         
         if self.chk_report.isChecked():
@@ -228,7 +229,7 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         code.append("if 'display_html' in globals():")
         code.append("    display_html('\\n'.join(html_output))")
         code.append("elif 'show_result' in globals():")
-        code.append(f"    show_result('{self.windowTitle()}', '\\n'.join(html_output))")
+        code.append(f"    show_result('{title}', '\\n'.join(html_output))")
         code.append("else:")
         code.append("    print('\\n'.join(html_output))")
         code.append("")            
