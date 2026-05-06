@@ -17,6 +17,7 @@ from PySide6.QtCore import Qt
 import itertools
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.core.settings import SettingsManager, ComputeMode
 from .base import BaseAnalysisDialog
 
 
@@ -336,6 +337,9 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
         criterion = self.cmb_criterion.currentText()
         min_samples = self.spin_min_samples.value()
         
+        settings = SettingsManager()
+        n_jobs = -1 if settings.compute_mode == ComputeMode.CPU_MULTI else 1
+        
         code = [
             f"# {self.windowTitle()} (with CCP Optimization): {target} ~ {', '.join(features)}",
             "import polars as pl",
@@ -345,7 +349,7 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
             "import seaborn as sns",
             "import io",
             "import base64",
-            "from sklearn.model_selection import train_test_split, cross_val_score",
+            "from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV",
             "from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error",
             "from sklearn.tree import DecisionTreeRegressor",
             f"features = {features}",
@@ -373,22 +377,18 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
             code.append("X_test = pd.DataFrame(scaler.transform(X_test), columns=X.columns)")
             code.append("")
 
-        code.append("# 1. Find Pruning Path")
-        code.append(f"temp_tree = DecisionTreeRegressor(criterion='{criterion}', {depth_str}, min_samples_split={min_samples}, random_state=42)")
-        code.append("path = temp_tree.cost_complexity_pruning_path(X_train, y_train)")
-        code.append("ccp_alphas, impurities = path.ccp_alphas, path.impurities")
+        code.append("# 1. Compute Pruning Path")
+        code.append(f"base_tree = DecisionTreeRegressor(criterion='{criterion}', {depth_str}, min_samples_split={min_samples}, random_state=42)")
+        code.append("path = base_tree.cost_complexity_pruning_path(X_train, y_train)")
+        code.append("ccp_alphas = path.ccp_alphas")
         code.append("")
         
-        code.append("# 2. Cross-validate Alphas")
-        code.append("alpha_scores = []")
-        code.append("for alpha in ccp_alphas:")
-        code.append(f"    model = DecisionTreeRegressor(criterion='{criterion}', {depth_str}, min_samples_split={min_samples}, ccp_alpha=alpha, random_state=42)")
-        code.append("    scores = cross_val_score(model, X_train, y_train, cv=5)")
-        code.append("    alpha_scores.append(np.mean(scores))")
+        code.append("# 2. Optimize CCP Alpha (Parallel)")
+        code.append(f"grid_search = GridSearchCV(base_tree, param_grid={{'ccp_alpha': ccp_alphas}}, cv=5, n_jobs={n_jobs})")
+        code.append("grid_search.fit(X_train, y_train)")
         code.append("")
-        code.append("best_alpha = ccp_alphas[np.argmax(alpha_scores)]")
-        code.append(f"model = DecisionTreeRegressor(criterion='{criterion}', {depth_str}, min_samples_split={min_samples}, ccp_alpha=best_alpha, random_state=42)")
-        code.append("model.fit(X_train, y_train)")
+        code.append("model = grid_search.best_estimator_")
+        code.append("best_alpha = grid_search.best_params_['ccp_alpha']")
         code.append("")
         
         code.append("# 3. Evaluate and Output")
