@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from .base import BaseAnalysisDialog
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.core.settings import SettingsManager, ComputeMode
 
 class BaseClusteringDialog(BaseAnalysisDialog):
     """Base dialog for clustering models."""
@@ -149,7 +150,10 @@ class BaseClusteringDialog(BaseAnalysisDialog):
         code.append("n_clusters = len(set(labels)) - (1 if -1 in labels else 0)")
         code.append("valid_idx = labels != -1")
         code.append("if sum(valid_idx) > 1 and len(np.unique(labels[valid_idx])) > 1:")
-        code.append("    sil_score = silhouette_score(X_train[valid_idx], labels[valid_idx])")
+        
+        settings = SettingsManager()
+        n_jobs_metrics = -1 if settings.compute_mode == ComputeMode.CPU_MULTI else 1
+        code.append(f"    sil_score = silhouette_score(X_train[valid_idx], labels[valid_idx], n_jobs={n_jobs_metrics})")
         code.append("else:")
         code.append("    sil_score = np.nan")
         code.append("")
@@ -302,14 +306,18 @@ class KMeansDialog(BaseClusteringDialog):
         
     def _get_model_init_code(self):
         if self.chk_auto.isChecked():
-            # Elbow method logic
+            settings = SettingsManager()
+            n_jobs = -1 if settings.compute_mode == ComputeMode.CPU_MULTI else 1
+            # Elbow method logic with parallel execution
             return (
-                "wcss = []\n"
-                f"k_range = range(1, {self.spin_max_k.value()} + 1)\n"
-                "for k in k_range:\n"
+                "from joblib import Parallel, delayed\n"
+                "def get_inertia(k, data):\n"
+                "    from sklearn.cluster import KMeans\n"
                 "    km = KMeans(n_clusters=k, random_state=42, n_init=10)\n"
-                "    km.fit(X_train)\n"
-                "    wcss.append(km.inertia_)\n\n"
+                "    km.fit(data)\n"
+                "    return km.inertia_\n\n"
+                f"k_range = range(1, {self.spin_max_k.value()} + 1)\n"
+                f"wcss = Parallel(n_jobs={n_jobs})(delayed(get_inertia)(k, X_train) for k in k_range)\n\n"
                 "# Simple elbow detection (max curvature)\n"
                 "def find_elbow(k_values, wcss_values):\n"
                 "    from numpy import diff\n"

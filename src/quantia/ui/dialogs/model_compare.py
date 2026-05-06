@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.dialogs.base import BaseAnalysisDialog
+from quantia.core.settings import SettingsManager, ComputeMode
 
 
 class ModelComparisonDialog(BaseAnalysisDialog):
@@ -181,13 +182,15 @@ class ModelComparisonDialog(BaseAnalysisDialog):
             code.append("from sklearn.naive_bayes import GaussianNB")
             code.append("models['Naive Bayes'] = GaussianNB()")
 
-        code.append("\n# Train and Evaluate")
-        code.append("results = []")
-        code.append("roc_data = {}")
-        code.append("for name, model in models.items():")
+        code.append("\n# Train and Evaluate (Parallelized)")
+        code.append("from joblib import Parallel, delayed")
+        
+        settings = SettingsManager()
+        n_jobs = -1 if settings.compute_mode == ComputeMode.CPU_MULTI else 1
+        
+        code.append("def evaluate_model(name, model, X_train, y_train, X_test, y_test, is_binary):")
         code.append("    model.fit(X_train, y_train)")
         code.append("    y_pred = model.predict(X_test)")
-        code.append("    ")
         code.append("    row = {")
         code.append("        'Model': name,")
         code.append("        'Accuracy': accuracy_score(y_test, y_pred),")
@@ -195,19 +198,22 @@ class ModelComparisonDialog(BaseAnalysisDialog):
         code.append("        'Recall': recall_score(y_test, y_pred, average='weighted', zero_division=0),")
         code.append("        'F1 Score': f1_score(y_test, y_pred, average='weighted', zero_division=0)")
         code.append("    }")
-        code.append("    ")
+        code.append("    roc_info = None")
         code.append("    if is_binary and hasattr(model, 'predict_proba'):")
         code.append("        try:")
         code.append("            y_prob = model.predict_proba(X_test)[:, 1]")
         code.append("            row['AUC'] = roc_auc_score(y_test, y_prob)")
         code.append("            fpr, tpr, _ = roc_curve(y_test, y_prob)")
-        code.append("            roc_data[name] = (fpr, tpr, row['AUC'])")
+        code.append("            roc_info = (name, fpr, tpr, row['AUC'])")
         code.append("        except:")
         code.append("            row['AUC'] = np.nan")
         code.append("    else:")
         code.append("        row['AUC'] = np.nan")
-        code.append("        ")
-        code.append("    results.append(row)")
+        code.append("    return row, roc_info")
+        code.append("")
+        code.append(f"parallel_out = Parallel(n_jobs={n_jobs})(delayed(evaluate_model)(name, model, X_train, y_train, X_test, y_test, is_binary) for name, model in models.items())")
+        code.append("results = [item[0] for item in parallel_out]")
+        code.append("roc_data = {item[1][0]: item[1][1:] for item in parallel_out if item[1] is not None}")
 
         code.append("\n# Create Comparison Table")
         code.append("comp_df = pd.DataFrame(results).set_index('Model')")

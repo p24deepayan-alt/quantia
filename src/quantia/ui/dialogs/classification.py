@@ -78,6 +78,14 @@ class BaseClassificationDialog(BaseAnalysisDialog):
     def _build_hyperparameters(self, layout):
         pass
         
+    def _add_extra_plots_logic(self, code):
+        """Override to add custom plot logic before the main loop."""
+        pass
+
+    def _add_extra_plots_rendering(self, code):
+        """Override to add custom plot rendering inside the main loop."""
+        pass
+        
     def _get_imports(self):
         """Override to return model-specific imports."""
         return []
@@ -181,6 +189,9 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         if self.chk_roc.isChecked(): code.append("if len(np.unique(y)) == 2: plots_to_draw.append('roc')")
         if self.chk_feat_imp.isChecked() and self._supports_feature_importance: code.append("plots_to_draw.append('feat_imp')")
         
+        # Hook for extra plots from subclasses
+        self._add_extra_plots_logic(code)
+        
         code.append("if plots_to_draw:")
         code.append(f"    fig, axes = plt.subplots(1, len(plots_to_draw), figsize=(5 * len(plots_to_draw), 5))")
         code.append("    if len(plots_to_draw) == 1: axes = [axes]")
@@ -227,6 +238,8 @@ class BaseClassificationDialog(BaseAnalysisDialog):
             code.append("        axes[ax_idx].set_title('Top Feature Importances')")
             code.append("        ax_idx += 1")
             
+        self._add_extra_plots_rendering(code)
+
         code.append("    plt.tight_layout()")
         code.append("    buf = io.BytesIO()")
         code.append("    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')")
@@ -298,7 +311,7 @@ class GradientBoostingDialog(BaseClassificationDialog):
         self.spin_estimators = QSpinBox()
         self.spin_estimators.setRange(10, 1000)
         self.spin_estimators.setValue(100)
-        layout.addRow("N Estimators:", self.spin_estimators)
+        layout.addRow("N Estimators (max_iter):", self.spin_estimators)
         
         self.spin_lr = QDoubleSpinBox()
         self.spin_lr.setRange(0.001, 1.0)
@@ -312,11 +325,11 @@ class GradientBoostingDialog(BaseClassificationDialog):
         layout.addRow("Max Depth:", self.spin_depth)
         
     def _get_imports(self):
-        return ["from sklearn.ensemble import GradientBoostingClassifier"]
+        return ["from sklearn.ensemble import HistGradientBoostingClassifier"]
         
     def _get_model_init_code(self):
-        return (f"model = GradientBoostingClassifier(\n"
-                f"    n_estimators={self.spin_estimators.value()}, \n"
+        return (f"model = HistGradientBoostingClassifier(\n"
+                f"    max_iter={self.spin_estimators.value()}, \n"
                 f"    learning_rate={self.spin_lr.value()}, \n"
                 f"    max_depth={self.spin_depth.value()}, \n"
                 f"    random_state=42\n"
@@ -324,7 +337,21 @@ class GradientBoostingDialog(BaseClassificationDialog):
 
 class DecisionTreeDialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):
+        # Initialize chk_tree BEFORE super().__init__ because super().__init__ 
+        # calls build_options, which uses chk_tree.
+        self.chk_tree = QCheckBox("Plot Tree Visualization")
+        self.chk_tree.setChecked(False)
+        
         super().__init__("Decision Tree Classifier", df, parent, supports_feature_importance=True)
+        
+    def build_options(self, layout):
+        super().build_options(layout)
+        # Find the Outputs group and add the checkbox
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if isinstance(item.widget(), QGroupBox) and item.widget().title() == "Outputs":
+                item.widget().layout().addWidget(self.chk_tree)
+                break
         
     def _build_hyperparameters(self, layout):
         # Criterion
@@ -368,8 +395,20 @@ class DecisionTreeDialog(BaseClassificationDialog):
         layout.addRow("Min Samples Split:", self.spin_min_split)
         
     def _get_imports(self):
-        return ["from sklearn.tree import DecisionTreeClassifier"]
+        return ["from sklearn.tree import DecisionTreeClassifier, plot_tree"]
         
+    def _add_extra_plots_logic(self, code):
+        if self.chk_tree.isChecked():
+            code.append("plots_to_draw.append('tree')")
+
+    def _add_extra_plots_rendering(self, code):
+        if self.chk_tree.isChecked():
+            code.append("    # Tree Visualization")
+            code.append("    if 'tree' in plots_to_draw:")
+            code.append("        plot_tree(model, feature_names=X.columns, class_names=[str(c) for c in model.classes_], filled=True, rounded=True, ax=axes[ax_idx])")
+            code.append("        axes[ax_idx].set_title('Decision Tree Structure')")
+            code.append("        ax_idx += 1")
+            
     def _get_model_init_code(self):
         depth = "None" if self.chk_auto_depth.isChecked() else self.spin_depth.value()
         return (f"model = DecisionTreeClassifier(\n"
@@ -386,6 +425,9 @@ class DecisionTreeDialog(BaseClassificationDialog):
             
         depth = "None" if self.chk_auto_depth.isChecked() else self.spin_depth.value()
         
+        settings = SettingsManager()
+        n_jobs = -1 if settings.compute_mode == ComputeMode.CPU_MULTI else 1
+        
         code = [
             "# Optimize CCP Alpha via Cross-Validation",
             "from sklearn.model_selection import GridSearchCV",
@@ -397,7 +439,7 @@ class DecisionTreeDialog(BaseClassificationDialog):
             "ccp_alphas = path.ccp_alphas",
             "",
             "# Grid search over the candidates",
-            "grid_search = GridSearchCV(base_tree, param_grid={'ccp_alpha': ccp_alphas}, cv=5, scoring='f1_weighted')",
+            f"grid_search = GridSearchCV(base_tree, param_grid={{'ccp_alpha': ccp_alphas}}, cv=5, scoring='f1_weighted', n_jobs={n_jobs})",
             "grid_search.fit(X_train, y_train)",
             "",
             "model = grid_search.best_estimator_",
