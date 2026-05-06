@@ -23,6 +23,8 @@ class WorkerSignals(QObject):
     error = Signal(tuple)  # (exctype, value, traceback.format_exc())
     result = Signal(object) # (namespace, stdout, stderr)
     progress = Signal(int)
+    display_result = Signal(str, object)  # (title, content)
+    display_plot = Signal(str, object)    # (title, figure)
 
 
 class ScriptWorker(QRunnable):
@@ -36,12 +38,23 @@ class ScriptWorker(QRunnable):
         self.namespace = namespace
         self.signals = WorkerSignals()
 
-        # Inject progress function into namespace
+        # Inject thread-safe functions into namespace
         self.namespace["progress"] = self.emit_progress
+        self.namespace["show_result"] = self.emit_result
+        self.namespace["show_plot"] = self.emit_plot
+        self.namespace["display_html"] = lambda html: self.emit_result("Analysis Result", html)
 
     def emit_progress(self, n: int):
         """Callback function used within scripts to report progress."""
         self.signals.progress.emit(int(n))
+
+    def emit_result(self, title: str, content: Any):
+        """Thread-safe way to show a result table or text."""
+        self.signals.display_result.emit(title, content)
+
+    def emit_plot(self, title: str, fig: Any):
+        """Thread-safe way to show a matplotlib figure."""
+        self.signals.display_plot.emit(title, fig)
 
     @Slot()
     def run(self):

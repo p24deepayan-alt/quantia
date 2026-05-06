@@ -747,17 +747,11 @@ class MainWindow(QMainWindow):
         """Execute Python code in a background thread."""
         self._console.write_command(code.strip().split('\n')[0][:80])
 
-        def _show_result(title: str, content) -> None:
-            self._results_view.add_result(title, content)
-            self._tabs.setCurrentIndex(2)
-
-        def _show_plot(title: str, fig) -> None:
-            self._plot_view.add_plot(title, fig)
-            self._tabs.setCurrentIndex(4)
-
         import numpy as np
         import scipy
         import scipy.stats
+        import matplotlib
+        matplotlib.use('Agg') # Force non-interactive backend for thread safety
         
         namespace = {
             "pd": pd,
@@ -765,9 +759,6 @@ class MainWindow(QMainWindow):
             "np": np,
             "scipy": scipy,
             "df": self._data_view.get_dataframe(),
-            "show_result": _show_result,
-            "show_plot": _show_plot,
-            "display_html": lambda html: _show_result("Analysis Result", html),
         }
 
         self._snapshot_for_undo()
@@ -797,10 +788,20 @@ class MainWindow(QMainWindow):
         def on_finished():
             self._status_bar.hide_progress()
 
+        def _handle_display_result(title, content):
+            self._results_view.add_result(title, content)
+            self._tabs.setCurrentIndex(2)
+
+        def _handle_display_plot(title, fig):
+            self._plot_view.add_plot(title, fig)
+            self._tabs.setCurrentIndex(4)
+
         worker.signals.result.connect(on_result)
         worker.signals.error.connect(on_error)
         worker.signals.finished.connect(on_finished)
         worker.signals.progress.connect(lambda n: self._status_bar.show_progress(n, 100, "Executing script..."))
+        worker.signals.display_result.connect(_handle_display_result)
+        worker.signals.display_plot.connect(_handle_display_plot)
 
         self._threadpool.start(worker)
 
