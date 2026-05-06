@@ -73,27 +73,51 @@ class StringFormatDialog(BaseAnalysisDialog):
         vars_str = ", ".join(f"'{v}'" for v in targets)
         code = [
             f"# String Format: {operation}",
+            "import polars as pl",
+            "import pandas as pd",
             f"target_cols = [{vars_str}]",
-            "for col in target_cols:"
+            "",
+            "if isinstance(df, pl.DataFrame):",
+            "    # Multi-threaded formatting via Polars",
+            "    exprs = []",
+            "    for col in target_cols:",
+            f"        new_col = 'Formatted_' + col if {new_cols} else col"
         ]
 
-        # Determine target column name
-        if new_cols:
-            code.append("    new_col = f'Formatted_' + col")
-        else:
-            code.append("    new_col = col")
-
-        # Apply transformation
         if operation == "UPPERCASE":
-            code.append("    df[new_col] = df[col].astype(str).str.upper()")
+            code.append("        exprs.append(pl.col(col).cast(pl.Utf8).str.to_uppercase().replace('', None).alias(new_col))")
         elif operation == "lowercase":
-            code.append("    df[new_col] = df[col].astype(str).str.lower()")
+            code.append("        exprs.append(pl.col(col).cast(pl.Utf8).str.to_lowercase().replace('', None).alias(new_col))")
         elif operation == "Title Case":
-            code.append("    df[new_col] = df[col].astype(str).str.title()")
+            code.append("        exprs.append(pl.col(col).cast(pl.Utf8).str.to_titlecase().replace('', None).alias(new_col))")
         elif operation == "Capitalize First Letter":
-            code.append("    df[new_col] = df[col].astype(str).str.capitalize()")
+            code.append("        exprs.append((pl.col(col).cast(pl.Utf8).str.slice(0, 1).str.to_uppercase() + pl.col(col).cast(pl.Utf8).str.slice(1).str.to_lowercase()).replace('', None).alias(new_col))")
         elif operation == "Trim Whitespace (Leading & Trailing)":
-            code.append("    df[new_col] = df[col].astype(str).str.strip()")
+            code.append("        exprs.append(pl.col(col).cast(pl.Utf8).str.strip_chars().replace('', None).alias(new_col))")
+
+        code.extend([
+            "    df = df.with_columns(exprs)",
+            "else:",
+            "    for col in target_cols:",
+            f"        new_col = 'Formatted_' + col if {new_cols} else col"
+        ])
+
+        # Apply transformation (Pandas fallback)
+        if operation == "UPPERCASE":
+            code.append("        res = df[col].astype(str).str.upper()")
+            code.append("        df[new_col] = res.mask(res == '')")
+        elif operation == "lowercase":
+            code.append("        res = df[col].astype(str).str.lower()")
+            code.append("        df[new_col] = res.mask(res == '')")
+        elif operation == "Title Case":
+            code.append("        res = df[col].astype(str).str.title()")
+            code.append("        df[new_col] = res.mask(res == '')")
+        elif operation == "Capitalize First Letter":
+            code.append("        res = df[col].astype(str).str.capitalize()")
+            code.append("        df[new_col] = res.mask(res == '')")
+        elif operation == "Trim Whitespace (Leading & Trailing)":
+            code.append("        res = df[col].astype(str).str.strip()")
+            code.append("        df[new_col] = res.mask(res == '')")
             
         return "\n".join(code)
 

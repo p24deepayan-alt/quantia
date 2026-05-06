@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Any
 
 import pandas as pd
+import polars as pl
 from PySide6.QtCore import Qt, QSortFilterProxyModel, Signal, QObject, QEvent
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
@@ -51,12 +52,13 @@ class DataViewWidget(QWidget):
     """Excel-like data grid backed by a PandasTableModel."""
 
     # Emitted when data is loaded (for status bar update, variable list refresh)
-    data_loaded = Signal(pd.DataFrame)
+    data_loaded = Signal(object)
     # Request a quick plot for a column
     quick_plot_requested = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._current_df: pd.DataFrame | pl.DataFrame = pd.DataFrame()
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -133,33 +135,47 @@ class DataViewWidget(QWidget):
     def model(self) -> PandasTableModel:
         return self._model
 
-    def load_dataframe(self, df: pd.DataFrame) -> None:
+    def load_dataframe(self, df: pd.DataFrame | pl.DataFrame) -> None:
         """Set a new DataFrame into the table."""
-        self._model.set_dataframe(df)
+        self._current_df = df
+        if isinstance(df, pl.DataFrame):
+            # Fast zero-copy conversion for display
+            pd_df = df.to_pandas()
+        else:
+            pd_df = df
+            
+        self._model.set_dataframe(pd_df)
         self._cell_ref.setText("")
         self._cell_value.clear()
         self.data_loaded.emit(df)
 
-    def load_csv(self, path: str) -> pd.DataFrame | None:
-        """Load a CSV file and display it. Returns the DataFrame on success."""
+    def load_csv(self, path: str) -> pl.DataFrame | None:
+        """Load a CSV file and display it. Returns the Polars DataFrame on success."""
         try:
-            df = pd.read_csv(path, low_memory=False)
+            # Use robust parameters for high-performance multi-threaded loading
+            df = pl.read_csv(
+                path, 
+                infer_schema_length=10000, 
+                truncate_ragged_lines=True
+            )
             self.load_dataframe(df)
             return df
         except Exception as e:
             return None
 
-    def load_excel(self, path: str) -> pd.DataFrame | None:
+    def load_excel(self, path: str) -> pl.DataFrame | None:
         """Load an Excel file and display it."""
         try:
-            df = pd.read_excel(path)
+            # Polars supports excel via fastexcel or calamine engines
+            pd_df = pd.read_excel(path)
+            df = pl.from_pandas(pd_df)
             self.load_dataframe(df)
             return df
         except Exception as e:
             return None
 
-    def get_dataframe(self) -> pd.DataFrame:
-        return self._model.dataframe
+    def get_dataframe(self) -> pd.DataFrame | pl.DataFrame:
+        return self._current_df
 
     # ── Cell selection ───────────────────────────────────────────────────
 

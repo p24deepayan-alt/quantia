@@ -107,6 +107,7 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         scale_data = self.chk_scale.isChecked()
         
         code = [
+            "import polars as pl",
             "import pandas as pd",
             "import numpy as np",
             "import matplotlib.pyplot as plt",
@@ -118,8 +119,17 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         ]
         code.extend(self._get_imports())
         code.append("")
-        code.append(f"X = df[[{', '.join([f'\"{f}\"' for f in features])}]]")
-        code.append(f"y = df['{target}']")
+        
+        code.append("if isinstance(df, pl.DataFrame):")
+        code.append(f"    # Extract and clean data using Polars")
+        code.append(f"    combined = df.select([{', '.join([f'\"{f}\"' for f in features + [target]])}]).drop_nulls()")
+        code.append(f"    X = combined.select([{', '.join([f'\"{f}\"' for f in features])}]).to_pandas()")
+        code.append(f"    y = combined.select('{target}').to_pandas().iloc[:, 0]")
+        code.append("else:")
+        code.append(f"    # Standard Pandas extraction and cleaning")
+        code.append(f"    combined = df[[{', '.join([f'\"{f}\"' for f in features + [target]])}]].dropna()")
+        code.append(f"    X = combined[[{', '.join([f'\"{f}\"' for f in features])}]]")
+        code.append(f"    y = combined['{target}']")
         code.append("")
         
         code.append("# Handle categorical features")

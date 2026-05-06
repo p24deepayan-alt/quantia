@@ -86,6 +86,7 @@ class PCADialog(BaseAnalysisDialog):
 
         code = [
             f"# Principal Component Analysis (PCA)",
+            "import polars as pl",
             "import pandas as pd",
             "import numpy as np",
             "import matplotlib.pyplot as plt",
@@ -97,13 +98,16 @@ class PCADialog(BaseAnalysisDialog):
 
         code.append("\n# Prepare Data")
         code.append(f"features = [{feat_str}]")
-        code.append("X = df[features].copy()")
-        code.append("X = X.dropna() # PCA cannot handle missing values")
+        code.append("if isinstance(df, pl.DataFrame):")
+        code.append("    # Extract data using Polars for speed, keeping track of rows if appending")
+        code.append("    X_pd = df.select(features).drop_nulls().to_pandas()")
+        code.append("else:")
+        code.append("    X_pd = df[features].dropna()")
         
         if self.chk_scale.isChecked():
-            code.append("X_scaled = StandardScaler().fit_transform(X)")
+            code.append("X_scaled = StandardScaler().fit_transform(X_pd)")
         else:
-            code.append("X_scaled = X.values")
+            code.append("X_scaled = X_pd.values")
 
         code.append("\n# Fit PCA")
         code.append(f"pca = PCA(n_components={n_comp})")
@@ -134,9 +138,17 @@ class PCADialog(BaseAnalysisDialog):
 
         if self.chk_append.isChecked():
             code.append("\n# Append PCs to Dataset")
-            code.append("for i in range(pca.n_components_):")
-            # We align using the index of the dropna'd X to avoid misaligning rows
-            code.append(f"    df.loc[X.index, f'PC{{i+1}}'] = X_pca[:, i]")
+            code.append("if isinstance(df, pl.DataFrame):")
+            code.append("    pc_names = [f'PC{i+1}' for i in range(pca.n_components_)]")
+            code.append("    # To align correctly, we use row indices")
+            code.append("    temp_df = df.with_row_index('__row_id__')")
+            code.append("    valid_ids = temp_df.select(['__row_id__'] + features).drop_nulls().get_column('__row_id__')")
+            code.append("    pcs_pl = pl.DataFrame(X_pca, schema=pc_names).with_columns(__row_id__ = valid_ids)")
+            code.append("    df = temp_df.join(pcs_pl, on='__row_id__', how='left').drop('__row_id__')")
+            code.append("else:")
+            code.append("    for i in range(pca.n_components_):")
+            # We align using the index of the dropna'd X_pd to avoid misaligning rows
+            code.append(f"        df.loc[X_pd.index, f'PC{{i+1}}'] = X_pca[:, i]")
             code.append("print(f'\\nAppended {pca.n_components_} Principal Components to the dataset.')")
 
         plots_to_draw = []

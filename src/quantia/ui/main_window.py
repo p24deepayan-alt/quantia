@@ -17,7 +17,8 @@ import zipfile
 import io
 
 import pandas as pd
-from PySide6.QtCore import Qt, QSize, QTimer
+import polars as pl
+from PySide6.QtCore import Qt, QSize, QTimer, QThreadPool
 from PySide6.QtGui import QIcon, QKeySequence, QAction
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -43,6 +44,7 @@ from quantia.ui.central.script_editor import ScriptEditorWidget
 from quantia.ui.central.results_view import ResultsViewWidget
 from quantia.ui.central.plot_view import PlotViewWidget
 from quantia.ui.central.workflow import WorkflowTab
+from quantia.utils.worker import ScriptWorker
 from quantia.ui.dialogs.descriptive import DescriptiveStatsDialog
 from quantia.ui.dialogs.ttest import TTestDialog
 from quantia.ui.dialogs.regression import LinearRegressionDialog
@@ -92,11 +94,12 @@ class MainWindow(QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
+        self._threadpool = QThreadPool.globalInstance()
 
 
         # ── Undo / Redo stacks (max 4 snapshots) ────────────────────────
-        self._undo_stack: deque[pd.DataFrame] = deque(maxlen=1)
-        self._redo_stack: deque[pd.DataFrame] = deque(maxlen=1)
+        self._undo_stack: deque[pd.DataFrame | pl.DataFrame] = deque(maxlen=1)
+        self._redo_stack: deque[pd.DataFrame | pl.DataFrame] = deque(maxlen=1)
         self._model_history = []
 
         # ── Window setup ─────────────────────────────────────────────────
@@ -345,7 +348,7 @@ class MainWindow(QMainWindow):
 
     def _auto_save_heartbeat(self) -> None:
         """Silently save the current state to a temporary file."""
-        if self._data_view.model.dataframe.empty:
+        if len(self._data_view.model.dataframe) == 0:
             return
             
         temp_path = get_workspaces_dir() / ".temp.quantia"
@@ -367,10 +370,14 @@ class MainWindow(QMainWindow):
     def _write_project_file(self, path: str, is_autosave: bool = False) -> None:
         try:
             with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-                # Save Dataframe
-                if not self._data_view.model.dataframe.empty:
+                # Save Main Dataframe (Source of truth)
+                df_main = self._data_view.get_dataframe()
+                if len(df_main) > 0:
                     df_bytes = io.BytesIO()
-                    self._data_view.model.dataframe.to_parquet(df_bytes)
+                    if isinstance(df_main, pl.DataFrame):
+                        df_main.write_parquet(df_bytes)
+                    else:
+                        df_main.to_parquet(df_bytes)
                     zf.writestr("data.parquet", df_bytes.getvalue())
                 
                 # Save Script
@@ -380,13 +387,19 @@ class MainWindow(QMainWindow):
                 # Save Undo stack
                 for i, df in enumerate(self._undo_stack):
                     df_bytes = io.BytesIO()
-                    df.to_parquet(df_bytes)
+                    if isinstance(df, pl.DataFrame):
+                        df.write_parquet(df_bytes)
+                    else:
+                        df.to_parquet(df_bytes)
                     zf.writestr(f"undo_{i}.parquet", df_bytes.getvalue())
 
                 # Save Redo stack
                 for i, df in enumerate(self._redo_stack):
                     df_bytes = io.BytesIO()
-                    df.to_parquet(df_bytes)
+                    if isinstance(df, pl.DataFrame):
+                        df.write_parquet(df_bytes)
+                    else:
+                        df.to_parquet(df_bytes)
                     zf.writestr(f"redo_{i}.parquet", df_bytes.getvalue())
 
             if not is_autosave:
@@ -455,31 +468,39 @@ class MainWindow(QMainWindow):
 
     # ── Data import ──────────────────────────────────────────────────────
 
-    def _robust_read_csv(self, path: str) -> tuple[pd.DataFrame, str | None]:
-        """Attempt to read a CSV with smart default fallbacks before AI detection."""
+    def _robust_read_csv(self, path: str) -> tuple[pl.DataFrame, str | None]:
+        """Attempt to read a CSV with smart default fallbacks and robust schema inference."""
+        # Common robust parameters
+        null_vals = ["NA", "N/A", "null", "NULL", "NaN", "nan", "None", "", " ", "-"]
+        robust_params = {
+            "infer_schema_length": 10000,
+            "truncate_ragged_lines": True,
+            "ignore_errors": False,
+            "null_values": null_vals
+        }
+
         # 1. Try standard utf-8
         try:
-            df = pd.read_csv(path, encoding='utf-8', low_memory=False)
+            df = pl.read_csv(path, **robust_params)
             return df, None
-        except UnicodeDecodeError:
+        except Exception:
             pass
 
-        # 2. Try cp1252 (Windows-1252) - fixes 99% of western datasets with ™, ½, etc.
+        # 2. Try cp1252 (Windows-1252) via byte reading if Polars native fails
         try:
-            df = pd.read_csv(path, encoding='cp1252', low_memory=False)
+            with open(path, 'rb') as f:
+                content = f.read().decode('cp1252').encode('utf-8')
+            df = pl.read_csv(io.BytesIO(content), **robust_params)
             self._console.write_info("Loaded successfully using 'cp1252' smart fallback.")
             return df, 'cp1252'
-        except UnicodeDecodeError:
+        except Exception:
             pass
             
-        # 3. Fallback to AI Guesser for Asian scripts, UTF-16, etc.
+        # 3. Fallback to AI Guesser
         self._console.write_info("Smart fallbacks failed, running automatic encoding detection...")
         try:
             import charset_normalizer
-            
-            # Read a sample of the file to guess encoding
             with open(path, 'rb') as f:
-                # Read first 1MB to guess
                 raw_data = f.read(1024 * 1024)
             
             result = charset_normalizer.from_bytes(raw_data).best()
@@ -489,13 +510,20 @@ class MainWindow(QMainWindow):
             detected_encoding = result.encoding
             self._console.write_info(f"Detected encoding: '{detected_encoding}' (Language: {result.language}).")
             
-            df = pd.read_csv(path, encoding=detected_encoding, low_memory=False)
+            with open(path, 'rb') as f:
+                content = f.read().decode(detected_encoding).encode('utf-8')
+            df = pl.read_csv(io.BytesIO(content), **robust_params)
             return df, detected_encoding
             
         except Exception as e:
-            # 4. Absolute last resort: latin1 mathematically cannot fail decoding
-            self._console.write_warning(f"Detection failed ({e}). Forcing 'latin1' absolute fallback.")
-            df = pd.read_csv(path, encoding="latin1", low_memory=False)
+            # 4. Absolute last resort: latin1 + ignore_errors
+            self._console.write_warning(f"Detection failed ({e}). Forcing 'latin1' with error ignoring.")
+            with open(path, 'rb') as f:
+                content = f.read().decode('latin1').encode('utf-8')
+            
+            last_resort_params = robust_params.copy()
+            last_resort_params["ignore_errors"] = True
+            df = pl.read_csv(io.BytesIO(content), **last_resort_params)
             return df, "latin1"
 
     def _import_any(self) -> None:
@@ -527,11 +555,12 @@ class MainWindow(QMainWindow):
             if ext == ".csv":
                 df, used_encoding = self._robust_read_csv(path)
             elif ext in (".xlsx", ".xls"):
-                df = pd.read_excel(path)
+                pd_df = pd.read_excel(path)
+                df = pl.from_pandas(pd_df)
             elif ext == ".json":
-                df = pd.read_json(path)
+                df = pl.read_json(path)
             elif ext == ".parquet":
-                df = pd.read_parquet(path)
+                df = pl.read_parquet(path)
             else:
                 self._console.write_error(f"Unsupported format: {ext}")
                 self._status_bar.hide_progress()
@@ -541,16 +570,19 @@ class MainWindow(QMainWindow):
             self._console.write_success(f"Loaded {len(df):,} rows × {len(df.columns)} columns from {Path(path).name}")
 
             # Generate code in script editor
-            csv_code = f"df = pd.read_csv(r'{path}', low_memory=False)"
+            null_vals_code = '["NA", "N/A", "null", "NULL", "NaN", "nan", "None", "", " ", "-"]'
+            csv_code = f"df = pl.read_csv(r'{path}', infer_schema_length=10000, truncate_ragged_lines=True, null_values={null_vals_code})"
             if used_encoding:
-                csv_code = f"df = pd.read_csv(r'{path}', encoding='{used_encoding}', low_memory=False)"
+                csv_code = (f"with open(r'{path}', 'rb') as f:\n"
+                            f"    content = f.read().decode('{used_encoding}').encode('utf-8')\n"
+                            f"df = pl.read_csv(io.BytesIO(content), infer_schema_length=10000, truncate_ragged_lines=True, null_values={null_vals_code})")
                 
             code_map = {
                 ".csv": csv_code,
-                ".xlsx": f"df = pd.read_excel(r'{path}')",
-                ".xls": f"df = pd.read_excel(r'{path}')",
-                ".json": f"df = pd.read_json(r'{path}')",
-                ".parquet": f"df = pd.read_parquet(r'{path}')",
+                ".xlsx": f"df = pl.from_pandas(pd.read_excel(r'{path}'))",
+                ".xls": f"df = pl.from_pandas(pd.read_excel(r'{path}'))",
+                ".json": f"df = pl.read_json(r'{path}')",
+                ".parquet": f"df = pl.read_parquet(r'{path}')",
             }
             self._script_editor.append_code(code_map.get(ext, f"# import: {path}"))
         except Exception as e:
@@ -561,7 +593,7 @@ class MainWindow(QMainWindow):
     def _import_csv(self) -> None:
         path, _ = QFileDialog.getOpenFileName(self, "Import CSV", "", "CSV Files (*.csv);;All Files (*)")
         if path:
-            self._console.write_command(f"pd.read_csv('{path}')")
+            self._console.write_command(f"pl.read_csv('{path}')")
             try:
                 from PySide6.QtWidgets import QApplication
                 self._status_bar.show_progress(0, 0, "Loading CSV...")
@@ -571,11 +603,15 @@ class MainWindow(QMainWindow):
                 self._data_view.load_dataframe(df)
                 self._console.write_success(f"Loaded {len(df):,} rows × {len(df.columns)} cols")
                 
-                # Append to script manually since _import_any handles its own
+                null_vals_code = '["NA", "N/A", "null", "NULL", "NaN", "nan", "None", "", " ", "-"]'
                 if used_encoding:
-                    self._script_editor.append_code(f"df = pd.read_csv(r'{path}', encoding='{used_encoding}', low_memory=False)")
+                    self._script_editor.append_code(
+                        f"with open(r'{path}', 'rb') as f:\n"
+                        f"    content = f.read().decode('{used_encoding}').encode('utf-8')\n"
+                        f"df = pl.read_csv(io.BytesIO(content), infer_schema_length=10000, truncate_ragged_lines=True, null_values={null_vals_code})"
+                    )
                 else:
-                    self._script_editor.append_code(f"df = pd.read_csv(r'{path}', low_memory=False)")
+                    self._script_editor.append_code(f"df = pl.read_csv(r'{path}', infer_schema_length=10000, truncate_ragged_lines=True, null_values={null_vals_code})")
                     
             except Exception as e:
                 self._console.write_error(str(e))
@@ -591,9 +627,11 @@ class MainWindow(QMainWindow):
                 self._status_bar.show_progress(0, 0, "Loading Excel...")
                 QApplication.processEvents()
 
-                df = pd.read_excel(path)
+                pd_df = pd.read_excel(path)
+                df = pl.from_pandas(pd_df)
                 self._data_view.load_dataframe(df)
                 self._console.write_success(f"Loaded {len(df):,} rows × {len(df.columns)} cols")
+                self._script_editor.append_code(f"df = pl.from_pandas(pd.read_excel(r'{path}'))")
             except Exception as e:
                 self._console.write_error(str(e))
             finally:
@@ -602,15 +640,16 @@ class MainWindow(QMainWindow):
     def _import_json(self) -> None:
         path, _ = QFileDialog.getOpenFileName(self, "Import JSON", "", "JSON Files (*.json);;All Files (*)")
         if path:
-            self._console.write_command(f"pd.read_json('{path}')")
+            self._console.write_command(f"pl.read_json('{path}')")
             try:
                 from PySide6.QtWidgets import QApplication
                 self._status_bar.show_progress(0, 0, "Loading JSON...")
                 QApplication.processEvents()
 
-                df = pd.read_json(path)
+                df = pl.read_json(path)
                 self._data_view.load_dataframe(df)
                 self._console.write_success(f"Loaded {len(df):,} rows × {len(df.columns)} cols")
+                self._script_editor.append_code(f"df = pl.read_json(r'{path}')")
             except Exception as e:
                 self._console.write_error(str(e))
             finally:
@@ -619,15 +658,16 @@ class MainWindow(QMainWindow):
     def _import_parquet(self) -> None:
         path, _ = QFileDialog.getOpenFileName(self, "Import Parquet", "", "Parquet Files (*.parquet);;All Files (*)")
         if path:
-            self._console.write_command(f"pd.read_parquet('{path}')")
+            self._console.write_command(f"pl.read_parquet('{path}')")
             try:
                 from PySide6.QtWidgets import QApplication
                 self._status_bar.show_progress(0, 0, "Loading Parquet...")
                 QApplication.processEvents()
 
-                df = pd.read_parquet(path)
+                df = pl.read_parquet(path)
                 self._data_view.load_dataframe(df)
                 self._console.write_success(f"Loaded {len(df):,} rows × {len(df.columns)} cols")
+                self._script_editor.append_code(f"df = pl.read_parquet(r'{path}')")
             except Exception as e:
                 self._console.write_error(str(e))
             finally:
@@ -638,8 +678,10 @@ class MainWindow(QMainWindow):
     def _snapshot_for_undo(self) -> None:
         """Save current DataFrame to undo stack before a mutation."""
         df = self._data_view.get_dataframe()
-        if not df.empty:
-            self._undo_stack.append(df.copy())
+        if len(df) > 0:
+            # Handle Polars vs Pandas copy/clone
+            snapshot = df.clone() if isinstance(df, pl.DataFrame) else df.copy()
+            self._undo_stack.append(snapshot)
             self._redo_stack.clear()
 
     def _undo(self) -> None:
@@ -649,8 +691,9 @@ class MainWindow(QMainWindow):
             return
         # Push current state to redo
         current = self._data_view.get_dataframe()
-        if not current.empty:
-            self._redo_stack.append(current.copy())
+        if len(current) > 0:
+            snapshot = current.clone() if isinstance(current, pl.DataFrame) else current.copy()
+            self._redo_stack.append(snapshot)
         prev = self._undo_stack.pop()
         self._data_view.load_dataframe(prev)
         self._console.write_info("Undo")
@@ -662,13 +705,14 @@ class MainWindow(QMainWindow):
             return
         # Push current state to undo
         current = self._data_view.get_dataframe()
-        if not current.empty:
-            self._undo_stack.append(current.copy())
+        if len(current) > 0:
+            snapshot = current.clone() if isinstance(current, pl.DataFrame) else current.copy()
+            self._undo_stack.append(snapshot)
         nxt = self._redo_stack.pop()
         self._data_view.load_dataframe(nxt)
         self._console.write_info("Redo")
 
-    def _on_data_loaded(self, df: pd.DataFrame) -> None:
+    def _on_data_loaded(self, df: pd.DataFrame | pl.DataFrame) -> None:
         """Update variable list and status bar when data is loaded."""
         self._status_bar.set_dataset_info(len(df), len(df.columns))
         col_info = self._data_view.model.column_info()
@@ -677,10 +721,17 @@ class MainWindow(QMainWindow):
     def _on_variable_selected(self, var_name: str) -> None:
         """Log variable selection to console."""
         df = self._data_view.get_dataframe()
-        if var_name in df.columns:
-            series = df[var_name]
-            self._console.write_info(f"── {var_name} ──")
-            self._console.write(str(series.describe()))
+        if isinstance(df, pl.DataFrame):
+            if var_name in df.columns:
+                series = df.get_column(var_name)
+                self._console.write_info(f"── {var_name} ──")
+                # Polars describe() returns a DataFrame summary
+                self._console.write(str(series.describe()))
+        else:
+            if var_name in df.columns:
+                series = df[var_name]
+                self._console.write_info(f"── {var_name} ──")
+                self._console.write(str(series.describe()))
 
 
 
@@ -693,27 +744,24 @@ class MainWindow(QMainWindow):
             self._execute_code(code)
 
     def _execute_code(self, code: str) -> None:
-        """Execute Python code and show output in console."""
-        import io
-        import contextlib
-
+        """Execute Python code in a background thread."""
         self._console.write_command(code.strip().split('\n')[0][:80])
 
         def _show_result(title: str, content) -> None:
             self._results_view.add_result(title, content)
-            self._tabs.setCurrentIndex(2) # Auto switch to Results tab
+            self._tabs.setCurrentIndex(2)
 
         def _show_plot(title: str, fig) -> None:
             self._plot_view.add_plot(title, fig)
-            self._tabs.setCurrentIndex(4) # Auto switch to Plots tab
+            self._tabs.setCurrentIndex(4)
 
-        # Build a namespace with the current dataframe available
         import numpy as np
         import scipy
         import scipy.stats
         
         namespace = {
             "pd": pd,
+            "pl": pl,
             "np": np,
             "scipy": scipy,
             "df": self._data_view.get_dataframe(),
@@ -722,53 +770,44 @@ class MainWindow(QMainWindow):
             "display_html": lambda html: _show_result("Analysis Result", html),
         }
 
-        stdout_capture = io.StringIO()
-        stderr_capture = io.StringIO()
+        self._snapshot_for_undo()
+        self._status_bar.show_progress(0, 0, "Executing script...")
 
-        try:
-            from PySide6.QtWidgets import QApplication
-            self._snapshot_for_undo()
-            self._status_bar.show_progress(0, 0, "Executing script...")
-            QApplication.processEvents()
+        worker = ScriptWorker(code, namespace)
 
-            with contextlib.redirect_stdout(stdout_capture), \
-                 contextlib.redirect_stderr(stderr_capture):
-                exec(code, namespace)
-
-            output = stdout_capture.getvalue()
+        def on_result(result_data):
+            output = result_data["stdout"]
             if output:
                 self._console.write(output.rstrip())
 
-            errors = stderr_capture.getvalue()
+            errors = result_data["stderr"]
             if errors:
                 self._console.write_warning(errors.rstrip())
 
-            # If df was reassigned or modified in the script, update the data view
-            if "df" in namespace and isinstance(namespace["df"], pd.DataFrame):
-                self._data_view.load_dataframe(namespace["df"])
+            new_ns = result_data["namespace"]
+            if "df" in new_ns and isinstance(new_ns["df"], (pd.DataFrame, pl.DataFrame)):
+                self._data_view.load_dataframe(new_ns["df"])
                 self._console.write_success("Data updated")
 
-            # Extract any statistical models created
-            for key, val in namespace.items():
-                if hasattr(val, "model") and hasattr(val.model, "endog_names") and hasattr(val.model, "exog_names"):
-                    model = val.model
-                    y_name = model.endog_names
-                    x_names = model.exog_names if isinstance(model.exog_names, list) else [model.exog_names]
-                    x_names = [x for x in x_names if x != 'const']
-                    model_info = (y_name, x_names)
-                    if model_info not in self._model_history:
-                        self._model_history.append(model_info)
-                        self._console.write_success(f"Model saved to history: {y_name} ~ {', '.join(x_names)}")
+        def on_error(err_tuple):
+            exctype, value, tb_str = err_tuple
+            self._console.write_error(f"Execution failed: {value}")
+            self._console.write_warning(tb_str)
 
-        except Exception as e:
-            self._console.write_error(str(e))
-        finally:
+        def on_finished():
             self._status_bar.hide_progress()
+
+        worker.signals.result.connect(on_result)
+        worker.signals.error.connect(on_error)
+        worker.signals.finished.connect(on_finished)
+        worker.signals.progress.connect(lambda n: self._status_bar.show_progress(n, 100, "Executing script..."))
+
+        self._threadpool.start(worker)
 
     # ── Data Dialogs ─────────────────────────────────────────────────────
 
     def _show_data_dialog(self, dialog_class) -> None:
-        if self._data_view.get_dataframe().empty:
+        if len(self._data_view.get_dataframe()) == 0:
             QMessageBox.warning(self, "No Data", "Please load a dataset first.")
             return
 
@@ -820,7 +859,7 @@ class MainWindow(QMainWindow):
     # ── Statistics Dialogs ───────────────────────────────────────────────
 
     def _show_descriptive_stats(self) -> None:
-        if self._data_view.get_dataframe().empty:
+        if len(self._data_view.get_dataframe()) == 0:
             QMessageBox.warning(self, "No Data", "Please load a dataset first.")
             return
 
@@ -834,7 +873,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _show_ttest(self) -> None:
-        if self._data_view.get_dataframe().empty:
+        if len(self._data_view.get_dataframe()) == 0:
             QMessageBox.warning(self, "No Data", "Please load a dataset first.")
             return
 
@@ -860,7 +899,7 @@ class MainWindow(QMainWindow):
         self._show_data_dialog(CorrelationDialog)
 
     def _show_linear_regression(self) -> None:
-        if self._data_view.get_dataframe().empty:
+        if len(self._data_view.get_dataframe()) == 0:
             QMessageBox.warning(self, "No Data", "Please load a dataset first.")
             return
 
@@ -874,7 +913,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _show_logistic_regression(self) -> None:
-        if self._data_view.get_dataframe().empty:
+        if len(self._data_view.get_dataframe()) == 0:
             QMessageBox.warning(self, "No Data", "Please load a dataset first.")
             return
 
@@ -888,7 +927,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _show_logistic_regression(self) -> None:
-        if self._data_view.get_dataframe().empty:
+        if len(self._data_view.get_dataframe()) == 0:
             QMessageBox.warning(self, "No Data", "Please load a dataset first.")
             return
 
@@ -984,7 +1023,7 @@ class MainWindow(QMainWindow):
     def _export_data(self) -> None:
         """Export the current dataset to CSV, Excel, JSON, or Parquet."""
         df = self._data_view.get_dataframe()
-        if df.empty:
+        if len(df) == 0:
             QMessageBox.warning(self, "No Data", "Please load a dataset first.")
             return
 
@@ -1003,17 +1042,34 @@ class MainWindow(QMainWindow):
             QApplication.processEvents()
 
             ext = Path(path).suffix.lower()
-            if ext == ".csv":
-                df.to_csv(path, index=False)
-            elif ext == ".xlsx":
-                df.to_excel(path, index=False)
-            elif ext == ".json":
-                df.to_json(path, orient="records", indent=2)
-            elif ext == ".parquet":
-                df.to_parquet(path, index=False)
+            if isinstance(df, pl.DataFrame):
+                # Polars branch
+                if ext == ".csv":
+                    df.write_csv(path)
+                elif ext == ".xlsx":
+                    df.to_pandas().to_excel(path, index=False)
+                elif ext == ".json":
+                    df.write_json(path, row_oriented=True)
+                elif ext == ".parquet":
+                    df.write_parquet(path)
+                else:
+                    QMessageBox.warning(self, "Unsupported", f"Unsupported format: {ext}")
+                    self._status_bar.hide_progress()
+                    return
             else:
-                QMessageBox.warning(self, "Unsupported", f"Unsupported format: {ext}")
-                return
+                # Pandas branch
+                if ext == ".csv":
+                    df.to_csv(path, index=False)
+                elif ext == ".xlsx":
+                    df.to_excel(path, index=False)
+                elif ext == ".json":
+                    df.to_json(path, orient="records", indent=2)
+                elif ext == ".parquet":
+                    df.to_parquet(path, index=False)
+                else:
+                    QMessageBox.warning(self, "Unsupported", f"Unsupported format: {ext}")
+                    self._status_bar.hide_progress()
+                    return
 
             self._console.write_success(f"Exported {len(df):,} rows to {Path(path).name}")
         except Exception as e:

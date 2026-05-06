@@ -100,6 +100,7 @@ class BaseClusteringDialog(BaseAnalysisDialog):
         feature_list_str = ", ".join(f"'{f}'" for f in features)
         
         imports = [
+            "import polars as pl",
             "import pandas as pd",
             "import numpy as np",
             "import matplotlib.pyplot as plt",
@@ -119,11 +120,14 @@ class BaseClusteringDialog(BaseAnalysisDialog):
         code = imports + [""]
         code.append(f"# Prepare Data for {title}")
         code.append(f"features = [{feature_list_str}]")
-        code.append("X = df[features].copy().dropna()")
+        code.append("if isinstance(df, pl.DataFrame):")
+        code.append("    X_clean = df.select(features).drop_nulls().to_pandas()")
+        code.append("else:")
+        code.append("    X_clean = df[features].dropna()")
         code.append("")
         
         code.append("# Handle categorical features automatically")
-        code.append("X = pd.get_dummies(X, drop_first=True, dtype=float)")
+        code.append("X = pd.get_dummies(X_clean, drop_first=True, dtype=float)")
         code.append("")
         
         if scale_data:
@@ -152,7 +156,13 @@ class BaseClusteringDialog(BaseAnalysisDialog):
         
         if self.chk_append.isChecked():
             code.append("# Append labels to original dataframe")
-            code.append("df['Cluster_Label'] = labels")
+            code.append("if isinstance(df, pl.DataFrame):")
+            code.append("    temp_df = df.with_row_index('__row_id__')")
+            code.append("    valid_ids = temp_df.select(['__row_id__'] + features).drop_nulls().get_column('__row_id__')")
+            code.append("    labels_pl = pl.DataFrame({'Cluster_Label': labels}).with_columns(__row_id__ = valid_ids)")
+            code.append("    df = temp_df.join(labels_pl, on='__row_id__', how='left').drop('__row_id__')")
+            code.append("else:")
+            code.append("    df.loc[X_clean.index, 'Cluster_Label'] = labels")
             code.append("print(f'Added \\'Cluster_Label\\' column to main dataset.')")
             code.append("")
             
@@ -178,7 +188,7 @@ class BaseClusteringDialog(BaseAnalysisDialog):
 
         if self.chk_profile.isChecked():
             code.append("    # Cluster Profiles Table")
-            code.append("    profile_df = df[features].copy()")
+            code.append("    profile_df = X_clean.copy()")
             code.append("    profile_df['Cluster'] = labels")
             code.append("    means = profile_df.groupby('Cluster').mean().round(3)")
             code.append("    counts = profile_df.groupby('Cluster').size().rename('Count')")

@@ -113,34 +113,58 @@ class TypeConvertDialog(BaseAnalysisDialog):
         
         code = [
             "# Type / String Conversion",
+            "import polars as pl",
+            "import pandas as pd",
             f"target_cols = [{vars_str}]",
-            "for col in target_cols:"
+            "",
+            "if isinstance(df, pl.DataFrame):",
+            "    # Multi-threaded conversion via Polars",
+            "    exprs = []",
+            "    for i, col in enumerate(target_cols):",
+            "        if 'progress' in globals(): progress(int((i+1)/len(target_cols)*100))",
+            f"        new_col = 'Mod_' + col if {new_cols} else col"
         ]
-        
-        if new_cols:
-            code.append("    new_col = 'Mod_' + col")
-        else:
-            code.append("    new_col = col")
 
         if self.rad_to_numeric.isChecked():
-            code.append("    # Coerce forces unparseable strings to NaN")
-            code.append("    df[new_col] = pd.to_numeric(df[col], errors='coerce')")
-            
+            code.append("        exprs.append(pl.col(col).cast(pl.Float64, strict=False).alias(new_col))")
         elif self.rad_to_string.isChecked():
-            code.append("    df[new_col] = df[col].astype(str)")
-            
+            code.append("        exprs.append(pl.col(col).cast(pl.Utf8).alias(new_col))")
         elif self.rad_replace.isChecked():
             targ = self.txt_target.text()
             repl = self.txt_replace.text()
             if not targ:
                 QMessageBox.warning(self, "Missing Input", "Please specify the target character to replace.")
                 return ""
-            code.append(f"    df[new_col] = df[col].astype(str).str.replace({repr(targ)}, {repr(repl)}, regex=False)")
-            
+            # replace_all followed by mapping "" to None
+            code.append(f"        res = pl.col(col).cast(pl.Utf8).str.replace_all({repr(targ)}, {repr(repl)}, literal=True)")
+            code.append(f"        exprs.append(res.replace('', None).alias(new_col))")
         elif self.rad_append.isChecked():
             prefix = self.txt_prefix.text()
             suffix = self.txt_suffix.text()
-            code.append(f"    df[new_col] = {repr(prefix)} + df[col].astype(str) + {repr(suffix)}")
+            code.append(f"        exprs.append((pl.lit({repr(prefix)}) + pl.col(col).cast(pl.Utf8) + pl.lit({repr(suffix)})).alias(new_col))")
+
+        code.extend([
+            "    df = df.with_columns(exprs)",
+            "else:",
+            "    for i, col in enumerate(target_cols):",
+            "        if 'progress' in globals(): progress(int((i+1)/len(target_cols)*100))",
+            f"        new_col = 'Mod_' + col if {new_cols} else col"
+        ])
+
+        if self.rad_to_numeric.isChecked():
+            code.append("        # Coerce forces unparseable strings to NaN")
+            code.append("        df[new_col] = pd.to_numeric(df[col], errors='coerce')")
+        elif self.rad_to_string.isChecked():
+            code.append("        df[new_col] = df[col].astype(str)")
+        elif self.rad_replace.isChecked():
+            targ = self.txt_target.text()
+            repl = self.txt_replace.text()
+            code.append(f"        res = df[col].astype(str).str.replace({repr(targ)}, {repr(repl)}, regex=False)")
+            code.append(f"        df[new_col] = res.mask(res == '')")
+        elif self.rad_append.isChecked():
+            prefix = self.txt_prefix.text()
+            suffix = self.txt_suffix.text()
+            code.append(f"        df[new_col] = {repr(prefix)} + df[col].astype(str) + {repr(suffix)}")
 
         code.append(f"print('Processed {len(targets)} columns.')")
         return "\n".join(code)

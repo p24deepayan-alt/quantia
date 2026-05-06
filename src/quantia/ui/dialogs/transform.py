@@ -67,38 +67,61 @@ class TransformDataDialog(BaseAnalysisDialog):
 
         transform_type = self.cmb_transform.currentText()
         new_cols = self.rad_new_col.isChecked()
+        prefix = transform_type.split(' ')[0].replace('-', '')
 
         vars_str = ", ".join(f"'{v}'" for v in targets)
         code = [
             f"# Data Transformation: {transform_type}",
             "import numpy as np",
-            f"target_cols = [{vars_str}]"
+            "import polars as pl",
+            "import pandas as pd",
         ]
 
         if transform_type == "Standardize (Z-score)":
             code.insert(1, "from scipy.stats import zscore")
 
-        code.append("for col in target_cols:")
-        
-        # Determine target column name
-        if new_cols:
-            prefix = transform_type.split(' ')[0].replace('-', '')
-            code.append(f"    new_col = f'{prefix}_' + col")
-        else:
-            code.append("    new_col = col")
+        code.extend([
+            "",
+            f"target_cols = [{vars_str}]",
+            "if isinstance(df, pl.DataFrame):",
+            "    # Multi-threaded transformations via Polars expressions",
+            "    exprs = []",
+            "    for i, col in enumerate(target_cols):",
+            "        if 'progress' in globals(): progress(int((i+1)/len(target_cols)*100))",
+            f"        new_col = f'{prefix}_' + col if {new_cols} else col"
+        ])
 
-        # Apply transformation
         if transform_type == "Log (base e)":
-            code.append("    df[new_col] = np.log(df[col])")
+            code.append("        exprs.append(pl.col(col).log().alias(new_col))")
         elif transform_type == "Log (base 10)":
-            code.append("    df[new_col] = np.log10(df[col])")
+            code.append("        exprs.append(pl.col(col).log(10).alias(new_col))")
         elif transform_type == "Square Root":
-            code.append("    df[new_col] = np.sqrt(df[col])")
+            code.append("        exprs.append(pl.col(col).sqrt().alias(new_col))")
         elif transform_type == "Standardize (Z-score)":
-            code.append("    df[new_col] = zscore(df[col], nan_policy='omit')")
+            code.append("        exprs.append(((pl.col(col) - pl.col(col).mean()) / pl.col(col).std()).alias(new_col))")
         elif transform_type == "Min-Max Normalize":
-            code.append("    min_val, max_val = df[col].min(), df[col].max()")
-            code.append("    df[new_col] = (df[col] - min_val) / (max_val - min_val)")
+            code.append("        exprs.append(((pl.col(col) - pl.col(col).min()) / (pl.col(col).max() - pl.col(col).min())).alias(new_col))")
+
+        code.extend([
+            "    df = df.with_columns(exprs)",
+            "else:",
+            "    for i, col in enumerate(target_cols):",
+            "        if 'progress' in globals(): progress(int((i+1)/len(target_cols)*100))",
+            f"        new_col = f'{prefix}_' + col if {new_cols} else col"
+        ])
+
+        # Apply transformation (Pandas fallback)
+        if transform_type == "Log (base e)":
+            code.append("        df[new_col] = np.log(df[col])")
+        elif transform_type == "Log (base 10)":
+            code.append("        df[new_col] = np.log10(df[col])")
+        elif transform_type == "Square Root":
+            code.append("        df[new_col] = np.sqrt(df[col])")
+        elif transform_type == "Standardize (Z-score)":
+            code.append("        df[new_col] = zscore(df[col], nan_policy='omit')")
+        elif transform_type == "Min-Max Normalize":
+            code.append("        min_val, max_val = df[col].min(), df[col].max()")
+            code.append("        df[new_col] = (df[col] - min_val) / (max_val - min_val)")
 
         code.append(f"print('Transformed {len(targets)} columns.')")
         return "\n".join(code)

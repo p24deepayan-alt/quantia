@@ -116,6 +116,7 @@ class ModelComparisonDialog(BaseAnalysisDialog):
         code = [
             f"# Model Comparison Dashboard",
             "import pandas as pd",
+            "import polars as pl",
             "import numpy as np",
             "import matplotlib.pyplot as plt",
             "from sklearn.model_selection import train_test_split",
@@ -128,14 +129,21 @@ class ModelComparisonDialog(BaseAnalysisDialog):
         code.append("\n# Prepare Data")
         code.append(f"features = [{feat_str}]")
         code.append(f"target = '{target}'")
-        code.append("X = df[features].copy()")
-        code.append("y = df[target].copy()")
+        code.append("all_vars = features + [target]")
+        code.append("if isinstance(df, pl.DataFrame):")
+        code.append("    # Multi-threaded extraction via Polars")
+        code.append("    model_data = df.select(all_vars).drop_nulls().to_pandas()")
+        code.append("else:")
+        code.append("    model_data = df[all_vars].dropna()")
+        
+        code.append("\nX = model_data[features]")
+        code.append("y = model_data[target]")
         
         code.append("\n# Handle categorical features")
         code.append("X = pd.get_dummies(X, drop_first=True, dtype=float)")
         
         code.append("\n# Check if binary classification (for AUC/ROC)")
-        code.append("is_binary = len(np.unique(y.dropna())) == 2")
+        code.append("is_binary = len(np.unique(y)) == 2")
         
         code.append("\n# Train/Test Split")
         code.append(f"X_train, X_test, y_train, y_test = train_test_split(X, y, test_size={test_size}, random_state=42, stratify=y)")

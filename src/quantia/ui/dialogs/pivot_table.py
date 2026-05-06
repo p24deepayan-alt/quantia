@@ -100,53 +100,89 @@ class PivotTableDialog(BaseAnalysisDialog):
             "First": "first",
             "Last": "last"
         }
-        agg_func = agg_map[self.cmb_agg.currentText()]
+        agg_func_name = self.cmb_agg.currentText()
+        agg_func = agg_map[agg_func_name]
         overwrite = self.rad_overwrite.isChecked()
 
         gb_str = ", ".join(f"'{c}'" for c in groupby_cols)
         val_str = ", ".join(f"'{c}'" for c in value_cols)
 
         code = [
-            f"# Pivot Table / Group By: {self.cmb_agg.currentText()}"
+            f"# Pivot Table / Group By: {agg_func_name}",
+            "import polars as pl",
+            "import pandas as pd",
+            ""
         ]
 
+        code.append("if isinstance(df, pl.DataFrame):")
         if pivot_col:
-            # True Pivot Table
-            code.append("import pandas as pd")
-            code.append(f"pivot_df = pd.pivot_table(")
-            code.append(f"    df,")
-            code.append(f"    values=[{val_str}],")
-            if groupby_cols:
-                code.append(f"    index=[{gb_str}],")
-            code.append(f"    columns='{pivot_col}',")
-            code.append(f"    aggfunc='{agg_func}'")
-            code.append(")")
-            code.append("pivot_df = pivot_df.reset_index()")
-            # Flatten multi-index columns if they exist
-            code.append("if isinstance(pivot_df.columns, pd.MultiIndex):")
-            code.append("    pivot_df.columns = ['_'.join(str(c) for c in col).strip('_') for col in pivot_df.columns.values]")
-            
-            result_var = "pivot_df"
-            
+            # Polars Pivot
+            code.append("    # Polars Pivot")
+            # Note: Polars pivot aggregate_function can be a string for simple aggs
+            code.append(f"    result_df = df.pivot(")
+            code.append(f"        values=[{val_str}],")
+            code.append(f"        index=[{gb_str}],")
+            code.append(f"        on='{pivot_col}',")
+            code.append(f"        aggregate_function='{agg_func}'")
+            code.append("    )")
         else:
-            # Simple Group By
+            # Polars Group By
+            code.append("    # Polars Group By")
+            # In Polars, we need to map the aggregation function to expressions
+            pl_agg_map = {
+                "sum": "pl.col(c).sum()",
+                "mean": "pl.col(c).mean()",
+                "median": "pl.col(c).median()",
+                "count": "pl.col(c).count()",
+                "min": "pl.col(c).min()",
+                "max": "pl.col(c).max()",
+                "std": "pl.col(c).std()",
+                "first": "pl.col(c).first()",
+                "last": "pl.col(c).last()"
+            }
+            pl_exprs = ", ".join(pl_agg_map[agg_func].replace("c", f"'{c}'") for c in value_cols)
+            code.append(f"    result_df = df.group_by([{gb_str}]).agg([{pl_exprs}])")
+
+        code.append("else:")
+        if pivot_col:
+            # Pandas Pivot
+            code.append(f"    result_df = pd.pivot_table(")
+            code.append(f"        df,")
+            code.append(f"        values=[{val_str}],")
+            if groupby_cols:
+                code.append(f"        index=[{gb_str}],")
+            code.append(f"        columns='{pivot_col}',")
+            code.append(f"        aggfunc='{agg_func}'")
+            code.append("    ).reset_index()")
+            # Flatten multi-index columns if they exist
+            code.append("    if isinstance(result_df.columns, pd.MultiIndex):")
+            code.append("        result_df.columns = ['_'.join(str(c) for c in col).strip('_') for col in result_df.columns.values]")
+        else:
+            # Pandas Group By
             if len(value_cols) == 1:
-                code.append(f"grouped_df = df.groupby([{gb_str}])['{value_cols[0]}'].agg('{agg_func}').reset_index()")
+                code.append(f"    result_df = df.groupby([{gb_str}])['{value_cols[0]}'].agg('{agg_func}').reset_index()")
             else:
-                code.append(f"grouped_df = df.groupby([{gb_str}])[[{val_str}]].agg('{agg_func}').reset_index()")
-            
-            result_var = "grouped_df"
+                code.append(f"    result_df = df.groupby([{gb_str}])[[{val_str}]].agg('{agg_func}').reset_index()")
 
         if overwrite:
-            code.append(f"\ndf = {result_var}")
-            code.append("print(f'Replaced dataset with aggregated results: {df.shape[0]} rows, {df.shape[1]} columns')")
+            code.append("\ndf = result_df")
+            code.append("pivot_df = result_df  # Legacy compatibility")
+            code.append("if isinstance(df, pl.DataFrame):")
+            code.append("    print(f'Replaced dataset with aggregated Polars results: {df.height} rows, {df.width} columns')")
+            code.append("else:")
+            code.append("    print(f'Replaced dataset with aggregated Pandas results: {df.shape[0]} rows, {df.shape[1]} columns')")
         else:
-            agg_func = self.cmb_agg.currentText()
+            code.append("\npivot_df = result_df  # Legacy compatibility")
             code.append("\n# Format Output")
             code.append("html_output = []")
             code.append(f"html_output.append('<h3>Pivot Table / Group By Results</h3>')")
-            code.append(f"html_output.append('<p><b>Aggregation:</b> {agg_func}</p>')")
-            code.append(f"html_output.append({result_var}.to_html(classes='table table-sm table-striped'))")
+            code.append(f"html_output.append('<p><b>Aggregation:</b> {agg_func_name}</p>')")
+            
+            code.append("if isinstance(result_df, pl.DataFrame):")
+            code.append("    html_output.append(result_df.to_pandas().to_html(classes='table table-sm table-striped'))")
+            code.append("else:")
+            code.append("    html_output.append(result_df.to_html(classes='table table-sm table-striped'))")
+            
             code.append("if 'display_html' in globals():")
             code.append("    display_html('\\n'.join(html_output))")
             code.append("elif 'show_result' in globals():")

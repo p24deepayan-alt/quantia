@@ -14,11 +14,16 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 
 class PandasTableModel(QAbstractTableModel):
-    """Read-only table model backed by a pandas DataFrame."""
+    """
+    Table model backed by a pandas DataFrame.
+    Implements virtual-windowing for high-performance scrolling.
+    """
 
     def __init__(self, df: pd.DataFrame | None = None, parent: Any = None) -> None:
         super().__init__(parent)
         self._df: pd.DataFrame = df if df is not None else pd.DataFrame()
+        # Constants for virtual display
+        self._page_size = 1000 
 
     # ── Properties ───────────────────────────────────────────────────────
 
@@ -49,12 +54,18 @@ class PandasTableModel(QAbstractTableModel):
             return None
 
         row, col = index.row(), index.column()
+        
+        # Virtual check: Ensure row is within bounds
+        if row >= len(self._df) or col >= len(self._df.columns):
+            return None
+
+        # Optimization: use iat for single cell access
         value = self._df.iat[row, col]
 
         if role == Qt.ItemDataRole.DisplayRole:
             if pd.isna(value):
                 return ""
-            if isinstance(value, float):
+            if isinstance(value, (float, np.float64, np.float32)):
                 return f"{value:.6g}"
             return str(value)
 

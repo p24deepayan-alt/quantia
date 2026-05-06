@@ -79,31 +79,59 @@ class CleanDataDialog(BaseAnalysisDialog):
         vars_str = ", ".join(f"'{v}'" for v in targets)
         code = [
             "# Data Cleaning",
-            f"target_cols = [{vars_str}]"
+            "import polars as pl",
+            "import pandas as pd",
+            f"target_cols = [{vars_str}]",
+            "",
+            "if isinstance(df, pl.DataFrame):",
         ]
 
         if self.rad_drop_col.isChecked():
-            code.append("df = df.drop(columns=target_cols)")
+            code.append("    df = df.drop(target_cols)")
         elif self.rad_drop_na.isChecked():
-            code.append("df = df.dropna(subset=target_cols)")
+            code.append("    df = df.drop_nulls(subset=target_cols)")
         elif self.rad_impute.isChecked():
             strategy = self.cmb_strategy.currentText()
-            code.append("for col in target_cols:")
+            code.append("    for i, c in enumerate(target_cols):")
+            code.append("        if 'progress' in globals(): progress(int((i+1)/len(target_cols)*100))")
             if strategy == "Mean":
-                code.append("    df[col] = df[col].fillna(df[col].mean())")
+                code.append("        df = df.with_columns(pl.col(c).fill_null(pl.col(c).mean()))")
             elif strategy == "Median":
-                code.append("    df[col] = df[col].fillna(df[col].median())")
+                code.append("        df = df.with_columns(pl.col(c).fill_null(pl.col(c).median()))")
             elif strategy == "Mode":
-                code.append("    df[col] = df[col].fillna(df[col].mode()[0])")
+                code.append("        df = df.with_columns(pl.col(c).fill_null(pl.col(c).mode().get(0)))")
             elif strategy == "Custom Constant":
                 val = self.txt_constant.text()
-                # Try to parse as numeric if possible
                 try:
                     float(val)
-                    code.append(f"    df[col] = df[col].fillna({val})")
+                    code.append(f"        df = df.with_columns(pl.col(c).fill_null({val}))")
                 except ValueError:
-                    code.append(f"    df[col] = df[col].fillna('{val}')")
+                    code.append(f"        df = df.with_columns(pl.col(c).fill_null('{val}'))")
+        
+        code.append("else:")
+        if self.rad_drop_col.isChecked():
+            code.append("    df = df.drop(columns=target_cols)")
+        elif self.rad_drop_na.isChecked():
+            code.append("    df = df.dropna(subset=target_cols)")
+        elif self.rad_impute.isChecked():
+            strategy = self.cmb_strategy.currentText()
+            code.append("    for i, col in enumerate(target_cols):")
+            code.append("        if 'progress' in globals(): progress(int((i+1)/len(target_cols)*100))")
+            if strategy == "Mean":
+                code.append("        df[col] = df[col].fillna(df[col].mean())")
+            elif strategy == "Median":
+                code.append("        df[col] = df[col].fillna(df[col].median())")
+            elif strategy == "Mode":
+                code.append("        df[col] = df[col].fillna(df[col].mode()[0])")
+            elif strategy == "Custom Constant":
+                val = self.txt_constant.text()
+                try:
+                    float(val)
+                    code.append(f"        df[col] = df[col].fillna({val})")
+                except ValueError:
+                    code.append(f"        df[col] = df[col].fillna('{val}')")
 
+        code.append("")
         code.append("print(f'Operation complete. Current shape: {df.shape}')")
         return "\n".join(code)
 

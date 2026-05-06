@@ -80,15 +80,26 @@ class FindReplaceDialog(BaseAnalysisDialog):
         if not new_col:
             new_col = target
 
-        code = [
-            f"# String Find & Replace",
-        ]
-        
         # Escape quotes
         f_esc = find_str.replace("'", "\\'")
         r_esc = replace_str.replace("'", "\\'")
-        
-        code.append(f"df['{new_col}'] = df['{target}'].astype(str).str.replace(r'{f_esc}', '{r_esc}', regex={regex})")
+
+        code = [
+            f"# String Find & Replace",
+            "import polars as pl",
+            "import pandas as pd",
+            "import numpy as np",
+            "",
+            "if isinstance(df, pl.DataFrame):",
+            "    # Multi-threaded replace via Polars",
+            f"    res = pl.col('{target}').cast(pl.Utf8).str.replace_all(r'{f_esc}', r'{r_esc}', literal={not regex})",
+            "    # Map empty results to null",
+            f"    df = df.with_columns(res.replace('', None).alias('{new_col}'))",
+            "else:",
+            f"    res = df['{target}'].astype(str).str.replace(r'{f_esc}', r'{r_esc}', regex={regex})",
+            "    # Map empty results to NaN",
+            f"    df['{new_col}'] = res.mask(res == '')"
+        ]
             
         return "\n".join(code)
 

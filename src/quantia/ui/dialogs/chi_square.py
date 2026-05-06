@@ -78,10 +78,15 @@ class ChiSquareDialog(BaseAnalysisDialog):
 
         code = [
             f"# Chi-Square Test of Independence: {row_var} vs {col_var}",
+            "import polars as pl",
             "import pandas as pd",
             "from scipy.stats import chi2_contingency",
             "",
-            f"sub = df[['{row_var}', '{col_var}']].dropna()",
+            "if isinstance(df, pl.DataFrame):",
+            f"    sub = df.select(['{row_var}', '{col_var}']).drop_nulls().to_pandas()",
+            "else:",
+            f"    sub = df[['{row_var}', '{col_var}']].dropna()",
+            "",
             f"crosstab = pd.crosstab(sub['{row_var}'], sub['{col_var}'])",
             "",
             "chi2, p, dof, expected = chi2_contingency(crosstab)",

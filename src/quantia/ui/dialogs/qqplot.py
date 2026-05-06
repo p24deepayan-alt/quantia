@@ -74,12 +74,17 @@ class QQPlotDialog(BaseAnalysisDialog):
 
         code = [
             f"# Q-Q Plot: {var} against {dist} distribution",
+            "import polars as pl",
+            "import pandas as pd",
             "import matplotlib.pyplot as plt",
             "import statsmodels.api as sm",
             "import scipy.stats as stats",
             "import io, base64",
             "",
-            f"data = df['{var}'].dropna()",
+            "if isinstance(df, pl.DataFrame):",
+            f"    data = df.get_column('{var}').drop_nulls().to_pandas()",
+            "else:",
+            f"    data = df['{var}'].dropna()",
         ]
         
         for line in style_code.split("\n"):

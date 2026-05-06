@@ -67,10 +67,16 @@ class TTestDialog(BaseAnalysisDialog):
             QMessageBox.warning(self, "Missing Input", "Please select a Grouping Variable.")
             return ""
 
-        # Validate that the grouping variable has exactly two unique values in the current dataframe
-        # Note: We do this validation in the generated code so the script works independently,
-        # but we also provide a quick GUI check.
-        unique_groups = self._df[group_var].dropna().unique()
+        # Validate that the grouping variable has exactly two unique values
+        try:
+            import polars as pl
+            if isinstance(self._df, pl.DataFrame):
+                unique_groups = self._df[group_var].drop_nulls().unique().to_list()
+            else:
+                unique_groups = self._df[group_var].dropna().unique().tolist()
+        except (ImportError, AttributeError):
+            unique_groups = self._df[group_var].dropna().unique().tolist()
+
         if len(unique_groups) != 2:
             QMessageBox.warning(self, "Invalid Grouping", 
                                 f"The grouping variable '{group_var}' must have exactly 2 unique values. "
@@ -86,24 +92,39 @@ class TTestDialog(BaseAnalysisDialog):
 
         code = [
             f"# Independent t-test for: {', '.join(test_vars)} by {group_var}",
-            "from scipy import stats",
+            "import polars as pl",
             "import pandas as pd",
+            "from scipy import stats",
+            "",
             f"test_vars = [{vars_str}]",
             f"group_var = '{group_var}'",
             f"group1_val, group2_val = {repr(group1)}, {repr(group2)}",
             "",
             "results = []",
-            "for var in test_vars:",
-            "    data1 = df[df[group_var] == group1_val][var].dropna()",
-            "    data2 = df[df[group_var] == group2_val][var].dropna()",
-            f"    res = stats.ttest_ind(data1, data2, equal_var={equal_var}, alternative='{alternative}')",
-            "    results.append({",
-            "        'Variable': var,",
-            "        't-statistic': res.statistic,",
-            "        'p-value': res.pvalue,",
-            f"        'Mean ({group1})': data1.mean(),",
-            f"        'Mean ({group2})': data2.mean(),",
-            "    })",
+            "if isinstance(df, pl.DataFrame):",
+            "    for var in test_vars:",
+            "        data1 = df.filter(pl.col(group_var) == group1_val).select(var).drop_nulls().to_series()",
+            "        data2 = df.filter(pl.col(group_var) == group2_val).select(var).drop_nulls().to_series()",
+            f"        res = stats.ttest_ind(data1, data2, equal_var={equal_var}, alternative='{alternative}')",
+            "        results.append({",
+            "            'Variable': var,",
+            "            't-statistic': float(res.statistic),",
+            "            'p-value': float(res.pvalue),",
+            f"            'Mean ({group1})': data1.mean(),",
+            f"            'Mean ({group2})': data2.mean(),",
+            "        })",
+            "else:",
+            "    for var in test_vars:",
+            "        data1 = df[df[group_var] == group1_val][var].dropna()",
+            "        data2 = df[df[group_var] == group2_val][var].dropna()",
+            f"        res = stats.ttest_ind(data1, data2, equal_var={equal_var}, alternative='{alternative}')",
+            "        results.append({",
+            "            'Variable': var,",
+            "            't-statistic': res.statistic,",
+            "            'p-value': res.pvalue,",
+            f"            'Mean ({group1})': data1.mean(),",
+            f"            'Mean ({group2})': data2.mean(),",
+            "        })",
             "",
             "results_df = pd.DataFrame(results)",
             "if 'show_result' in globals():",

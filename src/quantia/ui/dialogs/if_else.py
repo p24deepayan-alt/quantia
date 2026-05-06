@@ -113,7 +113,16 @@ class IfElseDialog(BaseAnalysisDialog):
                 
         def format_comp(v: str) -> str:
             # Check if target column is numeric
-            is_numeric = pd.api.types.is_numeric_dtype(self._df[target])
+            is_numeric = False
+            try:
+                import polars as pl
+                if isinstance(self._df, pl.DataFrame):
+                    is_numeric = self._df[target].dtype.is_numeric()
+                else:
+                    is_numeric = pd.api.types.is_numeric_dtype(self._df[target])
+            except ImportError:
+                is_numeric = pd.api.types.is_numeric_dtype(self._df[target])
+
             if is_numeric:
                 try:
                     float(v)
@@ -125,14 +134,42 @@ class IfElseDialog(BaseAnalysisDialog):
 
         code = [
             f"# If / Else logic on '{target}'",
-            "import numpy as np"
+            "import polars as pl",
+            "import pandas as pd",
+            "import numpy as np",
+            ""
         ]
         
         t_fmt = format_val(val_true)
         f_fmt = format_val(val_false)
         c_fmt = format_comp(comp_val)
 
-        # Build condition string
+        code.append("if isinstance(df, pl.DataFrame):")
+        # Polars condition
+        if op_text == "Equals (==)":
+            pl_cond = f"pl.col('{target}') == {c_fmt}"
+        elif op_text == "Not Equals (!=)":
+            pl_cond = f"pl.col('{target}') != {c_fmt}"
+        elif op_text == "Greater Than (>)":
+            pl_cond = f"pl.col('{target}') > {c_fmt}"
+        elif op_text == "Less Than (<)":
+            pl_cond = f"pl.col('{target}') < {c_fmt}"
+        elif op_text == "Greater or Equal (>=)":
+            pl_cond = f"pl.col('{target}') >= {c_fmt}"
+        elif op_text == "Less or Equal (<=)":
+            pl_cond = f"pl.col('{target}') <= {c_fmt}"
+        elif op_text == "Contains (string)":
+            c_esc = comp_val.replace("'", "\\'")
+            pl_cond = f"pl.col('{target}').cast(pl.Utf8).str.contains('{c_esc}')"
+        elif op_text == "Is Missing (NA)":
+            pl_cond = f"pl.col('{target}').is_null()"
+
+        code.append(f"    df = df.with_columns(")
+        code.append(f"        pl.when({pl_cond}).then({t_fmt}).otherwise({f_fmt}).alias('{new_col}')")
+        code.append(f"    )")
+        code.append("else:")
+
+        # Build Pandas condition string
         if op_text == "Equals (==)":
             cond = f"df['{target}'] == {c_fmt}"
         elif op_text == "Not Equals (!=)":
@@ -151,7 +188,7 @@ class IfElseDialog(BaseAnalysisDialog):
         elif op_text == "Is Missing (NA)":
             cond = f"df['{target}'].isna()"
             
-        code.append(f"df['{new_col}'] = np.where({cond}, {t_fmt}, {f_fmt})")
+        code.append(f"    df['{new_col}'] = np.where({cond}, {t_fmt}, {f_fmt})")
             
         return "\n".join(code)
 

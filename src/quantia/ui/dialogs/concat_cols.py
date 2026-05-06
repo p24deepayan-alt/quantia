@@ -62,20 +62,29 @@ class ConcatColsDialog(BaseAnalysisDialog):
             QMessageBox.warning(self, "Missing Input", "Please provide a new column name.")
             return ""
 
-        code = [
-            f"# Concatenate Columns",
-        ]
-        
         # Escape quotes
         s_esc = sep_str.replace("'", "\\'")
-        
+
         # Build the pandas string concatenation code
         parts = [f"df['{c}'].astype(str)" for c in targets]
         joiner = f" + '{s_esc}' + "
-        
         concat_expr = joiner.join(parts)
-        
-        code.append(f"df['{new_col}'] = {concat_expr}")
+
+        # Build Polars expression
+        pl_parts = [f"pl.col('{c}').cast(pl.Utf8)" for c in targets]
+        pl_concat_expr = f"pl.concat_str([{', '.join(pl_parts)}], separator=r'{s_esc}')"
+
+        code = [
+            f"# Concatenate Columns",
+            "import polars as pl",
+            "import pandas as pd",
+            "",
+            "if isinstance(df, pl.DataFrame):",
+            "    # Multi-threaded concatenation via Polars",
+            f"    df = df.with_columns({pl_concat_expr}.alias('{new_col}'))",
+            "else:",
+            f"    df['{new_col}'] = {concat_expr}"
+        ]
             
         return "\n".join(code)
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pandas as pd
+import polars as pl
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 from quantia.utils.paths import get_exports_dir, get_quantia_root
 
@@ -89,17 +90,26 @@ class CleanDataNode(BaseLogicNode):
             self._configured_code = dialog.generate_code()
             self.sub_item.setPlainText("Configured")
             
-    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+    def run_logic(self, input_dfs: list[pd.DataFrame | pl.DataFrame]) -> None:
         if not input_dfs:
             raise ValueError("Clean Data node requires an input.")
             
-        df = input_dfs[0].copy()
-        self.output_df = df.dropna()
+        df = input_dfs[0]
+        # Handle Polars vs Pandas copy/clone
+        snapshot = df.clone() if isinstance(df, pl.DataFrame) else df.copy()
+        
+        if isinstance(snapshot, pl.DataFrame):
+            self.output_df = snapshot.drop_nulls()
+        else:
+            self.output_df = snapshot.dropna()
         
         if self._configured_code:
             self._code = self._configured_code
         else:
-            self._code = "df = df.dropna()"
+            if isinstance(df, pl.DataFrame):
+                self._code = "df = df.drop_nulls()"
+            else:
+                self._code = "df = df.dropna()"
 
 
 class ExportCSVNode(BaseLogicNode):

@@ -95,22 +95,42 @@ class MergeJoinDialog(BaseAnalysisDialog):
 
         code = [
             f"# Merge/Join Data with {Path(self._external_path).name}",
-            f"ext_path = r'{self._external_path}'"
+            "import polars as pl",
+            "import pandas as pd",
+            f"ext_path = r'{self._external_path}'",
+            "",
+            "if isinstance(df, pl.DataFrame):",
+            "    # Multi-threaded loading and join via Polars"
         ]
 
-        # Load external data
+        # Load external data (Polars branch)
         if ext == ".csv":
-            code.append("df_ext = pd.read_csv(ext_path, low_memory=False)")
+            code.append("    df_ext = pl.read_csv(ext_path)")
         elif ext in [".xls", ".xlsx"]:
-            code.append("df_ext = pd.read_excel(ext_path)")
+            code.append("    df_ext = pl.from_pandas(pd.read_excel(ext_path))")
         elif ext == ".parquet":
-            code.append("df_ext = pd.read_parquet(ext_path)")
+            code.append("    df_ext = pl.read_parquet(ext_path)")
+        
+        # Perform merge (Polars branch)
+        if how_str == "right":
+            # Polars uses left, swap for right
+            code.append(f"    df = df_ext.join(df, left_on='{ext_key}', right_on='{current_key}', how='left')")
         else:
-            return ""
+            code.append(f"    df = df.join(df_ext, left_on='{current_key}', right_on='{ext_key}', how='{how_str}')")
+        
+        code.append("else:")
 
-        # Perform merge
+        # Load external data (Pandas branch)
+        if ext == ".csv":
+            code.append("    df_ext = pd.read_csv(ext_path, low_memory=False)")
+        elif ext in [".xls", ".xlsx"]:
+            code.append("    df_ext = pd.read_excel(ext_path)")
+        elif ext == ".parquet":
+            code.append("    df_ext = pd.read_parquet(ext_path)")
+
+        # Perform merge (Pandas branch)
         code.append(
-            f"df = pd.merge(df, df_ext, left_on='{current_key}', right_on='{ext_key}', how='{how_str}')"
+            f"    df = pd.merge(df, df_ext, left_on='{current_key}', right_on='{ext_key}', how='{how_str}')"
         )
         code.append("print(f'Merge successful. New shape: {df.shape}')")
 

@@ -70,6 +70,8 @@ class FilterDataDialog(BaseAnalysisDialog):
 
         code = [
             f"# Filter Data: Keep rows where {target_var} {operator_str} {value}",
+            "import polars as pl",
+            "import pandas as pd",
             f"target = '{target_var}'",
         ]
 
@@ -80,10 +82,27 @@ class FilterDataDialog(BaseAnalysisDialog):
         except ValueError:
             val_repr = repr(value)
 
+        code.append("if isinstance(df, pl.DataFrame):")
         if operator_str == "Contains":
-            code.append(f"df = df[df[target].astype(str).str.contains({val_repr}, na=False, case=False)]")
+            code.append(f"    df = df.filter(pl.col(target).cast(pl.Utf8).str.contains({val_repr}, ignore_case=True))")
+        elif operator_str == "==":
+            code.append(f"    df = df.filter(pl.col(target) == {val_repr})")
+        elif operator_str == "!=":
+            code.append(f"    df = df.filter(pl.col(target) != {val_repr})")
+        elif operator_str == ">":
+            code.append(f"    df = df.filter(pl.col(target) > {val_repr})")
+        elif operator_str == "<":
+            code.append(f"    df = df.filter(pl.col(target) < {val_repr})")
+        elif operator_str == ">=":
+            code.append(f"    df = df.filter(pl.col(target) >= {val_repr})")
+        elif operator_str == "<=":
+            code.append(f"    df = df.filter(pl.col(target) <= {val_repr})")
+            
+        code.append("else:")
+        if operator_str == "Contains":
+            code.append(f"    df = df[df[target].astype(str).str.contains({val_repr}, na=False, case=False)]")
         else:
-            code.append(f"df = df[df[target] {operator_str} {val_repr}]")
+            code.append(f"    df = df[df[target] {operator_str} {val_repr}]")
 
         code.append("print(f'Filtering applied. New shape: {df.shape}')")
         return "\n".join(code)

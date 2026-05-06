@@ -78,17 +78,36 @@ class TextExtractDialog(BaseAnalysisDialog):
 
         mode = "Before" if self.rad_before.isChecked() else "After"
         
-        code = [
-            f"# Text Extract: Keep Text {mode} '{delim}' in '{target}'",
-        ]
-        
         # Escape quotes in delimiter for the generated code
         delim_esc = delim.replace("'", "\\'")
+
+        code = [
+            f"# Text Extract: Keep Text {mode} '{delim}' in '{target}'",
+            "import polars as pl",
+            "import pandas as pd",
+            "",
+            "if isinstance(df, pl.DataFrame):",
+            "    # Multi-threaded extraction via Polars",
+        ]
+
+        if mode == "Before":
+            code.append(f"    res = pl.col('{target}').cast(pl.Utf8).str.split_exact('{delim_esc}', 1).struct.field('field_0')")
+            code.append(f"    df = df.with_columns(res.replace('', None).alias('{new_col}'))")
+        else:
+            code.append(f"    res = pl.col('{target}').cast(pl.Utf8).str.split_exact('{delim_esc}', 1).struct.field('field_1')")
+            code.append(f"    df = df.with_columns(res.replace('', None).alias('{new_col}'))")
+
+        code.extend([
+            "else:",
+            f"    # Pandas fallback"
+        ])
         
         if mode == "Before":
-            code.append(f"df['{new_col}'] = df['{target}'].astype(str).str.split('{delim_esc}').str[0]")
+            code.append(f"    res = df['{target}'].astype(str).str.split('{delim_esc}').str[0]")
+            code.append(f"    df['{new_col}'] = res.mask(res == '')")
         else:
-            code.append(f"df['{new_col}'] = df['{target}'].astype(str).str.split('{delim_esc}', n=1).str[1]")
+            code.append(f"    res = df['{target}'].astype(str).str.split('{delim_esc}', n=1).str[1]")
+            code.append(f"    df['{new_col}'] = res.mask(res == '')")
             
         return "\n".join(code)
 

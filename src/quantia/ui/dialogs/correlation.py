@@ -81,22 +81,28 @@ class CorrelationDialog(BaseAnalysisDialog):
 
         code = [
             f"# Correlation Matrix ({method.capitalize()})",
+            "import polars as pl",
+            "import pandas as pd",
             "import numpy as np",
             "from scipy import stats as scipy_stats",
             "",
             f"cols = {vars_repr}",
             f"method = '{method}'",
-            "sub = df[cols].dropna()",
+            "",
+            "if isinstance(df, pl.DataFrame):",
+            "    sub = df.select(cols).drop_nulls().to_pandas()",
+            "else:",
+            "    sub = df[cols].dropna()",
             "",
             "# Correlation coefficients",
             "corr = sub.corr(method=method)",
+            "n = len(sub)",
         ]
 
         if show_pvalues:
             code += [
                 "",
                 "# P-value matrix",
-                "n = len(sub)",
                 "p_matrix = pd.DataFrame(np.ones((len(cols), len(cols))), index=cols, columns=cols)",
                 "for i, c1 in enumerate(cols):",
                 "    for j, c2 in enumerate(cols):",
