@@ -130,7 +130,8 @@ class BaseTreeRegressionDialog(BaseAnalysisDialog):
             "import io",
             "import base64",
             "from sklearn.model_selection import train_test_split",
-            "from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error"
+            "from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error",
+            f"features = {features}",
         ]
         code.extend(self._get_imports())
         code.append("")
@@ -284,13 +285,180 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
         self.spin_min_samples.setValue(2)
         layout.addRow("Min Samples Split:", self.spin_min_samples)
         
+        self.chk_optimize_ccp = QCheckBox("Optimize CCP Alpha (Auto-pruning)")
+        self.chk_optimize_ccp.setChecked(False)
+        layout.addRow(self.chk_optimize_ccp)
+        
+        self.spin_ccp_alpha = QDoubleSpinBox()
+        self.spin_ccp_alpha.setRange(0.0, 10.0)
+        self.spin_ccp_alpha.setDecimals(4)
+        self.spin_ccp_alpha.setSingleStep(0.001)
+        self.spin_ccp_alpha.setValue(0.0)
+        layout.addRow("CCP Alpha:", self.spin_ccp_alpha)
+        
+        # Connect visibility
+        self.chk_optimize_ccp.toggled.connect(lambda checked: self.spin_ccp_alpha.setEnabled(not checked))
+
     def _get_imports(self) -> list[str]:
-        return ["from sklearn.tree import DecisionTreeRegressor"]
+        imports = ["from sklearn.tree import DecisionTreeRegressor"]
+        if self.chk_optimize_ccp.isChecked():
+            imports.append("from sklearn.model_selection import KFold")
+        return imports
         
     def _get_model_init_code(self) -> str:
         depth = self.spin_max_depth.value()
         depth_str = f"max_depth={depth}" if depth > 0 else "max_depth=None"
-        return f"model = DecisionTreeRegressor(criterion='{self.cmb_criterion.currentText()}', {depth_str}, min_samples_split={self.spin_min_samples.value()}, random_state=42)"
+        
+        if self.chk_optimize_ccp.isChecked():
+            # Optimization logic is complex, so we'll generate it differently or as a multi-step block
+            return f"# Model initialized later after CCP optimization"
+        
+        return f"model = DecisionTreeRegressor(criterion='{self.cmb_criterion.currentText()}', {depth_str}, min_samples_split={self.spin_min_samples.value()}, ccp_alpha={self.spin_ccp_alpha.value()}, random_state=42)"
+
+    def generate_code(self) -> str:
+        if not self.chk_optimize_ccp.isChecked():
+            return super().generate_code()
+            
+        # Custom code generation for CCP optimization
+        if self.list_dependent.count() == 0:
+            QMessageBox.warning(self, "Missing Input", "Please select a Target Variable (Y).")
+            return ""
+        if self.list_independent.count() == 0:
+            QMessageBox.warning(self, "Missing Input", "Please select at least one Feature (X).")
+            return ""
+            
+        target = self.list_dependent.item(0).text()
+        features = [self.list_independent.item(i).text() for i in range(self.list_independent.count())]
+        test_size = self.spin_test_size.value() / 100.0
+        scale_data = self.chk_scale.isChecked()
+        depth = self.spin_max_depth.value()
+        depth_str = f"max_depth={depth}" if depth > 0 else "max_depth=None"
+        criterion = self.cmb_criterion.currentText()
+        min_samples = self.spin_min_samples.value()
+        
+        code = [
+            f"# {self.windowTitle()} (with CCP Optimization): {target} ~ {', '.join(features)}",
+            "import polars as pl",
+            "import pandas as pd",
+            "import numpy as np",
+            "import matplotlib.pyplot as plt",
+            "import seaborn as sns",
+            "import io",
+            "import base64",
+            "from sklearn.model_selection import train_test_split, cross_val_score",
+            "from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error",
+            "from sklearn.tree import DecisionTreeRegressor",
+            f"features = {features}",
+            ""
+        ]
+        
+        # Data loading (consistent with base)
+        code.append("if isinstance(df, pl.DataFrame):")
+        code.append(f"    combined = df.select([{', '.join([f'\"{f}\"' for f in features + [target]])}]).drop_nulls()")
+        code.append(f"    X = combined.select([{', '.join([f'\"{f}\"' for f in features])}]).to_pandas()")
+        code.append(f"    y = combined.select('{target}').to_pandas().iloc[:, 0]")
+        code.append("else:")
+        code.append(f"    combined = df[[{', '.join([f'\"{f}\"' for f in features + [target]])}]].dropna()")
+        code.append(f"    X = combined[[{', '.join([f'\"{f}\"' for f in features])}]]")
+        code.append(f"    y = combined['{target}']")
+        code.append("")
+        code.append("X = pd.get_dummies(X, drop_first=True, dtype=float)")
+        code.append(f"X_train, X_test, y_train, y_test = train_test_split(X, y, test_size={test_size}, random_state=42)")
+        code.append("")
+        
+        if scale_data:
+            code.append("from sklearn.preprocessing import StandardScaler")
+            code.append("scaler = StandardScaler()")
+            code.append("X_train = pd.DataFrame(scaler.fit_transform(X_train), columns=X.columns)")
+            code.append("X_test = pd.DataFrame(scaler.transform(X_test), columns=X.columns)")
+            code.append("")
+
+        code.append("# 1. Find Pruning Path")
+        code.append(f"temp_tree = DecisionTreeRegressor(criterion='{criterion}', {depth_str}, min_samples_split={min_samples}, random_state=42)")
+        code.append("path = temp_tree.cost_complexity_pruning_path(X_train, y_train)")
+        code.append("ccp_alphas, impurities = path.ccp_alphas, path.impurities")
+        code.append("")
+        
+        code.append("# 2. Cross-validate Alphas")
+        code.append("alpha_scores = []")
+        code.append("for alpha in ccp_alphas:")
+        code.append(f"    model = DecisionTreeRegressor(criterion='{criterion}', {depth_str}, min_samples_split={min_samples}, ccp_alpha=alpha, random_state=42)")
+        code.append("    scores = cross_val_score(model, X_train, y_train, cv=5)")
+        code.append("    alpha_scores.append(np.mean(scores))")
+        code.append("")
+        code.append("best_alpha = ccp_alphas[np.argmax(alpha_scores)]")
+        code.append(f"model = DecisionTreeRegressor(criterion='{criterion}', {depth_str}, min_samples_split={min_samples}, ccp_alpha=best_alpha, random_state=42)")
+        code.append("model.fit(X_train, y_train)")
+        code.append("")
+        
+        code.append("# 3. Evaluate and Output")
+        code.append("y_pred = model.predict(X_test)")
+        code.append("html_output = []")
+        code.append(f"html_output.append('<h3>{self.windowTitle()}</h3>')")
+        code.append(f"html_output.append(f'<p><b>Best CCP Alpha:</b> {{best_alpha:.6f}}<br><b>Features:</b> {len(features)} selected</p>')")
+        
+        # Reuse metrics and plotting from base by refactoring? 
+        # For now, duplicate to keep it surgical since base is not easily separable into fragments.
+        
+        if self.chk_metrics.isChecked():
+            code.append("mse = mean_squared_error(y_test, y_pred)")
+            code.append("rmse = np.sqrt(mse)")
+            code.append("r2 = r2_score(y_test, y_pred)")
+            code.append("mae = mean_absolute_error(y_test, y_pred)")
+            code.append("metrics_html = f'''<table style=\"width:100%; margin-bottom:16px; border-collapse:collapse;\">")
+            code.append("<tr>")
+            code.append("  <td style=\"padding:10px; background:#F8FAFC; border:1px solid #F1F5F9; text-align:center;\"><div style=\"font-size:8pt; color:#94A3B8; font-weight:600;\">R-SQUARED</div><div style=\"font-size:13pt; font-weight:700;\">{r2:.4f}</div></td>")
+            code.append("  <td style=\"padding:10px; background:#F8FAFC; border:1px solid #F1F5F9; text-align:center;\"><div style=\"font-size:8pt; color:#94A3B8; font-weight:600;\">RMSE</div><div style=\"font-size:13pt; font-weight:700;\">{rmse:.4f}</div></td>")
+            code.append("  <td style=\"padding:10px; background:#F8FAFC; border:1px solid #F1F5F9; text-align:center;\"><div style=\"font-size:8pt; color:#94A3B8; font-weight:600;\">MAE</div><div style=\"font-size:13pt; font-weight:700;\">{mae:.4f}</div></td>")
+            code.append("</tr></table>'''")
+            code.append("html_output.append(metrics_html)")
+
+        if self.chk_plots.isChecked() or (self.chk_feat_imp.isChecked()):
+            style_code = generate_style_code(self.cmb_style.currentText())
+            code.extend([line for line in style_code.split("\n") if line.strip()])
+            
+            code.append("plots_to_draw = []")
+            if self.chk_plots.isChecked(): code.append("plots_to_draw.append('actual_vs_pred')")
+            if self.chk_plots.isChecked(): code.append("plots_to_draw.append('residuals')")
+            if self.chk_feat_imp.isChecked(): code.append("plots_to_draw.append('feat_imp')")
+            
+            code.append("if plots_to_draw:")
+            code.append("    fig, axes = plt.subplots(1, len(plots_to_draw), figsize=(5 * len(plots_to_draw), 5))")
+            code.append("    if len(plots_to_draw) == 1: axes = [axes]")
+            code.append("    ax_idx = 0")
+            
+            if self.chk_plots.isChecked():
+                code.append("    if 'actual_vs_pred' in plots_to_draw:")
+                code.append("        axes[ax_idx].scatter(y_test, y_pred, alpha=0.5)")
+                code.append("        axes[ax_idx].plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)")
+                code.append("        axes[ax_idx].set_title('Actual vs Predicted')")
+                code.append("        ax_idx += 1")
+                code.append("    if 'residuals' in plots_to_draw:")
+                code.append("        resids = y_test - y_pred")
+                code.append("        axes[ax_idx].scatter(y_pred, resids, alpha=0.5)")
+                code.append("        axes[ax_idx].axhline(y=0, color='r', linestyle='--')")
+                code.append("        axes[ax_idx].set_title('Residuals')")
+                code.append("        ax_idx += 1")
+            
+            if self.chk_feat_imp.isChecked():
+                code.append("    if 'feat_imp' in plots_to_draw:")
+                code.append("        imps = model.feature_importances_")
+                code.append("        idx = np.argsort(imps)[::-1][:15]")
+                code.append("        axes[ax_idx].bar(range(len(idx)), imps[idx])")
+                code.append("        axes[ax_idx].set_xticks(range(len(idx)))")
+                code.append("        axes[ax_idx].set_xticklabels([X.columns[i] for i in idx], rotation=45, ha='right')")
+                code.append("        axes[ax_idx].set_title('Feature Importance')")
+            
+            code.append("    plt.tight_layout()")
+            code.append("    buf = io.BytesIO()")
+            code.append("    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')")
+            code.append("    buf.seek(0)")
+            code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+            code.append("    plt.close()")
+            code.append("    html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"max-width:100%;\"/></div>')")
+
+        code.append("show_result('Decision Tree (CCP)', '\\n'.join(html_output))")
+        return "\n".join(code)
 
 
 class RandomForestRegressorDialog(BaseTreeRegressionDialog):

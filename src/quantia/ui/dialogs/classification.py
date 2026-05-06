@@ -123,7 +123,8 @@ class BaseClassificationDialog(BaseAnalysisDialog):
             "import io",
             "import base64",
             "from sklearn.model_selection import train_test_split",
-            "from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc"
+            "from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc",
+            f"features = {features}",
         ]
         code.extend(self._get_imports())
         code.append("")
