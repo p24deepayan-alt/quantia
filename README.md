@@ -11,7 +11,9 @@ Quantia is designed to provide powerful data analysis and modeling capabilities 
 ## Features
 
 *   **🔒 Fully Offline:** Your data stays on your machine. No cloud services, no telemetry, no internet required.
-*   **🛠️ Reproducible Workflows:** Every GUI action generates standard Python code (`pandas`, `scipy`, `scikit-learn`, `matplotlib`) in the built-in Script Editor. You can view, edit, and re-run this code at any time.
+*   **🛠️ Reproducible Workflows:** Every GUI action generates standard Python code (`pandas`, `polars`, `scipy`, `scikit-learn`, `matplotlib`) in the built-in Script Editor. You can view, edit, and re-run this code at any time.
+*   **⛓️ Visual Workflow Builder:** Design and connect data processing nodes in a visual canvas to build complex, reusable analysis pipelines.
+*   🚀 **Hardware Acceleration:** Automatic detection of NVIDIA GPUs for future hardware-accelerated computation paths.
 *   **📊 Comprehensive Statistics:** Descriptive statistics, t-tests (independent, paired, one-sample), ANOVA, Non-parametric tests (Mann-Whitney, Wilcoxon, Kruskal-Wallis), Correlation (Pearson, Spearman, Kendall), and Chi-square.
 *   **🤖 Machine Learning:** 
     *   **Regression:** Linear and Logistic (with stepwise selection).
@@ -104,7 +106,7 @@ quantia/
 
 Quantia is built using:
 *   **GUI Framework:** PySide6 (Qt6)
-*   **Data Manipulation:** `pandas`, `numpy`, `pyarrow`
+*   **Data Manipulation:** `pandas`, `polars`, `numpy`, `pyarrow`
 *   **Statistics & ML:** `scipy`, `statsmodels`, `scikit-learn`
 *   **Visualization:** `matplotlib`, `seaborn`
 

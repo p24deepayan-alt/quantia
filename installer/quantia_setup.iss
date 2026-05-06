@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Quantia"
-#define MyAppVersion "0.1.1"
+#define MyAppVersion "0.2.0-alpha"
 #define MyAppPublisher "Quantia AI"
 #define MyAppURL "https://github.com/p24deepayan-alt/quantia"
 #define MyAppExeName "Quantia.exe"

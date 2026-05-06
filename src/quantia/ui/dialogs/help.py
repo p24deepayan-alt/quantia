@@ -20,13 +20,14 @@ _USER_MANUAL_HTML = """\
 </div>
 <h1 style="color:#0F172A; border-bottom:3px solid #3B82F6; padding-bottom:8px; text-align:center;">
 Quantia User Manual</h1>
-<p style="color:#64748B; text-align:center;">Version 0.1.0 &nbsp;|&nbsp; Fully Offline Statistical Desktop Application</p>
+<p style="color:#64748B; text-align:center;">Version 0.2.0-alpha &nbsp;|&nbsp; Fully Offline Statistical Desktop Application</p>
 
 <hr>
 <h2>1 &mdash; Overview</h2>
 <p>Quantia is a no-code statistical and machine-learning workbench. Every action
 you perform through the GUI is automatically translated into reproducible Python
-code. All computation runs locally &mdash; no internet or cloud services required.</p>
+code. All computation runs locally &mdash; no internet or cloud services required.
+Quantia now supports both <b>Pandas</b> and <b>Polars</b> backends for data manipulation.</p>
 
 <h3>Application Layout</h3>
 <table>
@@ -34,9 +35,9 @@ code. All computation runs locally &mdash; no internet or cloud services require
 <tr><td><b>Menu Bar</b></td><td>File, Edit, Data, Statistics, Machine Learning, Visualize, Report, Help</td></tr>
 <tr><td><b>Toolbar</b></td><td>Quick-access buttons: New, Open, Save, Undo, Redo, Import Data, Run Script</td></tr>
 <tr><td><b>Variable Panel</b> (left dock)</td><td>Lists all columns in the active dataset. Click a variable to see a quick summary in the Console.</td></tr>
-<tr><td><b>Central Tabs</b></td><td><b>Data View</b> (spreadsheet), <b>Script Editor</b> (Python code), <b>Results</b> (test output tables), <b>Workflow</b>, <b>Plots</b> (charts)</td></tr>
+<tr><td><b>Central Tabs</b></td><td><b>Data View</b> (spreadsheet), <b>Script Editor</b> (Python code), <b>Results</b> (test output), <b>Workflow</b> (Visual node-based builder), <b>Plots</b> (charts)</td></tr>
 <tr><td><b>Console</b> (bottom dock)</td><td>Shows command log, success/error messages, and variable summaries</td></tr>
-<tr><td><b>Status Bar</b></td><td>Dataset dimensions, progress indicator during long operations</td></tr>
+<tr><td><b>Status Bar</b></td><td>Dataset dimensions, compute mode, and progress indicator</td></tr>
 </table>
 
 <hr>

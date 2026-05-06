@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quantia"
-version = "0.1.0"
+version = "0.2.0-alpha"
 description = "Offline no-code statistical desktop application"
 requires-python = ">=3.11"
 dependencies = [
