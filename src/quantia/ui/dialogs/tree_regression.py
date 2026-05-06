@@ -178,6 +178,7 @@ class BaseTreeRegressionDialog(BaseAnalysisDialog):
         code.append(f"html_output.append('<h3>{title}</h3>')")
         code.append(f"html_output.append('<p><b>Target:</b> {target}<br><b>Features:</b> {len(features)} selected<br><b>Test Size:</b> {test_size:.0%}</p>')")
         
+        code.append("")
         if self.chk_metrics.isChecked():
             code.append("mse = mean_squared_error(y_test, y_pred)")
             code.append("rmse = np.sqrt(mse)")
@@ -201,11 +202,10 @@ class BaseTreeRegressionDialog(BaseAnalysisDialog):
             code.append("")
 
         code.append("plots_to_draw = []")
-        if self.chk_plots.isChecked(): plots_to_draw.append("actual_vs_pred")
-        if self.chk_plots.isChecked(): plots_to_draw.append("residuals")
-        if self.chk_feat_imp.isChecked() and self._supports_feature_importance: plots_to_draw.append("feat_imp")
+        if self.chk_plots.isChecked(): code.append("plots_to_draw.append('actual_vs_pred')")
+        if self.chk_plots.isChecked(): code.append("plots_to_draw.append('residuals')")
+        if self.chk_feat_imp.isChecked() and self._supports_feature_importance: code.append("plots_to_draw.append('feat_imp')")
         
-        code.append(f"plots_to_draw = {plots_to_draw}")
         code.append("if plots_to_draw:")
         code.append("    fig, axes = plt.subplots(1, len(plots_to_draw), figsize=(5 * len(plots_to_draw), 5))")
         code.append("    if len(plots_to_draw) == 1: axes = [axes]")
