@@ -58,6 +58,8 @@ class QuantiaMenuBar(QMenuBar):
     correlation = Signal()
     regression_linear = Signal()
     regression_logistic = Signal()
+    regression_random_forest = Signal()
+    regression_decision_tree = Signal()
     chi_square = Signal()
     nonparametric = Signal()
 
@@ -197,6 +199,8 @@ class QuantiaMenuBar(QMenuBar):
         reg_menu.setProperty("icon_name", "trending-up")
         self._add(reg_menu, "Linear Regression…", self.regression_linear, "trending-up", ic)
         self._add(reg_menu, "Logistic Regression…", self.regression_logistic, "trending-up", ic)
+        self._add(reg_menu, "Random Forest Regression…", self.regression_random_forest, "trending-up", ic)
+        self._add(reg_menu, "Decision Tree Regression…", self.regression_decision_tree, "trending-up", ic)
         
         cls_menu = menu.addMenu("Classification")
         cls_menu.setIcon(feather_icon("cpu", ic, 14))

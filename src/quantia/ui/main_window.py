@@ -49,6 +49,7 @@ from quantia.ui.dialogs.descriptive import DescriptiveStatsDialog
 from quantia.ui.dialogs.ttest import TTestDialog
 from quantia.ui.dialogs.regression import LinearRegressionDialog
 from quantia.ui.dialogs.logistic_regression import LogisticRegressionDialog
+from quantia.ui.dialogs.tree_regression import RandomForestRegressorDialog, DecisionTreeRegressorDialog
 from quantia.ui.dialogs.clean_data import CleanDataDialog
 from quantia.ui.dialogs.transform import TransformDataDialog
 from quantia.ui.dialogs.type_convert import TypeConvertDialog
@@ -209,6 +210,8 @@ class MainWindow(QMainWindow):
         self._menu_bar.correlation.connect(self._show_correlation)
         self._menu_bar.regression_linear.connect(self._show_linear_regression)
         self._menu_bar.regression_logistic.connect(self._show_logistic_regression)
+        self._menu_bar.regression_random_forest.connect(self._show_reg_random_forest)
+        self._menu_bar.regression_decision_tree.connect(self._show_reg_decision_tree)
         
         # ML Classification
         self._menu_bar.model_compare.connect(self._show_model_compare)
@@ -927,19 +930,11 @@ class MainWindow(QMainWindow):
         dialog.code_generated.connect(handle_code)
         dialog.exec()
 
-    def _show_logistic_regression(self) -> None:
-        if len(self._data_view.get_dataframe()) == 0:
-            QMessageBox.warning(self, "No Data", "Please load a dataset first.")
-            return
+    def _show_reg_random_forest(self) -> None:
+        self._show_data_dialog(RandomForestRegressorDialog)
 
-        dialog = LogisticRegressionDialog(self._data_view.get_dataframe(), self)
-        
-        def handle_code(code: str) -> None:
-            self._script_editor.append_code("\n" + code)
-            self._execute_code(code)
-            
-        dialog.code_generated.connect(handle_code)
-        dialog.exec()
+    def _show_reg_decision_tree(self) -> None:
+        self._show_data_dialog(DecisionTreeRegressorDialog)
 
     # ── Visualize Dialogs ────────────────────────────────────────────────
 
