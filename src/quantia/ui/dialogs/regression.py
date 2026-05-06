@@ -532,7 +532,7 @@ class LinearRegressionDialog(BaseAnalysisDialog):
         code.append("    print(f'R-squared: {results[\"rsquared\"]:.4f}')")
         code.append("    print(results[\"params\"])")
 
-        return \"\\n\".join(code)
+        return "\n".join(code)
 
     def _show_help(self) -> None:
         QMessageBox.information(

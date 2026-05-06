@@ -126,7 +126,8 @@ class TypeConvertDialog(BaseAnalysisDialog):
         ]
 
         if self.rad_to_numeric.isChecked():
-            code.append("        exprs.append(pl.col(col).cast(pl.Float64, strict=False).alias(new_col))")
+            # Cast to Utf8, strip whitespace, then strict cast to Float64
+            code.append("        exprs.append(pl.col(col).cast(pl.Utf8).str.strip_chars().cast(pl.Float64, strict=True).alias(new_col))")
         elif self.rad_to_string.isChecked():
             code.append("        exprs.append(pl.col(col).cast(pl.Utf8).alias(new_col))")
         elif self.rad_replace.isChecked():
@@ -152,8 +153,8 @@ class TypeConvertDialog(BaseAnalysisDialog):
         ])
 
         if self.rad_to_numeric.isChecked():
-            code.append("        # Coerce forces unparseable strings to NaN")
-            code.append("        df[new_col] = pd.to_numeric(df[col], errors='coerce')")
+            code.append("        # Raise error if unparseable strings are found")
+            code.append("        df[new_col] = pd.to_numeric(df[col], errors='raise')")
         elif self.rad_to_string.isChecked():
             code.append("        df[new_col] = df[col].astype(str)")
         elif self.rad_replace.isChecked():
@@ -173,6 +174,6 @@ class TypeConvertDialog(BaseAnalysisDialog):
         QMessageBox.information(
             self, 
             "Convert Help",
-            "To Numeric: Converts variables to numbers (e.g., '2.55' -> 2.55). Invalid strings become missing (NaN).\n"
+            "To Numeric: Converts variables to numbers (e.g., '2.55' -> 2.55). If a variable contains non-numeric text, an error will be shown.\n"
             "Remove/Replace: Use this to remove symbols like '$' or ',' before converting to numeric."
         )
