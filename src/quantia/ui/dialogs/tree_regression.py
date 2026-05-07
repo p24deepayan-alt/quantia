@@ -86,6 +86,8 @@ class BaseTreeRegressionDialog(BaseAnalysisDialog):
         out_layout.addWidget(self.chk_plots)
         out_layout.addWidget(self.chk_feat_imp)
         
+        self._add_extra_outputs(out_layout)
+
         out_layout.addWidget(QLabel("Plot Style:"))
         self.cmb_style = QComboBox()
         self.cmb_style.addItems(STYLE_NAMES)
@@ -94,6 +96,10 @@ class BaseTreeRegressionDialog(BaseAnalysisDialog):
         
         out_group.setLayout(out_layout)
         layout.addWidget(out_group)
+
+    def _add_extra_outputs(self, layout: QVBoxLayout) -> None:
+        """To be overridden by subclasses."""
+        pass
 
     def _build_hyperparameters(self, layout: QFormLayout) -> None:
         """To be overridden by subclasses."""
@@ -106,6 +112,14 @@ class BaseTreeRegressionDialog(BaseAnalysisDialog):
     def _get_model_init_code(self) -> str:
         """To be overridden by subclasses."""
         return "model = None"
+
+    def _add_extra_plots_logic(self, code: list[str]) -> None:
+        """To be overridden by subclasses."""
+        pass
+
+    def _add_extra_plots_rendering(self, code: list[str]) -> None:
+        """To be overridden by subclasses."""
+        pass
 
     def generate_code(self) -> str:
         """Generate Python code for the regression analysis."""
@@ -207,59 +221,59 @@ class BaseTreeRegressionDialog(BaseAnalysisDialog):
         if self.chk_plots.isChecked(): code.append("plots_to_draw.append('actual_vs_pred')")
         if self.chk_plots.isChecked(): code.append("plots_to_draw.append('residuals')")
         if self.chk_feat_imp.isChecked() and self._supports_feature_importance: code.append("plots_to_draw.append('feat_imp')")
+        self._add_extra_plots_logic(code)
         
         code.append("if plots_to_draw:")
-        code.append("    fig, axes = plt.subplots(1, len(plots_to_draw), figsize=(5 * len(plots_to_draw), 5))")
-        code.append("    if len(plots_to_draw) == 1: axes = [axes]")
-        code.append("    ax_idx = 0")
-        code.append("")
+        code.append("    for p_type in plots_to_draw:")
+        code.append("        fig, ax = plt.subplots(figsize=(8, 8))")
         
+        first_p = True
         if self.chk_plots.isChecked():
-            code.append("    # Actual vs Predicted")
-            code.append("    if 'actual_vs_pred' in plots_to_draw:")
-            code.append("        axes[ax_idx].scatter(y_test, y_pred, alpha=0.5)")
-            code.append("        axes[ax_idx].plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)")
-            code.append("        axes[ax_idx].set_title('Actual vs Predicted')")
-            code.append("        axes[ax_idx].set_xlabel('Actual')")
-            code.append("        axes[ax_idx].set_ylabel('Predicted')")
-            code.append("        ax_idx += 1")
+            code.append("        if p_type == 'actual_vs_pred':")
+            code.append("            ax.scatter(y_test, y_pred, alpha=0.5)")
+            code.append("            ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)")
+            code.append("            ax.set_title('Actual vs Predicted')")
+            code.append("            ax.set_xlabel('Actual')")
+            code.append("            ax.set_ylabel('Predicted')")
             
-            code.append("    # Residuals")
-            code.append("    if 'residuals' in plots_to_draw:")
-            code.append("        residuals = y_test - y_pred")
-            code.append("        axes[ax_idx].scatter(y_pred, residuals, alpha=0.5)")
-            code.append("        axes[ax_idx].axhline(y=0, color='r', linestyle='--', lw=2)")
-            code.append("        axes[ax_idx].set_title('Residuals Plot')")
-            code.append("        axes[ax_idx].set_xlabel('Predicted')")
-            code.append("        axes[ax_idx].set_ylabel('Residuals')")
-            code.append("        ax_idx += 1")
+            code.append("        elif p_type == 'residuals':")
+            code.append("            residuals = y_test - y_pred")
+            code.append("            ax.scatter(y_pred, residuals, alpha=0.5)")
+            code.append("            ax.axhline(y=0, color='r', linestyle='--', lw=2)")
+            code.append("            ax.set_title('Residuals Plot')")
+            code.append("            ax.set_xlabel('Predicted')")
+            code.append("            ax.set_ylabel('Residuals')")
+            first_p = False
 
         if self.chk_feat_imp.isChecked() and self._supports_feature_importance:
-            code.append("    # Feature Importance")
-            code.append("    if 'feat_imp' in plots_to_draw and hasattr(model, 'feature_importances_'):")
-            code.append("        importances = model.feature_importances_")
-            code.append("        indices = np.argsort(importances)[::-1][:15]")
-            code.append("        axes[ax_idx].bar(range(len(indices)), importances[indices], align='center')")
-            code.append("        axes[ax_idx].set_xticks(range(len(indices)))")
-            code.append("        axes[ax_idx].set_xticklabels([X.columns[i] for i in indices], rotation=45, ha='right')")
-            code.append("        axes[ax_idx].set_title('Top Feature Importances')")
-            code.append("        ax_idx += 1")
+            if_str = "if" if first_p else "elif"
+            code.append(f"        {if_str} p_type == 'feat_imp' and hasattr(model, 'feature_importances_'):")
+            code.append("            importances = model.feature_importances_")
+            code.append("            indices = np.argsort(importances)[::-1][:15]")
+            code.append("            ax.bar(range(len(indices)), importances[indices], align='center')")
+            code.append("            ax.set_xticks(range(len(indices)))")
+            code.append("            ax.set_xticklabels([X.columns[i] for i in indices], rotation=45, ha='right')")
+            code.append("            ax.set_title('Top Feature Importances')")
+            first_p = False
             
-        code.append("    plt.tight_layout()")
-        code.append("    buf = io.BytesIO()")
-        code.append("    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')")
-        code.append("    buf.seek(0)")
-        code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
-        code.append("    plt.close()")
-        code.append("    html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"max-width:100%; border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
+        self._add_extra_plots_rendering(code)
+
+        code.append("        plt.tight_layout()")
+        code.append("        buf = io.BytesIO()")
+        code.append("        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
+        code.append("        buf.seek(0)")
+        code.append("        img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+        code.append("        plt.close(fig)")
+        code.append("        html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
+
         
         code.append("")
         code.append("if 'show_result' in globals():")
-        code.append("    show_result(title, '\\n'.join(html_output))")
+        code.append(f"    show_result('{title}', '\\n'.join(html_output))")
         code.append("else:")
-        code.append("    print(title)")
-        code.append("    if self.chk_metrics.isChecked():")
-        code.append("        print(f'R2: {r2:.4f}, RMSE: {rmse:.4f}')")
+        code.append(f"    print('{title}')")
+        if self.chk_metrics.isChecked():
+            code.append("    print(f'R2: {r2:.4f}, RMSE: {rmse:.4f}')")
             
         return "\n".join(code)
 
@@ -270,6 +284,11 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
     def __init__(self, df: pd.DataFrame, parent=None) -> None:
         super().__init__("Decision Tree Regression", df, parent)
         
+    def _add_extra_outputs(self, layout: QVBoxLayout) -> None:
+        self.chk_tree = QCheckBox("Plot Tree Visualization")
+        self.chk_tree.setChecked(False)
+        layout.addWidget(self.chk_tree)
+
     def _build_hyperparameters(self, layout: QFormLayout) -> None:
         self.cmb_criterion = QComboBox()
         self.cmb_criterion.addItems(["squared_error", "friedman_mse", "absolute_error", "poisson"])
@@ -301,7 +320,7 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
         self.chk_optimize_ccp.toggled.connect(lambda checked: self.spin_ccp_alpha.setEnabled(not checked))
 
     def _get_imports(self) -> list[str]:
-        imports = ["from sklearn.tree import DecisionTreeRegressor"]
+        imports = ["from sklearn.tree import DecisionTreeRegressor, plot_tree"]
         if self.chk_optimize_ccp.isChecked():
             imports.append("from sklearn.model_selection import KFold")
         return imports
@@ -315,6 +334,27 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
             return f"# Model initialized later after CCP optimization"
         
         return f"model = DecisionTreeRegressor(criterion='{self.cmb_criterion.currentText()}', {depth_str}, min_samples_split={self.spin_min_samples.value()}, ccp_alpha={self.spin_ccp_alpha.value()}, random_state=42)"
+
+    def _add_extra_plots_logic(self, code: list[str]) -> None:
+        if self.chk_tree.isChecked():
+            code.append("plots_to_draw.append('tree')")
+
+    def _add_extra_plots_rendering(self, code: list[str]) -> None:
+        if self.chk_tree.isChecked():
+            code.append("        elif p_type == 'tree':")
+            code.append("            # Re-generate tree plot with custom size")
+            code.append("            plt.close(fig)")
+            code.append("            fig, ax = plt.subplots(figsize=(20, 10))")
+            code.append("            plot_tree(model, feature_names=X.columns, filled=True, rounded=True, ax=ax)")
+            code.append("            ax.set_title('Decision Tree Structure')")
+            code.append("            plt.tight_layout()")
+            code.append("            buf = io.BytesIO()")
+            code.append("            fig.savefig(buf, format='png', dpi=200, bbox_inches='tight')")
+            code.append("            buf.seek(0)")
+            code.append("            img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+            code.append("            plt.close(fig)")
+            code.append("            html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"width:100%; max-width:2000px; border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
+            code.append("            continue")
 
     def generate_code(self) -> str:
         if not self.chk_optimize_ccp.isChecked():
@@ -351,7 +391,7 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
             "import base64",
             "from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV",
             "from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error",
-            "from sklearn.tree import DecisionTreeRegressor",
+            "from sklearn.tree import DecisionTreeRegressor, plot_tree",
             f"features = {features}",
             ""
         ]
@@ -397,9 +437,6 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
         code.append(f"html_output.append('<h3>{self.windowTitle()}</h3>')")
         code.append(f"html_output.append(f'<p><b>Best CCP Alpha:</b> {{best_alpha:.6f}}<br><b>Features:</b> {len(features)} selected</p>')")
         
-        # Reuse metrics and plotting from base by refactoring? 
-        # For now, duplicate to keep it surgical since base is not easily separable into fragments.
-        
         if self.chk_metrics.isChecked():
             code.append("mse = mean_squared_error(y_test, y_pred)")
             code.append("rmse = np.sqrt(mse)")
@@ -413,7 +450,7 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
             code.append("</tr></table>'''")
             code.append("html_output.append(metrics_html)")
 
-        if self.chk_plots.isChecked() or (self.chk_feat_imp.isChecked()):
+        if self.chk_plots.isChecked() or self.chk_feat_imp.isChecked() or self.chk_tree.isChecked():
             style_code = generate_style_code(self.cmb_style.currentText())
             code.extend([line for line in style_code.split("\n") if line.strip()])
             
@@ -421,43 +458,54 @@ class DecisionTreeRegressorDialog(BaseTreeRegressionDialog):
             if self.chk_plots.isChecked(): code.append("plots_to_draw.append('actual_vs_pred')")
             if self.chk_plots.isChecked(): code.append("plots_to_draw.append('residuals')")
             if self.chk_feat_imp.isChecked(): code.append("plots_to_draw.append('feat_imp')")
+            if self.chk_tree.isChecked(): code.append("plots_to_draw.append('tree')")
             
             code.append("if plots_to_draw:")
-            code.append("    fig, axes = plt.subplots(1, len(plots_to_draw), figsize=(5 * len(plots_to_draw), 5))")
-            code.append("    if len(plots_to_draw) == 1: axes = [axes]")
-            code.append("    ax_idx = 0")
+            code.append("    for p_type in plots_to_draw:")
+            code.append("        fig, ax = plt.subplots(figsize=(8, 8))")
             
             if self.chk_plots.isChecked():
-                code.append("    if 'actual_vs_pred' in plots_to_draw:")
-                code.append("        axes[ax_idx].scatter(y_test, y_pred, alpha=0.5)")
-                code.append("        axes[ax_idx].plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)")
-                code.append("        axes[ax_idx].set_title('Actual vs Predicted')")
-                code.append("        ax_idx += 1")
-                code.append("    if 'residuals' in plots_to_draw:")
-                code.append("        resids = y_test - y_pred")
-                code.append("        axes[ax_idx].scatter(y_pred, resids, alpha=0.5)")
-                code.append("        axes[ax_idx].axhline(y=0, color='r', linestyle='--')")
-                code.append("        axes[ax_idx].set_title('Residuals')")
-                code.append("        ax_idx += 1")
-            
-            if self.chk_feat_imp.isChecked():
-                code.append("    if 'feat_imp' in plots_to_draw:")
-                code.append("        imps = model.feature_importances_")
-                code.append("        idx = np.argsort(imps)[::-1][:15]")
-                code.append("        axes[ax_idx].bar(range(len(idx)), imps[idx])")
-                code.append("        axes[ax_idx].set_xticks(range(len(idx)))")
-                code.append("        axes[ax_idx].set_xticklabels([X.columns[i] for i in idx], rotation=45, ha='right')")
-                code.append("        axes[ax_idx].set_title('Feature Importance')")
-            
-            code.append("    plt.tight_layout()")
-            code.append("    buf = io.BytesIO()")
-            code.append("    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')")
-            code.append("    buf.seek(0)")
-            code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
-            code.append("    plt.close()")
-            code.append("    html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"max-width:100%;\"/></div>')")
+                code.append("        if p_type == 'actual_vs_pred':")
+                code.append("            ax.scatter(y_test, y_pred, alpha=0.5)")
+                code.append("            ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)")
+                code.append("            ax.set_title('Actual vs Predicted')")
+                code.append("            ax.set_xlabel('Actual')")
+                code.append("            ax.set_ylabel('Predicted')")
+                
+                code.append("        elif p_type == 'residuals':")
+                code.append("            residuals = y_test - y_pred")
+                code.append("            ax.scatter(y_pred, residuals, alpha=0.5)")
+                code.append("            ax.axhline(y=0, color='r', linestyle='--', lw=2)")
+                code.append("            ax.set_title('Residuals Plot')")
+                code.append("            ax.set_xlabel('Predicted')")
+                code.append("            ax.set_ylabel('Residuals')")
 
-        code.append("show_result('Decision Tree (CCP)', '\\n'.join(html_output))")
+            if self.chk_feat_imp.isChecked() and self._supports_feature_importance:
+                code.append("        elif p_type == 'feat_imp' and hasattr(model, 'feature_importances_'):")
+                code.append("            importances = model.feature_importances_")
+                code.append("            indices = np.argsort(importances)[::-1][:15]")
+                code.append("            ax.bar(range(len(indices)), importances[indices], align='center')")
+                code.append("            ax.set_xticks(range(len(indices)))")
+                code.append("            ax.set_xticklabels([X.columns[i] for i in indices], rotation=45, ha='right')")
+                code.append("            ax.set_title('Top Feature Importances')")
+                
+            self._add_extra_plots_rendering(code)
+
+            code.append("        plt.tight_layout()")
+            code.append("        buf = io.BytesIO()")
+            code.append("        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
+            code.append("        buf.seek(0)")
+            code.append("        img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+            code.append("        plt.close(fig)")
+            code.append("        html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
+
+
+        code.append("if 'show_result' in globals():")
+        code.append(f"    show_result('{self.windowTitle()}', '\\n'.join(html_output))")
+        code.append("else:")
+        code.append(f"    print('{self.windowTitle()}')")
+        if self.chk_metrics.isChecked():
+            code.append("    print(f'R2: {r2:.4f}, RMSE: {rmse:.4f}')")
         return "\n".join(code)
 
 
@@ -475,7 +523,7 @@ class RandomForestRegressorDialog(BaseTreeRegressionDialog):
         layout.addRow("n_estimators:", self.spin_estimators)
         
         self.cmb_criterion = QComboBox()
-        self.cmb_criterion.addItems(["squared_error", "absolute_error", "friedman_mse", "poisson"])
+        self.cmb_criterion.addItems(["squared_error", "friedman_mse", "absolute_error", "poisson"])
         layout.addRow("Criterion:", self.cmb_criterion)
         
         self.spin_max_depth = QSpinBox()

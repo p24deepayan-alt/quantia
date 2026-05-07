@@ -274,6 +274,8 @@ class ReportDialog(QDialog):
 
         if self.chk_summary.isChecked() and self._df is not None:
             df = self._df
+            if hasattr(df, 'to_pandas'):
+                df = df.to_pandas()
             dtypes = df.dtypes.value_counts()
             dtype_str = ", ".join(f"{v} {k}" for k, v in dtypes.items())
             parts.append("<h2>Dataset Summary</h2>")

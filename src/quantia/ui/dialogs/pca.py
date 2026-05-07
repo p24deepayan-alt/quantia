@@ -129,12 +129,60 @@ class PCADialog(BaseAnalysisDialog):
             code.append("html_output.append(var_df.to_html(index=False, classes='table table-sm table-striped'))")
 
         title = self.windowTitle()
-        if 'display_html' in globals():
-            code.append("display_html('\\n'.join(html_output))")
-        elif 'show_result' in globals():
-            code.append(f"show_result('{title}', '\\n'.join(html_output))")
-        else:
-            code.append("print('\\n'.join(html_output))")
+        
+        code.append("plots_to_draw = []")
+        if self.chk_scree.isChecked(): code.append("plots_to_draw.append('scree')")
+        if self.chk_biplot.isChecked(): code.append("plots_to_draw.append('biplot')")
+
+        if self.chk_scree.isChecked() or self.chk_biplot.isChecked():
+            code.append("\n# --- Plots ---")
+            code.append("import io, base64")
+            code.append("if plots_to_draw:")
+            code.append("    for p_type in plots_to_draw:")
+            code.append("        fig, ax = plt.subplots(figsize=(8, 8))")
+
+            first_p = True
+            if self.chk_scree.isChecked():
+                code.append("        if p_type == 'scree':")
+                code.append("            ax.bar(range(1, pca.n_components_ + 1), pca.explained_variance_ratio_ * 100, color='#2C3E8F')")
+                code.append("            ax.plot(range(1, pca.n_components_ + 1), pca.explained_variance_ratio_.cumsum() * 100, 'ro-', label='Cumulative')")
+                code.append("            ax.set_xlabel('Principal Component')")
+                code.append("            ax.set_ylabel('Variance Explained (%)')")
+                code.append("            ax.set_title('Scree Plot')")
+                code.append("            ax.legend()")
+                code.append("            ax.set_xticks(range(1, pca.n_components_ + 1))")
+                first_p = False
+
+            if self.chk_biplot.isChecked():
+                if_str = "if" if first_p else "elif"
+                code.append(f"        {if_str} p_type == 'biplot':")
+                code.append("            ax.scatter(X_pca[:, 0], X_pca[:, 1], alpha=0.5, color='#26A69A')")
+                code.append("            ax.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.1f}%)')")
+                code.append("            if pca.n_components_ > 1:")
+                code.append("                ax.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.1f}%)')")
+                code.append("            ax.set_title('PCA Biplot')")
+                
+                code.append("            # Overlay loadings as arrows (scaled for visibility)")
+                code.append("            if pca.n_components_ > 1:")
+                code.append("                loadings = pca.components_.T * np.sqrt(pca.explained_variance_) * 2")
+                code.append("                for i, feature in enumerate(features):")
+                code.append("                    ax.arrow(0, 0, loadings[i, 0], loadings[i, 1], color='r', alpha=0.8, head_width=0.05)")
+                code.append("                    ax.text(loadings[i, 0]*1.15, loadings[i, 1]*1.15, feature, color='darkred', ha='center', va='center')")
+                code.append("                ax.axhline(y=0, color='k', linestyle='--', alpha=0.3)")
+                code.append("                ax.axvline(x=0, color='k', linestyle='--', alpha=0.3)")
+
+            code.append("        plt.tight_layout()")
+            code.append("        buf = io.BytesIO()")
+            code.append("        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
+            code.append("        plt.close(fig)")
+            code.append("        buf.seek(0)")
+            code.append("        img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+            code.append("        html_output.append(f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
+
+        code.append("\nif 'show_result' in globals():")
+        code.append(f"    show_result('{title}', '\\n'.join(html_output))")
+        code.append("else:")
+        code.append("    print('\\n'.join(html_output))")
 
         if self.chk_append.isChecked():
             code.append("\n# Append PCs to Dataset")
@@ -150,46 +198,6 @@ class PCADialog(BaseAnalysisDialog):
             # We align using the index of the dropna'd X_pd to avoid misaligning rows
             code.append(f"        df.loc[X_pd.index, f'PC{{i+1}}'] = X_pca[:, i]")
             code.append("print(f'\\nAppended {pca.n_components_} Principal Components to the dataset.')")
-
-        plots_to_draw = []
-        if self.chk_scree.isChecked(): plots_to_draw.append("scree")
-        if self.chk_biplot.isChecked(): plots_to_draw.append("biplot")
-
-        if plots_to_draw:
-            code.append(f"\nfig, axes = plt.subplots(1, {len(plots_to_draw)}, figsize=({6 * len(plots_to_draw)}, 5))")
-            code.append(f"if {len(plots_to_draw)} == 1: axes = [axes]")
-            code.append("ax_idx = 0\n")
-
-            if self.chk_scree.isChecked():
-                code.append("# Scree Plot")
-                code.append("axes[ax_idx].bar(range(1, pca.n_components_ + 1), pca.explained_variance_ratio_ * 100, color='#2C3E8F')")
-                code.append("axes[ax_idx].plot(range(1, pca.n_components_ + 1), pca.explained_variance_ratio_.cumsum() * 100, 'ro-', label='Cumulative')")
-                code.append("axes[ax_idx].set_xlabel('Principal Component')")
-                code.append("axes[ax_idx].set_ylabel('Variance Explained (%)')")
-                code.append("axes[ax_idx].set_title('Scree Plot')")
-                code.append("axes[ax_idx].legend()")
-                code.append("axes[ax_idx].set_xticks(range(1, pca.n_components_ + 1))")
-                code.append("ax_idx += 1\n")
-
-            if self.chk_biplot.isChecked():
-                code.append("# Biplot (PC1 vs PC2)")
-                code.append("axes[ax_idx].scatter(X_pca[:, 0], X_pca[:, 1], alpha=0.5, color='#26A69A')")
-                code.append("axes[ax_idx].set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.1f}%)')")
-                code.append("if pca.n_components_ > 1:")
-                code.append("    axes[ax_idx].set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.1f}%)')")
-                code.append("axes[ax_idx].set_title('PCA Biplot')")
-                
-                code.append("\n# Overlay loadings as arrows (scaled for visibility)")
-                code.append("if pca.n_components_ > 1:")
-                code.append("    loadings = pca.components_.T * np.sqrt(pca.explained_variance_) * 2")
-                code.append("    for i, feature in enumerate(features):")
-                code.append("        axes[ax_idx].arrow(0, 0, loadings[i, 0], loadings[i, 1], color='r', alpha=0.8, head_width=0.05)")
-                code.append("        axes[ax_idx].text(loadings[i, 0]*1.15, loadings[i, 1]*1.15, feature, color='darkred', ha='center', va='center')")
-                code.append("    axes[ax_idx].axhline(y=0, color='k', linestyle='--', alpha=0.3)")
-                code.append("    axes[ax_idx].axvline(x=0, color='k', linestyle='--', alpha=0.3)")
-
-            code.append("\nplt.tight_layout()")
-            code.append("plt.show()")
 
         return "\n".join(code)
 

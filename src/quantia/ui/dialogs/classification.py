@@ -194,60 +194,58 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         self._add_extra_plots_logic(code)
         
         code.append("if plots_to_draw:")
-        code.append(f"    fig, axes = plt.subplots(1, len(plots_to_draw), figsize=(5 * len(plots_to_draw), 5))")
-        code.append("    if len(plots_to_draw) == 1: axes = [axes]")
-        code.append("    ax_idx = 0")
-        code.append("")
+        code.append("    for p_type in plots_to_draw:")
+        code.append("        fig, ax = plt.subplots(figsize=(8, 8))")
         
+        first_p = True
         if self.chk_cm.isChecked():
-            code.append("    # Confusion Matrix (dynamic check)")
-            code.append("    if 'cm' in plots_to_draw:")
-            code.append("        cm = confusion_matrix(y_test, y_pred)")
-            code.append("        classes = model.classes_")
-            code.append("        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=axes[ax_idx], xticklabels=classes, yticklabels=classes)")
-            code.append("        axes[ax_idx].set_title('Confusion Matrix')")
-            code.append("        axes[ax_idx].set_xlabel('Predicted')")
-            code.append("        axes[ax_idx].set_ylabel('Actual')")
-            code.append("        ax_idx += 1")
-            
+            code.append("        if p_type == 'cm':")
+            code.append("            cm = confusion_matrix(y_test, y_pred)")
+            code.append("            classes = model.classes_")
+            code.append("            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax, xticklabels=classes, yticklabels=classes)")
+            code.append("            ax.set_title('Confusion Matrix')")
+            code.append("            ax.set_xlabel('Predicted')")
+            code.append("            ax.set_ylabel('Actual')")
+            first_p = False
+        
         if self.chk_roc.isChecked():
-            code.append("    # ROC Curve (dynamic check)")
-            code.append("    if 'roc' in plots_to_draw:")
-            code.append("        classes = model.classes_")
-            code.append("        pos_class = classes[1]")
-            code.append("        y_test_bin = (y_test == pos_class).astype(int)")
-            code.append("        fpr, tpr, _ = roc_curve(y_test_bin, y_prob[:, 1])")
-            code.append("        roc_auc = auc(fpr, tpr)")
-            code.append("        axes[ax_idx].plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {{roc_auc:.2f}})')")
-            code.append("        axes[ax_idx].plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')")
-            code.append("        axes[ax_idx].set_xlim([0.0, 1.0])")
-            code.append("        axes[ax_idx].set_ylim([0.0, 1.05])")
-            code.append("        axes[ax_idx].set_xlabel('False Positive Rate')")
-            code.append("        axes[ax_idx].set_ylabel('True Positive Rate')")
-            code.append("        axes[ax_idx].set_title(f'ROC Curve (Positive: {{pos_class}})')")
-            code.append("        axes[ax_idx].legend(loc='lower right')")
-            code.append("        ax_idx += 1")
-            
+            if_str = "if" if first_p else "elif"
+            code.append(f"        {if_str} p_type == 'roc':")
+            code.append("            classes = model.classes_")
+            code.append("            pos_class = classes[1]")
+            code.append("            y_test_bin = (y_test == pos_class).astype(int)")
+            code.append("            fpr, tpr, _ = roc_curve(y_test_bin, y_prob[:, 1])")
+            code.append("            roc_auc = auc(fpr, tpr)")
+            code.append("            ax.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')")
+            code.append("            ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')")
+            code.append("            ax.set_xlim([0.0, 1.0])")
+            code.append("            ax.set_ylim([0.0, 1.05])")
+            code.append("            ax.set_xlabel('False Positive Rate')")
+            code.append("            ax.set_ylabel('True Positive Rate')")
+            code.append("            ax.set_title(f'ROC Curve (Positive: {pos_class})')")
+            code.append("            ax.legend(loc='lower right')")
+            first_p = False
+        
         if self.chk_feat_imp.isChecked() and self._supports_feature_importance:
-            code.append("    # Feature Importance (dynamic check)")
-            code.append("    if 'feat_imp' in plots_to_draw and hasattr(model, 'feature_importances_'):")
-            code.append("        importances = model.feature_importances_")
-            code.append("        indices = np.argsort(importances)[::-1][:15]")
-            code.append("        axes[ax_idx].bar(range(len(indices)), importances[indices], align='center')")
-            code.append("        axes[ax_idx].set_xticks(range(len(indices)))")
-            code.append("        axes[ax_idx].set_xticklabels([X.columns[i] for i in indices], rotation=45, ha='right')")
-            code.append("        axes[ax_idx].set_title('Top Feature Importances')")
-            code.append("        ax_idx += 1")
+            if_str = "if" if first_p else "elif"
+            code.append(f"        {if_str} p_type == 'feat_imp' and hasattr(model, 'feature_importances_'):")
+            code.append("            importances = model.feature_importances_")
+            code.append("            indices = np.argsort(importances)[::-1][:15]")
+            code.append("            ax.bar(range(len(indices)), importances[indices], align='center')")
+            code.append("            ax.set_xticks(range(len(indices)))")
+            code.append("            ax.set_xticklabels([X.columns[i] for i in indices], rotation=45, ha='right')")
+            code.append("            ax.set_title('Top Feature Importances')")
+            first_p = False
             
         self._add_extra_plots_rendering(code)
 
-        code.append("    plt.tight_layout()")
-        code.append("    buf = io.BytesIO()")
-        code.append("    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')")
-        code.append("    buf.seek(0)")
-        code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
-        code.append("    plt.close()")
-        code.append("    html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"max-width:100%;\"/></div>')")
+        code.append("        plt.tight_layout()")
+        code.append("        buf = io.BytesIO()")
+        code.append("        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
+        code.append("        buf.seek(0)")
+        code.append("        img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+        code.append("        plt.close(fig)")
+        code.append("        html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
 
         code.append("")
         code.append("if 'display_html' in globals():")
@@ -404,11 +402,22 @@ class DecisionTreeDialog(BaseClassificationDialog):
 
     def _add_extra_plots_rendering(self, code):
         if self.chk_tree.isChecked():
-            code.append("    # Tree Visualization")
-            code.append("    if 'tree' in plots_to_draw:")
-            code.append("        plot_tree(model, feature_names=X.columns, class_names=[str(c) for c in model.classes_], filled=True, rounded=True, ax=axes[ax_idx])")
-            code.append("        axes[ax_idx].set_title('Decision Tree Structure')")
-            code.append("        ax_idx += 1")
+            code.append("        # Tree Visualization")
+            code.append("        elif p_type == 'tree':")
+            code.append("            # Re-generate tree plot with custom size")
+            code.append("            plt.close(fig)")
+            code.append("            fig, ax = plt.subplots(figsize=(20, 10))")
+            code.append("            plot_tree(model, feature_names=X.columns, class_names=[str(c) for c in model.classes_], filled=True, rounded=True, ax=ax)")
+            code.append("            ax.set_title('Decision Tree Structure')")
+            code.append("            plt.tight_layout()")
+            code.append("            buf = io.BytesIO()")
+            code.append("            fig.savefig(buf, format='png', dpi=200, bbox_inches='tight')")
+            code.append("            buf.seek(0)")
+            code.append("            img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+            code.append("            plt.close(fig)")
+            code.append("            html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"width:100%; max-width:2000px; border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
+            # Signal the loop to skip the default append logic
+            code.append("            continue")
             
     def _get_model_init_code(self):
         depth = "None" if self.chk_auto_depth.isChecked() else self.spin_depth.value()
