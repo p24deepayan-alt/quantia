@@ -454,26 +454,33 @@ class LinearRegressionDialog(BaseAnalysisDialog):
             for line in style_code.split("\n"):
                 if line.strip():
                     code.append(f"    {line}")
-            code.append("    fig, axes = plt.subplots(1, 2, figsize=(10, 4))")
-            code.append("    sns.residplot(x=results.fittedvalues, y=results.resid, ax=axes[0], lowess=True, scatter_kws={'alpha': 0.5})")
-            code.append("    axes[0].set_title('Residuals vs Fitted')")
-            code.append("    axes[0].set_xlabel('Fitted values')")
-            code.append("    axes[0].set_ylabel('Residuals')")
-            
-            # Manual Q-Q plot
-            code.append("    (osm, osr), (slope, intercept, _) = stats.probplot(results.resid, dist='norm', plot=None)")
-            code.append("    axes[1].scatter(osm, osr, alpha=0.5)")
-            code.append("    axes[1].plot(osm, intercept + slope*osm, color='red', lw=2)")
-            
-            code.append("    axes[1].set_title('Normal Q-Q')")
+            code.append("    # Residuals vs Fitted")
+            code.append("    fig, ax = plt.subplots(figsize=(8, 8))")
+            code.append("    sns.residplot(x=results.fittedvalues, y=results.resid, ax=ax, lowess=True, scatter_kws={'alpha': 0.5})")
+            code.append("    ax.set_title('Residuals vs Fitted')")
+            code.append("    ax.set_xlabel('Fitted values')")
+            code.append("    ax.set_ylabel('Residuals')")
             code.append("    fig.tight_layout()")
             code.append("    buf = io.BytesIO()")
-            code.append("    fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')")
+            code.append("    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
             code.append("    plt.close(fig)")
             code.append("    buf.seek(0)")
             code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
-            code.append("    plots_html = f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"max-width:100%; border:1px solid #E2E8F0; border-radius:4px;\"/></div>'")
-            code.append("    html_output += plots_html")
+            code.append("    html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>'")
+            
+            # Manual Q-Q plot
+            code.append("    fig, ax = plt.subplots(figsize=(8, 8))")
+            code.append("    (osm, osr), (slope, intercept, _) = stats.probplot(results.resid, dist='norm', plot=None)")
+            code.append("    ax.scatter(osm, osr, alpha=0.5)")
+            code.append("    ax.plot(osm, intercept + slope*osm, color='red', lw=2)")
+            code.append("    ax.set_title('Normal Q-Q')")
+            code.append("    fig.tight_layout()")
+            code.append("    buf = io.BytesIO()")
+            code.append("    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
+            code.append("    plt.close(fig)")
+            code.append("    buf.seek(0)")
+            code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+            code.append("    html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>'")
 
         code.append("")
         code.append("    show_result('Linear Regression', html_output)")

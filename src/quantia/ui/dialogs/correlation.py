@@ -206,47 +206,57 @@ class CorrelationDialog(BaseAnalysisDialog):
         ]
 
         if show_pvalues:
-            inner_code.append("    legend = '<div style=\"font-size:8pt; color:#94A3B8; text-align:right; margin-top:4px;\">*** p &lt; 0.001 &nbsp; ** p &lt; 0.01 &nbsp; * p &lt; 0.05</div>'")
-            inner_code.append("    html_output = title_html + header + rows_html + '</table>' + legend")
+            inner_code.append("legend = '<div style=\"font-size:8pt; color:#94A3B8; text-align:right; margin-top:4px;\">*** p &lt; 0.001 &nbsp; ** p &lt; 0.01 &nbsp; * p &lt; 0.05</div>'")
+            inner_code.append("html_output = title_html + header + rows_html + '</table>' + legend")
         else:
-            inner_code.append("    html_output = title_html + header + rows_html + '</table>'")
+            inner_code.append("html_output = title_html + header + rows_html + '</table>'")
 
         if show_heatmap:
             style_code = generate_style_code(style_name)
             inner_code += [
                 "",
-                "    import matplotlib.pyplot as plt",
-                "    import seaborn as sns",
-                "    import io, base64",
+                "import matplotlib.pyplot as plt",
+                "import seaborn as sns",
+                "import io, base64",
             ]
             for line in style_code.split("\n"):
                 if line.strip():
-                    inner_code.append("    " + line)
+                    inner_code.append(line)
             inner_code += [
                 "",
-                "    fig, ax = plt.subplots(figsize=(max(6, len(cols)*1.2), max(5, len(cols)*1.0)))",
-                "    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']",
-                "    c_main = colors[0] if len(colors) > 0 else '#4C72B0'",
-                "    cmap = sns.blend_palette(['#4A4A4A', '#FFFFFF', c_main], as_cmap=True)",
-                "    sns.heatmap(corr, annot=True, fmt='.2f', cmap=cmap, vmin=-1, vmax=1, center=0,",
-                "                square=True, linewidths=.5, cbar_kws={'shrink': .8}, ax=ax)",
-                f"    ax.set_title('Correlation Heatmap ({method.capitalize()})', pad=16)",
-                "    fig.tight_layout()",
+                "fig, ax = plt.subplots(figsize=(8, 6))",
+                "colors = plt.rcParams['axes.prop_cycle'].by_key()['color']",
+                "c_main = colors[0] if len(colors) > 0 else '#4C72B0'",
+                "cmap = sns.blend_palette(['#4A4A4A', '#FFFFFF', c_main], as_cmap=True)",
                 "",
-                "    buf = io.BytesIO()",
-                "    fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')",
-                "    plt.close(fig)",
-                "    buf.seek(0)",
-                "    img_b64 = base64.b64encode(buf.read()).decode('utf-8')",
-                "    html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"max-width:100%; border:1px solid #E2E8F0; border-radius:4px;\"/></div>'",
+                "# Dynamic annotation and label font sizes",
+                "n_vars = len(cols)",
+                "annot_size = max(6, 12 - n_vars // 2)",
+                "label_size = max(6, 10 - n_vars // 3)",
+                "",
+                "sns.heatmap(corr, annot=True, fmt='.2f', cmap=cmap, vmin=-1, vmax=1, center=0,",
+                "            square=True, linewidths=.5, cbar_kws={'shrink': .8}, ax=ax,",
+                "            annot_kws={'size': annot_size})",
+                "    ",
+                "ax.tick_params(axis='both', which='major', labelsize=label_size)",
+                "    ",
+                "ax.set_title(f'Correlation Heatmap ({method.capitalize()})', pad=16)",
+                "fig.tight_layout()",
+                "",
+                "buf = io.BytesIO()",
+                "fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')",
+                "plt.close(fig)",
+                "buf.seek(0)",
+                "img_b64 = base64.b64encode(buf.read()).decode('utf-8')",
+                "html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>'",
             ]
 
         inner_code += [
             "",
-            "    if 'show_result' in globals():",
-            "        show_result('Correlation Matrix', html_output)",
-            "    else:",
-            "        print(corr.to_string())",
+            "if 'show_result' in globals():",
+            "    show_result('Correlation Matrix', html_output)",
+            "else:",
+            "    print(corr.to_string())",
         ]
 
         # Add the indented inner code to the main code list
