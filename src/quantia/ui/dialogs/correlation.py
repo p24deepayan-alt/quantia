@@ -248,6 +248,8 @@ class CorrelationDialog(BaseAnalysisDialog):
                 "plt.close(fig)",
                 "buf.seek(0)",
                 "img_b64 = base64.b64encode(buf.read()).decode('utf-8')",
+                "if \'register_figure\' in globals():",
+                "    register_figure(img_b64, fig)",
                 "html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>'",
             ]
 

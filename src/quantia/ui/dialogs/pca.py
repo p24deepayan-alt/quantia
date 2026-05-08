@@ -177,6 +177,8 @@ class PCADialog(BaseAnalysisDialog):
             code.append("        plt.close(fig)")
             code.append("        buf.seek(0)")
             code.append("        img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+            code.append("        if \'register_figure\' in globals():")
+            code.append("            register_figure(img_b64, fig)")
             code.append("        html_output.append(f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
 
         code.append("\nif 'show_result' in globals():")

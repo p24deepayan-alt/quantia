@@ -18,11 +18,13 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QVBoxLayout,
     QWidget,
+    QMenu,
 )
+from PySide6.QtCore import Qt
 
 from quantia.ui.icons import feather_icon
 from quantia.utils.paths import get_plots_dir
-
+from quantia.ui.central.interactive_plot import InteractivePlotDialog
 
 class PlotViewWidget(QWidget):
     """Container for matplotlib plots. Each figure opens in a new tab."""
@@ -65,8 +67,29 @@ class PlotViewWidget(QWidget):
         """Embed a matplotlib Figure in a new tab."""
         canvas = FigureCanvasQTAgg(fig)
         canvas.draw()
+
+        # Add context menu for interactive plot popup
+        canvas.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        canvas.customContextMenuRequested.connect(lambda pos, f=fig: self._show_context_menu(canvas, pos, f))
+
         idx = self._tabs.addTab(canvas, feather_icon("image", self._chrome_icon_color, 14), title)
         self._tabs.setCurrentIndex(idx)
+
+    def _show_context_menu(self, widget: QWidget, pos, fig: Figure) -> None:
+        menu = QMenu(self)
+        action = menu.addAction(feather_icon("external-link", self._chrome_icon_color, 14), "Open Plot")
+        if menu.exec(widget.mapToGlobal(pos)) == action:
+            self._open_interactive_plot(fig)
+
+    def _open_interactive_plot(self, fig: Figure) -> None:
+        import pickle
+        try:
+            fig_copy = pickle.loads(pickle.dumps(fig))
+            dialog = InteractivePlotDialog(fig_copy, self)
+            dialog.show()
+        except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Error", f"Failed to open interactive plot:\n{e}")
 
     def set_icon_color(self, color: str) -> None:
         """Update the icon colour for toolbar and existing tabs."""

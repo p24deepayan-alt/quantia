@@ -799,12 +799,16 @@ class MainWindow(QMainWindow):
             self._plot_view.add_plot(title, fig)
             self._tabs.setCurrentIndex(4)
 
+        def _handle_register_figure(b64_str, fig):
+            self._results_view.register_figure(b64_str, fig)
+
         worker.signals.result.connect(on_result)
         worker.signals.error.connect(on_error)
         worker.signals.finished.connect(on_finished)
         worker.signals.progress.connect(lambda n: self._status_bar.show_progress(n, 100, "Executing script..."))
         worker.signals.display_result.connect(_handle_display_result)
         worker.signals.display_plot.connect(_handle_display_plot)
+        worker.signals.register_figure.connect(_handle_register_figure)
 
         self._threadpool.start(worker)
 

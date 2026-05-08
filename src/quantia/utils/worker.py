@@ -25,6 +25,7 @@ class WorkerSignals(QObject):
     progress = Signal(int)
     display_result = Signal(str, object)  # (title, content)
     display_plot = Signal(str, object)    # (title, figure)
+    register_figure = Signal(str, object) # (b64_string, figure)
 
 
 class ScriptWorker(QRunnable):
@@ -43,6 +44,7 @@ class ScriptWorker(QRunnable):
         self.namespace["show_result"] = self.emit_result
         self.namespace["show_plot"] = self.emit_plot
         self.namespace["display_html"] = lambda html: self.emit_result("Analysis Result", html)
+        self.namespace["register_figure"] = self.emit_register_figure
 
     def emit_progress(self, n: int):
         """Callback function used within scripts to report progress."""
@@ -55,6 +57,15 @@ class ScriptWorker(QRunnable):
     def emit_plot(self, title: str, fig: Any):
         """Thread-safe way to show a matplotlib figure."""
         self.signals.display_plot.emit(title, fig)
+
+    def emit_register_figure(self, b64_str: str, fig: Any):
+        """Register a figure object for interactive view by its base64 HTML string."""
+        import pickle
+        try:
+            fig_copy = pickle.loads(pickle.dumps(fig))
+            self.signals.register_figure.emit(b64_str, fig_copy)
+        except Exception:
+            pass
 
     @Slot()
     def run(self):

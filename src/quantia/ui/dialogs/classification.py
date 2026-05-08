@@ -244,6 +244,8 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         code.append("        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
         code.append("        buf.seek(0)")
         code.append("        img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+        code.append("        if \'register_figure\' in globals():")
+        code.append("            register_figure(img_b64, fig)")
         code.append("        plt.close(fig)")
         code.append("        html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
 
@@ -414,6 +416,8 @@ class DecisionTreeDialog(BaseClassificationDialog):
             code.append("            fig.savefig(buf, format='png', dpi=200, bbox_inches='tight')")
             code.append("            buf.seek(0)")
             code.append("            img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+            code.append("            if \'register_figure\' in globals():")
+            code.append("                register_figure(img_b64, fig)")
             code.append("            plt.close(fig)")
             code.append("            html_output.append(f'<div style=\"text-align:center; margin-top:20px;\"><img src=\"data:image/png;base64,{img_b64}\" style=\"width:100%; max-width:2000px; border:1px solid #E2E8F0; border-radius:4px;\"/></div>')")
             # Signal the loop to skip the default append logic

@@ -56,6 +56,12 @@ class ResultsViewWidget(QWidget):
         self._tabs.setTabsClosable(True)
         self._tabs.tabCloseRequested.connect(self._close_tab)
         layout.addWidget(self._tabs)
+        
+        self._registered_figures = {}
+
+    def register_figure(self, b64_str: str, fig: Any) -> None:
+        """Store the generated matplotlib figure against its base64 signature."""
+        self._registered_figures[b64_str] = fig
 
     def add_result(self, title: str, content: str | pd.DataFrame) -> None:
         """Add a new result tab. Content can be text or a DataFrame."""
@@ -148,8 +154,42 @@ class ResultsViewWidget(QWidget):
         bg = PALETTE[theme]["bg_card"]
         
         browser.setStyleSheet(f"QTextBrowser {{ background-color: {bg}; padding: 20px; border: none; border-radius: 8px; }}")
+        
+        browser.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        browser.customContextMenuRequested.connect(lambda pos, b=browser: self._show_context_menu(b, pos))
+        
         self._update_text_browser_content(browser, text, theme)
         return browser
+
+    def _show_context_menu(self, browser: QTextBrowser, pos) -> None:
+        """Handle custom context menu to allow popping up interactive figures for images."""
+        from quantia.ui.central.interactive_plot import InteractivePlotDialog
+        
+        cursor = browser.cursorForPosition(pos)
+        fmt = cursor.charFormat()
+        
+        if fmt.isImageFormat():
+            src = fmt.toImageFormat().name()
+            if src.startswith("data:image/png;base64,"):
+                b64_str = src.replace("data:image/png;base64,", "")
+                if b64_str in self._registered_figures:
+                    menu = browser.createStandardContextMenu()
+                    menu.addSeparator()
+                    action = menu.addAction(feather_icon("external-link", self._chrome_icon_color, 14), "Open Plot")
+                    if menu.exec(browser.mapToGlobal(pos)) == action:
+                        try:
+                            fig = self._registered_figures[b64_str]
+                            import pickle
+                            fig_copy = pickle.loads(pickle.dumps(fig))
+                            dialog = InteractivePlotDialog(fig_copy, self)
+                            dialog.show()
+                        except Exception:
+                            pass
+                    return
+        
+        # Default fallback
+        menu = browser.createStandardContextMenu()
+        menu.exec(browser.mapToGlobal(pos))
 
     def _update_text_browser_content(self, browser: QTextBrowser, text: str, theme: Theme) -> None:
         """Render content into the browser with theme-aware CSS."""
@@ -178,6 +218,7 @@ class ResultsViewWidget(QWidget):
 
     def clear_all(self) -> None:
         self._tabs.clear()
+        self._registered_figures.clear()
 
     def get_all_html(self) -> str:
         """Collect HTML content from all result tabs for report generation."""
