@@ -106,8 +106,10 @@ class WorkflowGraphicsView(QGraphicsView):
         super().mouseReleaseEvent(event)
 
 
+import json
 from quantia.ui.central.workflow.engine import WorkflowEngine
-from PySide6.QtWidgets import QGraphicsView, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QMessageBox
+from quantia.utils.paths import get_quantia_root
+from PySide6.QtWidgets import QGraphicsView, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QMessageBox, QFileDialog
 
 class WorkflowTab(QWidget):
     """The main widget inserted into the central tabs."""
@@ -128,7 +130,15 @@ class WorkflowTab(QWidget):
         self.btn_clear = QPushButton("Clear Canvas")
         self.btn_clear.clicked.connect(self._clear_workflow)
         
+        self.btn_save = QPushButton("Save Workflow")
+        self.btn_save.clicked.connect(self._save_workflow)
+        
+        self.btn_load = QPushButton("Load Workflow")
+        self.btn_load.clicked.connect(self._load_workflow)
+        
         toolbar.addWidget(self.btn_run)
+        toolbar.addWidget(self.btn_save)
+        toolbar.addWidget(self.btn_load)
         toolbar.addWidget(self.btn_clear)
         toolbar.addStretch()
         
@@ -176,3 +186,24 @@ class WorkflowTab(QWidget):
         self.scene.clear()
         self.scene._drawing_edge = None
         self.scene._start_port = None
+
+    def _save_workflow(self) -> None:
+        path, _ = QFileDialog.getSaveFileName(self, "Save Workflow", str(get_quantia_root()), "JSON Files (*.json)")
+        if path:
+            try:
+                data = self.scene.serialize()
+                with open(path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=4)
+                QMessageBox.information(self, "Success", "Workflow saved successfully.")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to save workflow: {str(e)}")
+                
+    def _load_workflow(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(self, "Load Workflow", str(get_quantia_root()), "JSON Files (*.json)")
+        if path:
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self.scene.deserialize(data)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to load workflow: {str(e)}")

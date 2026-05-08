@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from PySide6.QtCore import Qt, QPointF, QRectF
 from PySide6.QtGui import QColor, QPen, QBrush, QPainterPath, QFont
 from PySide6.QtWidgets import (
@@ -104,6 +105,7 @@ class NodeItem(QGraphicsRectItem):
     
     def __init__(self, title: str, x: float = 0, y: float = 0) -> None:
         super().__init__(0, 0, 160, 60)
+        self.id = str(uuid.uuid4())
         self.setPos(x, y)
         self.title_text = title
         
