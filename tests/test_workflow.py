@@ -74,5 +74,59 @@ def test_workflow_serialization():
     assert len(export_nodes_des) == 1
     assert export_nodes_des[0].file_path == "out.csv"
 
+def test_extended_workflow_serialization():
+    from quantia.ui.central.workflow.nodes_logic import PCANode, LinearRegressionNode, SaveReportNode
+    scene = WorkflowScene()
+    
+    pca = PCANode(10, 10)
+    pca._configured_code = "# pca code"
+    
+    reg = LinearRegressionNode(200, 10)
+    reg._configured_code = "# regression code"
+    
+    rep = SaveReportNode(400, 10)
+    rep.file_path = "report.html"
+    
+    scene.addItem(pca)
+    scene.addItem(reg)
+    scene.addItem(rep)
+    
+    # PCA -> Reg -> Rep
+    e1 = EdgeItem(pca.out_port, reg.in_port)
+    scene.addItem(e1)
+    pca.out_port.add_edge(e1)
+    reg.in_port.add_edge(e1)
+    
+    e2 = EdgeItem(reg.out_port, rep.in_port)
+    scene.addItem(e2)
+    reg.out_port.add_edge(e2)
+    rep.in_port.add_edge(e2)
+    
+    data = scene.serialize()
+    assert len(data["nodes"]) == 3
+    assert len(data["edges"]) == 2
+    
+    new_scene = WorkflowScene()
+    new_scene.deserialize(data)
+    
+    nodes = [item for item in new_scene.items() if hasattr(item, "to_dict")]
+    edges = [item for item in new_scene.items() if isinstance(item, EdgeItem)]
+    
+    assert len(nodes) == 3
+    assert len(edges) == 2
+    
+    pca_nodes = [n for n in nodes if isinstance(n, PCANode)]
+    assert len(pca_nodes) == 1
+    assert pca_nodes[0]._configured_code == "# pca code"
+    
+    reg_nodes = [n for n in nodes if isinstance(n, LinearRegressionNode)]
+    assert len(reg_nodes) == 1
+    assert reg_nodes[0]._configured_code == "# regression code"
+    
+    rep_nodes = [n for n in nodes if isinstance(n, SaveReportNode)]
+    assert len(rep_nodes) == 1
+    assert rep_nodes[0].file_path == "report.html"
+
 if __name__ == "__main__":
     test_workflow_serialization()
+    test_extended_workflow_serialization()

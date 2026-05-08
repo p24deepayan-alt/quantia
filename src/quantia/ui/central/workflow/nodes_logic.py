@@ -189,6 +189,29 @@ class ExportCSVNode(BaseLogicNode):
 
 from quantia.ui.dialogs.pca import PCADialog
 from quantia.ui.dialogs.regression import LinearRegressionDialog
+from quantia.ui.dialogs.ttest import TTestDialog
+from quantia.ui.dialogs.descriptive import DescriptiveStatsDialog
+from quantia.ui.dialogs.correlation import CorrelationDialog
+from quantia.ui.dialogs.logistic_regression import LogisticRegressionDialog
+from quantia.ui.dialogs.chi_square import ChiSquareDialog
+from quantia.ui.dialogs.classification import (
+    RandomForestDialog, GradientBoostingDialog, DecisionTreeDialog,
+    SVMDialog, KNNDialog, LDADialog, QDADialog, NaiveBayesDialog
+)
+from quantia.ui.dialogs.clustering import (
+    KMeansDialog, HierarchicalDialog, DBSCANDialog, GMMDialog
+)
+from quantia.ui.dialogs.tree_regression import (
+    DecisionTreeRegressorDialog, RandomForestRegressorDialog
+)
+from quantia.ui.dialogs.histogram import HistogramDialog
+from quantia.ui.dialogs.boxplot import BoxPlotDialog
+from quantia.ui.dialogs.scatter import ScatterPlotDialog
+from quantia.ui.dialogs.barchart import BarChartDialog
+from quantia.ui.dialogs.heatmap import HeatmapDialog
+from quantia.ui.dialogs.linechart import LineChartDialog
+from quantia.ui.dialogs.violinplot import ViolinPlotDialog
+from quantia.ui.dialogs.qqplot import QQPlotDialog
 
 class PCANode(BaseLogicNode):
     def __init__(self, x: float = 0, y: float = 0) -> None:
@@ -281,6 +304,708 @@ class LinearRegressionNode(BaseLogicNode):
             self._code = self._configured_code
         else:
             self._code = "# Linear Regression not configured"
+
+class TTestNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("T-Test", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = TTestDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# T-Test not configured"
+
+class DescriptiveStatsNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Descriptive Stats", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = DescriptiveStatsDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Descriptive Stats not configured"
+
+class CorrelationNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Correlation", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = CorrelationDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Correlation not configured"
+
+class LogisticRegressionNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Logistic Regression", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = LogisticRegressionDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Logistic Regression not configured"
+
+class ChiSquareNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Chi-Square", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = ChiSquareDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Chi-Square not configured"
+
+class RandomForestNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Random Forest", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = RandomForestDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Random Forest not configured"
+
+class KMeansNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("K-Means", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = KMeansDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# K-Means not configured"
+
+class HistogramNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Histogram", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = HistogramDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Histogram not configured"
+
+class BoxPlotNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Box Plot", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = BoxPlotDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Box Plot not configured"
+
+class ScatterPlotNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Scatter Plot", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = ScatterPlotDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Scatter Plot not configured"
+
+class BarChartNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Bar Chart", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = BarChartDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Bar Chart not configured"
+
+class HeatmapNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Heatmap", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = HeatmapDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Heatmap not configured"
+
+class LineChartNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Line Chart", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = LineChartDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Line Chart not configured"
+
+class ViolinPlotNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Violin Plot", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = ViolinPlotDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Violin Plot not configured"
+
+class QQPlotNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Q-Q Plot", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = QQPlotDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Q-Q Plot not configured"
+
+class GradientBoostingNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Gradient Boosting", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = GradientBoostingDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Gradient Boosting not configured"
+
+class DecisionTreeNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Decision Tree", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = DecisionTreeDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Decision Tree not configured"
+
+class SVMNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("SVM", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = SVMDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# SVM not configured"
+
+class KNNNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("KNN", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = KNNDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# KNN not configured"
+
+class LDANode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("LDA", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = LDADialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# LDA not configured"
+
+class QDANode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("QDA", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = QDADialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# QDA not configured"
+
+class NaiveBayesNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Naive Bayes", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = NaiveBayesDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Naive Bayes not configured"
+
+class HierarchicalNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Hierarchical Clustering", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = HierarchicalDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Hierarchical not configured"
+
+class DBSCANNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("DBSCAN", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = DBSCANDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# DBSCAN not configured"
+
+class GMMNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("GMM", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = GMMDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# GMM not configured"
+
+class DecisionTreeRegressorNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Decision Tree Regressor", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = DecisionTreeRegressorDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Decision Tree Regressor not configured"
+
+class RandomForestRegressorNode(BaseLogicNode):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__("Random Forest Regressor", x, y)
+        self.sub_item.setPlainText("Double-click to configure")
+        self._configured_code = ""
+        
+    def configure(self) -> None:
+        input_dfs = []
+        for edge in self.in_port.edges:
+            if edge.source_port and hasattr(edge.source_port.node, "output_df"):
+                src_df = edge.source_port.node.output_df
+                if src_df is not None:
+                    input_dfs.append(src_df)
+        if not input_dfs:
+            QMessageBox.warning(None, "No Data", "Connect and run an upstream node first.")
+            return
+        dialog = RandomForestRegressorDialog(input_dfs[0])
+        if dialog.exec():
+            self._configured_code = dialog.generate_code()
+            self.sub_item.setPlainText("Configured")
+            
+    def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
+        if not input_dfs: raise ValueError("Requires input.")
+        self.output_df = input_dfs[0]
+        self._code = self._configured_code if self._configured_code else "# Random Forest Regressor not configured"
 
 class SaveReportNode(BaseLogicNode):
     def __init__(self, x: float = 0, y: float = 0) -> None:
