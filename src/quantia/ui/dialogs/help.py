@@ -20,7 +20,7 @@ _USER_MANUAL_HTML = """\
 </div>
 <h1 style="color:#0F172A; border-bottom:3px solid #3B82F6; padding-bottom:8px; text-align:center;">
 Quantia User Manual</h1>
-<p style="color:#64748B; text-align:center;">Version 0.2.0-alpha &nbsp;|&nbsp; Fully Offline Statistical Desktop Application</p>
+<p style="color:#64748B; text-align:center;">Version 0.4.0-alpha &nbsp;|&nbsp; Fully Offline Statistical Desktop Application</p>
 
 <hr>
 <h2>1 &mdash; Overview</h2>
@@ -38,6 +38,30 @@ Quantia now supports both <b>Pandas</b> and <b>Polars</b> backends for data mani
 <tr><td><b>Central Tabs</b></td><td><b>Data View</b> (spreadsheet), <b>Script Editor</b> (Python code), <b>Results</b> (test output), <b>Workflow</b> (Visual node-based builder), <b>Plots</b> (charts)</td></tr>
 <tr><td><b>Console</b> (bottom dock)</td><td>Shows command log, success/error messages, and variable summaries</td></tr>
 <tr><td><b>Status Bar</b></td><td>Dataset dimensions, compute mode, and progress indicator</td></tr>
+</table>
+
+<hr>
+<h2>2 &mdash; Workflow Builder (NEW)</h2>
+<p>The <b>Workflow</b> tab provides a visual node-based interface for building analysis pipelines.
+This is ideal for creating reproducible, multi-step processes where you can see the flow of data.</p>
+
+<h3>Working with Nodes</h3>
+<ul>
+<li><b>Right-click</b> on the canvas to add nodes from categorized menus (I/O, Processing, Statistics, Machine Learning, Visualization, Reporting).</li>
+<li><b>Connect</b> nodes by clicking an <b>output port</b> (right side) and dragging a wire to an <b>input port</b> (left side).</li>
+<li><b>Double-click</b> a node to configure its parameters (ensure it is connected to a data source first).</li>
+<li><b>Persistence:</b> Workflow designs are saved automatically as part of your <code>.quantia</code> project file.</li>
+</ul>
+
+<h3>Available Nodes</h3>
+<table>
+<tr><th>Category</th><th>Nodes</th></tr>
+<tr><td><b>I/O</b></td><td>Load CSV, Export CSV</td></tr>
+<tr><td><b>Processing</b></td><td>Clean Data (drop/fill NAs)</td></tr>
+<tr><td><b>Statistics</b></td><td>Descriptive Stats, T-Test, Correlation, Chi-Square</td></tr>
+<tr><td><b>Machine Learning</b></td><td>PCA, Regression (Linear, DT, RF), Classification (RF, GB, DT, SVM, KNN, LDA, QDA, NB), Clustering (K-Means, Hierarchical, DBSCAN, GMM)</td></tr>
+<tr><td><b>Visualization</b></td><td>Histogram, Box Plot, Scatter Plot, Bar Chart, Heatmap, Line Chart, Violin Plot, Q-Q Plot</td></tr>
+<tr><td><b>Reporting</b></td><td>Save Report (HTML summary)</td></tr>
 </table>
 
 <hr>

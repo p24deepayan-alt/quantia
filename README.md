@@ -12,14 +12,15 @@ Quantia is designed to provide powerful data analysis and modeling capabilities 
 
 *   **🔒 Fully Offline:** Your data stays on your machine. No cloud services, no telemetry, no internet required.
 *   **🛠️ Reproducible Workflows:** Every GUI action generates standard Python code (`pandas`, `polars`, `scipy`, `scikit-learn`, `matplotlib`) in the built-in Script Editor. You can view, edit, and re-run this code at any time.
-*   **⛓️ Visual Workflow Builder:** Design and connect data processing nodes in a visual canvas to build complex, reusable analysis pipelines.
-*   🚀 **Hardware Acceleration:** Automatic detection of NVIDIA GPUs for future hardware-accelerated computation paths.
+*   **⛓️ Visual Workflow Builder:** Design and connect data processing nodes in a visual canvas to build complex, reusable analysis pipelines. Now supports **all** statistics, machine learning, and visualization tools via a categorized node interface.
+* 🚀 **Hardware Acceleration:** Automatic detection of NVIDIA GPUs for future hardware-accelerated computation paths.
 *   **📊 Comprehensive Statistics:** Descriptive statistics, t-tests (independent, paired, one-sample), ANOVA, Non-parametric tests (Mann-Whitney, Wilcoxon, Kruskal-Wallis), Correlation (Pearson, Spearman, Kendall), and Chi-square.
 *   **🤖 Machine Learning:** 
-    *   **Regression:** Linear and Logistic (with stepwise selection).
+    *   **Regression:** Linear, Decision Tree, and Random Forest Regressors (with CCP pruning optimization).
     *   **Classification:** Random Forest, Gradient Boosting, Decision Tree, SVM, KNN, LDA, QDA, Naive Bayes (plus a **Model Comparison Dashboard** to evaluate up to 8 models simultaneously).
-    *   **Clustering:** K-Means, Hierarchical, DBSCAN, GMM (with automatic PCA for visualization).
+    *   **Clustering:** K-Means (Elbow Method), Hierarchical (Dendrograms), DBSCAN, GMM (with automatic PCA for visualization).
     *   **Dimensionality Reduction:** Principal Component Analysis (PCA) with Scree plots, Biplots, and dataset appending.
+
 *   **📈 Visualizations:** Histograms, Box Plots, Scatter Plots, Violin Plots, Q-Q Plots, Line Charts, Bar Charts, and Heatmaps.
 *   **🗄️ Data Operations:** Import/Export (CSV, Excel, JSON, Parquet), Data Cleaning (drop NA, impute), Transformations, Type Conversions, Filtering, Merging/Joining, and **Pivot Table / Group-By Aggregation**.
 *   **📑 Professional Reporting:** Generate browser-quality HTML or PDF reports (via headless Edge/Chrome) containing dataset summaries, statistical results, and generated Python code.
