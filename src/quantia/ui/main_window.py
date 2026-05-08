@@ -85,6 +85,7 @@ from quantia.ui.dialogs.pca import PCADialog
 from quantia.ui.dialogs.report import ReportDialog
 from quantia.ui.dialogs.help import UserManualDialog, GuidedWizardDialog
 from quantia.ui.dialogs.preferences import PreferencesDialog
+from quantia.core.workspace import Workspace
 
 
 _ICON_PATH = resource_path("reference/logo/Quantia_icon.ico")
@@ -98,9 +99,8 @@ class MainWindow(QMainWindow):
         self._threadpool = QThreadPool.globalInstance()
 
 
-        # ── Undo / Redo stacks (max 4 snapshots) ────────────────────────
-        self._undo_stack: deque[pd.DataFrame | pl.DataFrame] = deque(maxlen=1)
-        self._redo_stack: deque[pd.DataFrame | pl.DataFrame] = deque(maxlen=1)
+        # ── Workspace ───────────────────────────────────────────────────
+        self.workspace = Workspace(max_history=50)
         self._model_history = []
 
         # ── Window setup ─────────────────────────────────────────────────
@@ -372,38 +372,12 @@ class MainWindow(QMainWindow):
 
     def _write_project_file(self, path: str, is_autosave: bool = False) -> None:
         try:
-            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-                # Save Main Dataframe (Source of truth)
-                df_main = self._data_view.get_dataframe()
-                if len(df_main) > 0:
-                    df_bytes = io.BytesIO()
-                    if isinstance(df_main, pl.DataFrame):
-                        df_main.write_parquet(df_bytes)
-                    else:
-                        df_main.to_parquet(df_bytes)
-                    zf.writestr("data.parquet", df_bytes.getvalue())
-                
-                # Save Script
-                script_text = self._script_editor.get_text()
-                zf.writestr("script.py", script_text)
-
-                # Save Undo stack
-                for i, df in enumerate(self._undo_stack):
-                    df_bytes = io.BytesIO()
-                    if isinstance(df, pl.DataFrame):
-                        df.write_parquet(df_bytes)
-                    else:
-                        df.to_parquet(df_bytes)
-                    zf.writestr(f"undo_{i}.parquet", df_bytes.getvalue())
-
-                # Save Redo stack
-                for i, df in enumerate(self._redo_stack):
-                    df_bytes = io.BytesIO()
-                    if isinstance(df, pl.DataFrame):
-                        df.write_parquet(df_bytes)
-                    else:
-                        df.to_parquet(df_bytes)
-                    zf.writestr(f"redo_{i}.parquet", df_bytes.getvalue())
+            self.workspace.set_dataframe(self._data_view.get_dataframe())
+            self.workspace.script = self._script_editor.get_text()
+            if not self._current_project_path and not is_autosave:
+                self.workspace.metadata["name"] = Path(path).stem
+            
+            self.workspace.save(path)
 
             if not is_autosave:
                 self._current_project_path = path
@@ -421,37 +395,16 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            with zipfile.ZipFile(path, "r") as zf:
-                # Load Dataframe
-                if "data.parquet" in zf.namelist():
-                    df_bytes = io.BytesIO(zf.read("data.parquet"))
-                    df = pd.read_parquet(df_bytes)
-                    self._data_view.load_dataframe(df)
-                    self._variable_panel.populate(df.columns.tolist())
-                else:
-                    self._data_view.load_dataframe(pd.DataFrame())
-                    self._variable_panel.populate([])
-
-                # Load Script
-                if "script.py" in zf.namelist():
-                    script_text = zf.read("script.py").decode("utf-8")
-                    self._script_editor.set_text(script_text)
-
-                # Load Undo stack
-                self._undo_stack.clear()
-                undo_files = [n for n in zf.namelist() if n.startswith("undo_") and n.endswith(".parquet")]
-                undo_files.sort()  # Should preserve order since names are like undo_0.parquet
-                for n in undo_files:
-                    df_bytes = io.BytesIO(zf.read(n))
-                    self._undo_stack.append(pd.read_parquet(df_bytes))
-
-                # Load Redo stack
-                self._redo_stack.clear()
-                redo_files = [n for n in zf.namelist() if n.startswith("redo_") and n.endswith(".parquet")]
-                redo_files.sort()
-                for n in redo_files:
-                    df_bytes = io.BytesIO(zf.read(n))
-                    self._redo_stack.append(pd.read_parquet(df_bytes))
+            self.workspace = Workspace.load(path)
+            
+            # Sync UI to Workspace
+            self._data_view.load_dataframe(self.workspace.dataframe)
+            if isinstance(self.workspace.dataframe, pd.DataFrame):
+                self._variable_panel.populate(self.workspace.dataframe.columns.tolist())
+            else:
+                self._variable_panel.populate(self.workspace.dataframe.columns)
+            
+            self._script_editor.set_text(self.workspace.script)
 
             self._current_project_path = path
             self._update_window_title()
@@ -682,36 +635,25 @@ class MainWindow(QMainWindow):
         """Save current DataFrame to undo stack before a mutation."""
         df = self._data_view.get_dataframe()
         if len(df) > 0:
-            # Handle Polars vs Pandas copy/clone
-            snapshot = df.clone() if isinstance(df, pl.DataFrame) else df.copy()
-            self._undo_stack.append(snapshot)
-            self._redo_stack.clear()
+            self.workspace.push_undo_state(df)
 
     def _undo(self) -> None:
         """Restore the previous DataFrame state."""
-        if not self._undo_stack:
+        self.workspace.set_dataframe(self._data_view.get_dataframe())
+        prev = self.workspace.undo()
+        if prev is None:
             self._console.write_warning("Nothing to undo.")
             return
-        # Push current state to redo
-        current = self._data_view.get_dataframe()
-        if len(current) > 0:
-            snapshot = current.clone() if isinstance(current, pl.DataFrame) else current.copy()
-            self._redo_stack.append(snapshot)
-        prev = self._undo_stack.pop()
         self._data_view.load_dataframe(prev)
         self._console.write_info("Undo")
 
     def _redo(self) -> None:
         """Re-apply the previously undone DataFrame state."""
-        if not self._redo_stack:
+        self.workspace.set_dataframe(self._data_view.get_dataframe())
+        nxt = self.workspace.redo()
+        if nxt is None:
             self._console.write_warning("Nothing to redo.")
             return
-        # Push current state to undo
-        current = self._data_view.get_dataframe()
-        if len(current) > 0:
-            snapshot = current.clone() if isinstance(current, pl.DataFrame) else current.copy()
-            self._undo_stack.append(snapshot)
-        nxt = self._redo_stack.pop()
         self._data_view.load_dataframe(nxt)
         self._console.write_info("Redo")
 
