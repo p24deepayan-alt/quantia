@@ -20,7 +20,7 @@ _USER_MANUAL_HTML = """\
 </div>
 <h1 style="color:#0F172A; border-bottom:3px solid #3B82F6; padding-bottom:8px; text-align:center;">
 Quantia User Manual</h1>
-<p style="color:#64748B; text-align:center;">Version 0.4.0-alpha &nbsp;|&nbsp; Fully Offline Statistical Desktop Application</p>
+<p style="color:#64748B; text-align:center;">Version 0.9.0-beta &nbsp;|&nbsp; Fully Offline Statistical Desktop Application</p>
 
 <hr>
 <h2>1 &mdash; Overview</h2>

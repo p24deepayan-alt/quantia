@@ -69,6 +69,7 @@ from quantia.ui.dialogs.violinplot import ViolinPlotDialog
 from quantia.ui.dialogs.linechart import LineChartDialog
 from quantia.ui.dialogs.heatmap import HeatmapDialog
 from quantia.ui.dialogs.correlation import CorrelationDialog
+from quantia.ui.central.dashboard_tab import DashboardTabWidget
 from quantia.ui.dialogs.anova_models import AnovaModelComparisonDialog
 from quantia.ui.dialogs.chi_square import ChiSquareDialog
 from quantia.ui.dialogs.qqplot import QQPlotDialog
@@ -153,6 +154,9 @@ class MainWindow(QMainWindow):
 
         self._plot_view = PlotViewWidget()
         self._tabs.addTab(self._plot_view, feather_icon("pie-chart", "#000000", 14), "Plots")
+
+        self._dashboard_tab = DashboardTabWidget()
+        self._tabs.addTab(self._dashboard_tab, feather_icon("layout", "#000000", 14), "Dashboard Builder")
 
         self.setCentralWidget(self._tabs)
         
@@ -567,7 +571,7 @@ class MainWindow(QMainWindow):
                         f"df = pl.read_csv(io.BytesIO(content), infer_schema_length=10000, truncate_ragged_lines=True, null_values={null_vals_code})"
                     )
                 else:
-                    self._script_editor.append_code(f"df = pl.read_csv(r'{path}', infer_schema_length=10000, truncate_ragged_lines=True, null_values={null_vals_code})")
+                    self._script_editor.append_code(f"df = pl.read_csv(r'{path}', infer_schema_length=10000, truncate_ragged_lines=True, null_values={{null_vals_code}})")
                     
             except Exception as e:
                 self._console.write_error(str(e))
@@ -662,6 +666,7 @@ class MainWindow(QMainWindow):
         self._status_bar.set_dataset_info(len(df), len(df.columns))
         col_info = self._data_view.model.column_info()
         self._variable_panel.set_variables(col_info)
+        self._dashboard_tab.update_columns(df.columns)
 
     def _on_variable_selected(self, var_name: str) -> None:
         """Log variable selection to console."""
@@ -914,6 +919,9 @@ class MainWindow(QMainWindow):
     def _show_nonparametric(self) -> None:
         self._show_data_dialog(NonParametricDialog)
 
+    def _show_dashboard_builder(self) -> None:
+        self._show_data_dialog(DashboardBuilderDialog)
+
     # ── ML Classification Handlers ──────────────────────────────────────────
     
     def _show_model_compare(self) -> None:
@@ -1003,7 +1011,7 @@ class MainWindow(QMainWindow):
                 if ext == ".csv":
                     df.to_csv(path, index=False)
                 elif ext == ".xlsx":
-                    df.to_excel(path, index=False)
+                  df.to_excel(path, index=False)
                 elif ext == ".json":
                     df.to_json(path, orient="records", indent=2)
                 elif ext == ".parquet":
@@ -1065,7 +1073,7 @@ class MainWindow(QMainWindow):
             "About Quantia",
             "<h2>Quantia</h2>"
 
-            "<p>Version 0.1.1</p>"
+            "<p>Version 0.9.0-beta</p>"
             "<p>A fully offline, no-code statistical desktop application.</p>"
             "<p>Built with PySide6 (Qt6), pandas, numpy, scipy.</p>"
             f"<p style='color:#64748B; font-size:9pt;'>GPU: {get_gpu_info()} (CUDA {get_cuda_version()})</p>"

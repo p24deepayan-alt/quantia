@@ -23,7 +23,7 @@ DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 OutputDir=..\installer
-OutputBaseFilename=Quantia_Setup_v0.1
+OutputBaseFilename=Quantia_Setup_v0.9-beta
 SetupIconFile=..\reference\logo\Quantia_icon.ico
 Compression=lzma
 SolidCompression=yes
