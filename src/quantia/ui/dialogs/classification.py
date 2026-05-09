@@ -307,13 +307,13 @@ class RandomForestDialog(BaseClassificationDialog):
 
 class GradientBoostingDialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):
-        super().__init__("Gradient Boosting Classifier", df, parent, supports_feature_importance=True)
+        super().__init__("Gradient Boosting (XGBoost)", df, parent, supports_feature_importance=True)
         
     def _build_hyperparameters(self, layout):
         self.spin_estimators = QSpinBox()
-        self.spin_estimators.setRange(10, 1000)
+        self.spin_estimators.setRange(10, 2000)
         self.spin_estimators.setValue(100)
-        layout.addRow("N Estimators (max_iter):", self.spin_estimators)
+        layout.addRow("N Estimators:", self.spin_estimators)
         
         self.spin_lr = QDoubleSpinBox()
         self.spin_lr.setRange(0.001, 1.0)
@@ -327,15 +327,31 @@ class GradientBoostingDialog(BaseClassificationDialog):
         layout.addRow("Max Depth:", self.spin_depth)
         
     def _get_imports(self):
-        return ["from sklearn.ensemble import HistGradientBoostingClassifier"]
+        return ["import xgboost as xgb"]
         
     def _get_model_init_code(self):
-        return (f"model = HistGradientBoostingClassifier(\n"
-                f"    max_iter={self.spin_estimators.value()}, \n"
-                f"    learning_rate={self.spin_lr.value()}, \n"
-                f"    max_depth={self.spin_depth.value()}, \n"
-                f"    random_state=42\n"
-                f")")
+        settings = SettingsManager()
+        mode = settings.compute_mode
+        
+        # XGBoost handles GPU via parameters rather than a separate class
+        if mode == ComputeMode.GPU:
+            return (f"model = xgb.XGBClassifier(\n"
+                    f"    n_estimators={self.spin_estimators.value()}, \n"
+                    f"    learning_rate={self.spin_lr.value()}, \n"
+                    f"    max_depth={self.spin_depth.value()}, \n"
+                    f"    tree_method='hist', \n"
+                    f"    device='cuda', \n"
+                    f"    random_state=42\n"
+                    f")")
+        else:
+            n_jobs = -1 if mode == ComputeMode.CPU_MULTI else 1
+            return (f"model = xgb.XGBClassifier(\n"
+                    f"    n_estimators={self.spin_estimators.value()}, \n"
+                    f"    learning_rate={self.spin_lr.value()}, \n"
+                    f"    max_depth={self.spin_depth.value()}, \n"
+                    f"    n_jobs={n_jobs}, \n"
+                    f"    random_state=42\n"
+                    f")")
 
 class DecisionTreeDialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):
@@ -561,3 +577,45 @@ class NaiveBayesDialog(BaseClassificationDialog):
         
     def _get_model_init_code(self):
         return "model = GaussianNB()"
+
+class LogisticRegressionMLDialog(BaseClassificationDialog):
+    def __init__(self, df, parent=None):
+        super().__init__("Logistic Regression (ML)", df, parent, mandatory_scaling=True)
+        
+    def _build_hyperparameters(self, layout):
+        self.cmb_penalty = QComboBox()
+        self.cmb_penalty.addItems(["l2", "l1", "elasticnet", "none"])
+        layout.addRow("Penalty:", self.cmb_penalty)
+        
+        self.spin_c = QDoubleSpinBox()
+        self.spin_c.setRange(0.001, 1000.0)
+        self.spin_c.setValue(1.0)
+        layout.addRow("C (Inverse Regularization):", self.spin_c)
+        
+        self.cmb_solver = QComboBox()
+        self.cmb_solver.addItems(["lbfgs", "liblinear", "saga", "newton-cg"])
+        layout.addRow("Solver:", self.cmb_solver)
+        
+    def _get_imports(self):
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.linear_model", "LogisticRegression", "cuml.linear_model")
+        
+    def _get_model_init_code(self):
+        settings = SettingsManager()
+        mode = settings.compute_mode
+        n_jobs = -1 if mode == ComputeMode.CPU_MULTI else 1
+        
+        penalty = self.cmb_penalty.currentText()
+        if penalty == "none":
+            penalty_str = "penalty=None"
+        else:
+            penalty_str = f"penalty='{penalty}'"
+            
+        return (f"model = LogisticRegression(\n"
+                f"    {penalty_str}, \n"
+                f"    C={self.spin_c.value()}, \n"
+                f"    solver='{self.cmb_solver.currentText()}', \n"
+                f"    max_iter=1000, \n"
+                f"    n_jobs={n_jobs}, \n"
+                f"    random_state=42\n"
+                f")")

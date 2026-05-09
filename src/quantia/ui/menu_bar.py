@@ -58,6 +58,10 @@ class QuantiaMenuBar(QMenuBar):
     correlation = Signal()
     regression_linear = Signal()
     regression_logistic = Signal()
+    regression_linear_ml = Signal()
+    regression_ridge = Signal()
+    regression_lasso = Signal()
+    regression_elasticnet = Signal()
     regression_random_forest = Signal()
     regression_decision_tree = Signal()
     chi_square = Signal()
@@ -65,6 +69,7 @@ class QuantiaMenuBar(QMenuBar):
 
     # ML Classification
     model_compare = Signal()
+    cls_logistic = Signal()
     cls_random_forest = Signal()
     cls_gradient_boosting = Signal()
     cls_decision_tree = Signal()
@@ -107,6 +112,7 @@ class QuantiaMenuBar(QMenuBar):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._actions: list[QAction] = []
         ic = "#2D3E50"  # icon colour for light theme
         self._build_file_menu(ic)
         self._build_edit_menu(ic)
@@ -154,7 +160,6 @@ class QuantiaMenuBar(QMenuBar):
     def _build_view_menu(self, ic: str) -> None:
         menu = self.addMenu("&View")
         self._add(menu, "Toggle Light/Dark Mode", self.toggle_theme, "moon", ic)
-        menu.actions()[0].setProperty("icon_name", "moon") # For refresh_icons
 
     # ── Data ─────────────────────────────────────────────────────────────
 
@@ -198,7 +203,11 @@ class QuantiaMenuBar(QMenuBar):
         reg_menu.setIcon(feather_icon("trending-up", ic, 14))
         reg_menu.setProperty("icon_name", "trending-up")
         self._add(reg_menu, "Linear Regression…", self.regression_linear, "trending-up", ic)
+        self._add(reg_menu, "Linear Regression (ML)…", self.regression_linear_ml, "trending-up", ic)
         self._add(reg_menu, "Logistic Regression…", self.regression_logistic, "trending-up", ic)
+        self._add(reg_menu, "Ridge Regression…", self.regression_ridge, "trending-up", ic)
+        self._add(reg_menu, "Lasso Regression…", self.regression_lasso, "trending-up", ic)
+        self._add(reg_menu, "ElasticNet Regression…", self.regression_elasticnet, "trending-up", ic)
         self._add(reg_menu, "Random Forest Regression…", self.regression_random_forest, "trending-up", ic)
         self._add(reg_menu, "Decision Tree Regression…", self.regression_decision_tree, "trending-up", ic)
         
@@ -207,6 +216,7 @@ class QuantiaMenuBar(QMenuBar):
         cls_menu.setProperty("icon_name", "cpu")
         self._add(cls_menu, "Compare Models…", self.model_compare, "bar-chart-2", ic)
         cls_menu.addSeparator()
+        self._add(cls_menu, "Logistic Regression (ML)…", self.cls_logistic, "cpu", ic)
         self._add(cls_menu, "Random Forest…", self.cls_random_forest, "cpu", ic)
         self._add(cls_menu, "Gradient Boosting…", self.cls_gradient_boosting, "cpu", ic)
         self._add(cls_menu, "Decision Tree…", self.cls_decision_tree, "cpu", ic)
@@ -261,35 +271,37 @@ class QuantiaMenuBar(QMenuBar):
 
     def refresh_icons(self, color: str) -> None:
         """Update all menu icons to a new colour."""
-        # Update icons in all submenus
         for menu in self.findChildren(QMenu):
-            # Check the menu's own icon (e.g. for Regression)
             icon_name = menu.property("icon_name")
             if icon_name:
                 menu.setIcon(feather_icon(icon_name, color, 14))
                 
-            for action in menu.actions():
-                name = action.property("icon_name")
-                if name:
-                    action.setIcon(feather_icon(name, color, 14))
+        for action in self._actions:
+            name = action.property("icon_name")
+            if name:
+                action.setIcon(feather_icon(name, color, 14))
 
     # ── Helper ───────────────────────────────────────────────────────────
 
-    @staticmethod
     def _add(
-        menu,
+        self,
+        menu: QMenu,
         text: str,
         signal: Signal,
-        icon_name: str | None,
-        icon_color: str,
+        icon_name: str | None = None,
+        icon_color: str | None = None,
         shortcut: QKeySequence | None = None,
     ) -> QAction:
+        from PySide6.QtGui import QAction
+        action = QAction(text, self) # Parent to self (MenuBar)
         if icon_name:
-            action = menu.addAction(feather_icon(icon_name, icon_color), text)
+            action.setIcon(feather_icon(icon_name, icon_color or "#000000", 14))
             action.setProperty("icon_name", icon_name)
-        else:
-            action = menu.addAction(text)
+        
         action.triggered.connect(signal.emit)
         if shortcut is not None:
             action.setShortcut(shortcut)
+            
+        menu.addAction(action)
+        self._actions.append(action)
         return action

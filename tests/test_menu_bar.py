@@ -47,6 +47,11 @@ def test_menu_bar_signals(qtbot):
         ("K-Means", menu_bar.clu_kmeans),
         ("Histogram", menu_bar.histogram),
         ("Generate Report", menu_bar.generate_report),
+        ("Linear Regression (ML)", menu_bar.regression_linear_ml),
+        ("Ridge Regression", menu_bar.regression_ridge),
+        ("Lasso Regression", menu_bar.regression_lasso),
+        ("ElasticNet Regression", menu_bar.regression_elasticnet),
+        ("Logistic Regression (ML)", menu_bar.cls_logistic),
         ("About Quantia", menu_bar.about),
     ]
 

@@ -552,3 +552,95 @@ class RandomForestRegressorDialog(BaseTreeRegressionDialog):
         return (f"model = RandomForestRegressor(n_estimators={self.spin_estimators.value()}, "
                 f"criterion='{self.cmb_criterion.currentText()}', {depth_str}, "
                 f"bootstrap={self.chk_bootstrap.isChecked()}, n_jobs=-1, random_state=42)")
+
+class LinearRegressionMLDialog(BaseTreeRegressionDialog):
+    def __init__(self, df: pd.DataFrame, parent=None) -> None:
+        super().__init__("Linear Regression (ML)", df, parent, supports_feature_importance=True)
+        
+    def _build_hyperparameters(self, layout: QFormLayout) -> None:
+        self.chk_fit_intercept = QCheckBox("Fit Intercept")
+        self.chk_fit_intercept.setChecked(True)
+        layout.addRow(self.chk_fit_intercept)
+        
+    def _get_imports(self) -> list[str]:
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.linear_model", "LinearRegression", "cuml.linear_model")
+        
+    def _get_model_init_code(self) -> str:
+        return f"model = LinearRegression(fit_intercept={self.chk_fit_intercept.isChecked()})"
+        
+    def _add_extra_plots_rendering(self, code: list[str]) -> None:
+        if self.chk_feat_imp.isChecked():
+            code.append("        elif p_type == 'feat_imp' and hasattr(model, 'coef_'):")
+            code.append("            importances = np.abs(model.coef_)")
+            code.append("            indices = np.argsort(importances)[::-1][:15]")
+            code.append("            ax.bar(range(len(indices)), importances[indices], align='center')")
+            code.append("            ax.set_xticks(range(len(indices)))")
+            code.append("            ax.set_xticklabels([X.columns[i] for i in indices], rotation=45, ha='right')")
+            code.append("            ax.set_title('Coefficient Magnitude (Absolute)')")
+
+class RidgeDialog(BaseTreeRegressionDialog):
+    def __init__(self, df: pd.DataFrame, parent=None) -> None:
+        super().__init__("Ridge Regression", df, parent, supports_feature_importance=True)
+        
+    def _build_hyperparameters(self, layout: QFormLayout) -> None:
+        self.spin_alpha = QDoubleSpinBox()
+        self.spin_alpha.setRange(0.001, 1000.0)
+        self.spin_alpha.setValue(1.0)
+        layout.addRow("Alpha (Regularization):", self.spin_alpha)
+        
+    def _get_imports(self) -> list[str]:
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.linear_model", "Ridge", "cuml.linear_model")
+        
+    def _get_model_init_code(self) -> str:
+        return f"model = Ridge(alpha={self.spin_alpha.value()})"
+        
+    def _add_extra_plots_rendering(self, code: list[str]) -> None:
+        LinearRegressionMLDialog._add_extra_plots_rendering(self, code)
+
+class LassoDialog(BaseTreeRegressionDialog):
+    def __init__(self, df: pd.DataFrame, parent=None) -> None:
+        super().__init__("Lasso Regression", df, parent, supports_feature_importance=True)
+        
+    def _build_hyperparameters(self, layout: QFormLayout) -> None:
+        self.spin_alpha = QDoubleSpinBox()
+        self.spin_alpha.setRange(0.001, 1000.0)
+        self.spin_alpha.setValue(1.0)
+        layout.addRow("Alpha (Regularization):", self.spin_alpha)
+        
+    def _get_imports(self) -> list[str]:
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.linear_model", "Lasso", "cuml.linear_model")
+        
+    def _get_model_init_code(self) -> str:
+        return f"model = Lasso(alpha={self.spin_alpha.value()})"
+
+    def _add_extra_plots_rendering(self, code: list[str]) -> None:
+        LinearRegressionMLDialog._add_extra_plots_rendering(self, code)
+
+class ElasticNetDialog(BaseTreeRegressionDialog):
+    def __init__(self, df: pd.DataFrame, parent=None) -> None:
+        super().__init__("ElasticNet Regression", df, parent, supports_feature_importance=True)
+        
+    def _build_hyperparameters(self, layout: QFormLayout) -> None:
+        self.spin_alpha = QDoubleSpinBox()
+        self.spin_alpha.setRange(0.001, 1000.0)
+        self.spin_alpha.setValue(1.0)
+        layout.addRow("Alpha (Regularization):", self.spin_alpha)
+        
+        self.spin_l1_ratio = QDoubleSpinBox()
+        self.spin_l1_ratio.setRange(0.0, 1.0)
+        self.spin_l1_ratio.setValue(0.5)
+        self.spin_l1_ratio.setSingleStep(0.1)
+        layout.addRow("L1 Ratio:", self.spin_l1_ratio)
+        
+    def _get_imports(self) -> list[str]:
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.linear_model", "ElasticNet", "cuml.linear_model")
+        
+    def _get_model_init_code(self) -> str:
+        return f"model = ElasticNet(alpha={self.spin_alpha.value()}, l1_ratio={self.spin_l1_ratio.value()})"
+
+    def _add_extra_plots_rendering(self, code: list[str]) -> None:
+        LinearRegressionMLDialog._add_extra_plots_rendering(self, code)

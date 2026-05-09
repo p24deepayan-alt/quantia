@@ -70,3 +70,24 @@ def test_preferences_dialog(qtbot):
     
     pref_dialog = PreferencesDialog(parent=window)
     assert pref_dialog.windowTitle() == "Preferences"
+
+def test_new_ml_dialogs_instantiation(qtbot, dummy_df):
+    """Test that the new ML-specific dialogs can be instantiated."""
+    from quantia.ui.main_window import MainWindow
+    from quantia.ui.dialogs.tree_regression import (
+        LinearRegressionMLDialog, RidgeDialog, LassoDialog, ElasticNetDialog
+    )
+    from quantia.ui.dialogs.classification import LogisticRegressionMLDialog
+    
+    window = MainWindow()
+    qtbot.addWidget(window)
+    
+    # ML Regression
+    assert RidgeDialog(dummy_df, window).windowTitle() == "Ridge Regression"
+    assert LassoDialog(dummy_df, window).windowTitle() == "Lasso Regression"
+    assert ElasticNetDialog(dummy_df, window).windowTitle() == "ElasticNet Regression"
+    assert LinearRegressionMLDialog(dummy_df, window).windowTitle() == "Linear Regression (ML)"
+    
+    # ML Classification
+    assert LogisticRegressionMLDialog(dummy_df, window).windowTitle() == "Logistic Regression (ML)"
+
