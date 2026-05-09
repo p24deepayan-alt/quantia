@@ -9,10 +9,6 @@ Quantia is designed to provide powerful data analysis and modeling capabilities 
 </p>
 
 <p align="center">
-  <em>"Statistics, no code. Power, no cloud."</em>
-</p>
-
-<p align="center">
   <a href="#features">Features</a> •
   <a href="#installation">Installation</a> •
   <a href="#usage">Usage</a> •
