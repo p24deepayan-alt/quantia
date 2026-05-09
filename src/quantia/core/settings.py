@@ -4,6 +4,7 @@ from PySide6.QtCore import QSettings
 class ComputeMode(enum.Enum):
     CPU_SINGLE = "cpu_single"
     CPU_MULTI = "cpu_multi"
+    GPU = "gpu"
 
 class SettingsManager:
     """Manages application settings using QSettings."""

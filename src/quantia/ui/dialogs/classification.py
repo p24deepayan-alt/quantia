@@ -287,7 +287,8 @@ class RandomForestDialog(BaseClassificationDialog):
         layout.addRow("Max Depth:", depth_layout)
         
     def _get_imports(self):
-        return ["from sklearn.ensemble import RandomForestClassifier"]
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.ensemble", "RandomForestClassifier", "cuml.ensemble")
         
     def _get_model_init_code(self):
         settings = SettingsManager()
@@ -483,7 +484,8 @@ class SVMDialog(BaseClassificationDialog):
         layout.addRow("Gamma:", self.cmb_gamma)
         
     def _get_imports(self):
-        return ["from sklearn.svm import SVC"]
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.svm", "SVC", "cuml.svm")
         
     def _get_model_init_code(self):
         return (f"model = SVC(\n"
@@ -513,7 +515,8 @@ class KNNDialog(BaseClassificationDialog):
         layout.addRow("Algorithm:", self.cmb_algorithm)
         
     def _get_imports(self):
-        return ["from sklearn.neighbors import KNeighborsClassifier"]
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.neighbors", "KNeighborsClassifier", "cuml.neighbors")
         
     def _get_model_init_code(self):
         settings = SettingsManager()

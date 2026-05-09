@@ -543,7 +543,8 @@ class RandomForestRegressorDialog(BaseTreeRegressionDialog):
         layout.addRow("Bootstrap:", self.chk_bootstrap)
         
     def _get_imports(self) -> list[str]:
-        return ["from sklearn.ensemble import RandomForestRegressor"]
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.ensemble", "RandomForestRegressor", "cuml.ensemble")
         
     def _get_model_init_code(self) -> str:
         depth = self.spin_max_depth.value()

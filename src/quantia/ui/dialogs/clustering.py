@@ -373,7 +373,8 @@ class DBSCANDialog(BaseClusteringDialog):
         layout.addLayout(form)
         
     def _get_imports(self):
-        return ["from sklearn.cluster import DBSCAN"]
+        from quantia.utils.codegen import get_gpu_import
+        return get_gpu_import("sklearn.cluster", "DBSCAN", "cuml.cluster")
         
     def _get_summary_metrics(self):
         # Calculate noise points count

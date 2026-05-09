@@ -90,8 +90,10 @@ class PCADialog(BaseAnalysisDialog):
             "import pandas as pd",
             "import numpy as np",
             "import matplotlib.pyplot as plt",
-            "from sklearn.decomposition import PCA"
         ]
+        
+        from quantia.utils.codegen import get_gpu_import
+        code.extend(get_gpu_import("sklearn.decomposition", "PCA", "cuml.decomposition"))
 
         if self.chk_scale.isChecked():
             code.append("from sklearn.preprocessing import StandardScaler")
