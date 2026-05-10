@@ -51,9 +51,6 @@ class ReportDialog(QDialog):
         # Sections
         sec_group = QGroupBox("Include Sections")
         sec_layout = QVBoxLayout()
-        self.chk_summary = QCheckBox("Dataset Summary")
-        self.chk_summary.setChecked(True)
-        sec_layout.addWidget(self.chk_summary)
 
         self.chk_script = QCheckBox("Executed Python Script")
         self.chk_script.setChecked(True)
@@ -271,18 +268,6 @@ class ReportDialog(QDialog):
             f"<h1>{title}</h1>",
             f"<p class='meta'>Generated on {now} by Quantia</p>",
         ]
-
-        if self.chk_summary.isChecked() and self._df is not None:
-            df = self._df
-            if hasattr(df, 'to_pandas'):
-                df = df.to_pandas()
-            dtypes = df.dtypes.value_counts()
-            dtype_str = ", ".join(f"{v} {k}" for k, v in dtypes.items())
-            parts.append("<h2>Dataset Summary</h2>")
-            parts.append(f"<p><b>Rows:</b> {len(df):,} &nbsp; <b>Columns:</b> {len(df.columns)}</p>")
-            parts.append(f"<p><b>Column types:</b> {dtype_str}</p>")
-            desc = df.describe(include="all").round(3).T
-            parts.append(desc.to_html(classes="table"))
 
         if self.chk_script.isChecked() and self._script_text.strip():
             parts.append("<h2>Python Script</h2>")
