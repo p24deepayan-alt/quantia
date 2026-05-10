@@ -11,7 +11,7 @@ def process_file(filepath):
     for line in lines:
         new_lines.append(line)
         if 'img_b64 = base64.b64encode(' in line:
-            indent = re.match(r'^\s*', line).group()
+            indent = line[:len(line) - len(line.lstrip())]
             match = re.search(r'code\.append\([\'\"](\s*)img_b64 =', line)
             if match:
                 inner_indent = match.group(1)
