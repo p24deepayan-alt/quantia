@@ -69,7 +69,15 @@ class ResultsViewWidget(QWidget):
             widget = self._create_table_view(content)
             icon_name = "grid"
         else:
-            widget = self._create_text_view(str(content))
+            text_str = content
+            if "plotly.js" in text_str or "include_plotlyjs" in text_str or "plotly-graph-div" in text_str:
+                try:
+                    from PySide6.QtWebEngineWidgets import QWebEngineView
+                    widget = self._create_web_view(text_str)
+                except ImportError:
+                    widget = self._create_text_view(text_str)
+            else:
+                widget = self._create_text_view(text_str)
             icon_name = "file-text"
 
         # Store the original content for theme refreshing
@@ -96,6 +104,9 @@ class ResultsViewWidget(QWidget):
         # Update existing tabs content and background
         for i in range(self._tabs.count()):
             widget = self._tabs.widget(i)
+            if widget is None:
+                continue
+            
             raw = widget.property("raw_content")
             
             if isinstance(widget, QTextBrowser):
@@ -106,6 +117,8 @@ class ResultsViewWidget(QWidget):
             elif isinstance(widget, QTableView):
                 bg = palette["bg_secondary"]
                 widget.setStyleSheet(f"QTableView {{ background-color: {bg}; border: none; }}")
+            elif widget.metaObject().className() == "QWebEngineView":
+                self._update_web_view_content(widget, str(raw), theme)
 
     def set_icon_color(self, color: str) -> None:
         """Update the icon colour for toolbar and existing tabs."""
@@ -114,6 +127,9 @@ class ResultsViewWidget(QWidget):
         # Update existing tabs
         for i in range(self._tabs.count()):
             widget = self._tabs.widget(i)
+            if widget is None:
+                continue
+            
             if isinstance(widget, QTableView):
                 icon_name = "grid"
             else:
@@ -133,7 +149,7 @@ class ResultsViewWidget(QWidget):
 
         filter_obj = ShiftScrollFilter(table)
         table.viewport().installEventFilter(filter_obj)
-        table._shift_scroll_filter = filter_obj
+        setattr(table, "_shift_scroll_filter", filter_obj)
         
         from PySide6.QtWidgets import QApplication
         from quantia.app import QuantiaApp
@@ -160,6 +176,19 @@ class ResultsViewWidget(QWidget):
         
         self._update_text_browser_content(browser, text, theme)
         return browser
+
+    def _create_web_view(self, text: str) -> QWidget:
+        """Creates a QWebEngineView for interactive HTML content like Plotly."""
+        from PySide6.QtWebEngineWidgets import QWebEngineView
+        view = QWebEngineView()
+        
+        from PySide6.QtWidgets import QApplication
+        from quantia.app import QuantiaApp
+        app = QApplication.instance()
+        theme = app.get_current_theme() if isinstance(app, QuantiaApp) else Theme.LIGHT
+        
+        self._update_web_view_content(view, text, theme)
+        return view
 
     def _show_context_menu(self, browser: QTextBrowser, pos) -> None:
         """Handle custom context menu to allow popping up interactive figures for images."""
@@ -213,6 +242,22 @@ class ResultsViewWidget(QWidget):
             browser.setFont(font)
             browser.setPlainText(text)
 
+    def _update_web_view_content(self, view: Any, text: str, theme: Theme) -> None:
+        p = PALETTE[theme]
+        base_css = f"""
+            <style>
+                body {{ font-family: 'Segoe UI', sans-serif; color: {p['text_primary']}; background-color: {p['bg_card']}; line-height: 1.5; padding: 20px; margin: 0; }}
+                h2, h3 {{ color: {p['accent']}; margin-top: 0; }}
+                table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; background: {p['bg_secondary']}; border-radius: 6px; overflow: hidden; }}
+                th {{ padding: 10px 12px; font-size: 9pt; font-weight: 700; color: {p['text_secondary']}; border-bottom: 2px solid {p['border']}; text-align: left; background: {p['bg_secondary']}; }}
+                td {{ padding: 8px 12px; border-bottom: 1px solid {p['border']}; font-family: 'Fira Code', 'Consolas', monospace; font-size: 10pt; color: {p['text_primary']}; }}
+                .simpletable th {{ background: {p['bg_secondary']}; }}
+                .highlight {{ color: {p['accent']}; font-weight: 700; }}
+            </style>
+        """
+        html = f"<!DOCTYPE html><html><head>{base_css}</head><body>{text}</body></html>"
+        view.setHtml(html)
+
     def _close_tab(self, index: int) -> None:
         self._tabs.removeTab(index)
 
@@ -226,6 +271,9 @@ class ResultsViewWidget(QWidget):
         for i in range(self._tabs.count()):
             title = self._tabs.tabText(i)
             widget = self._tabs.widget(i)
+            if widget is None:
+                continue
+                
             if isinstance(widget, QTextBrowser):
                 html = widget.toHtml()
             elif isinstance(widget, QTableView):
@@ -234,6 +282,12 @@ class ResultsViewWidget(QWidget):
                     html = model.get_dataframe().to_html(classes='table table-sm table-striped')
                 else:
                     html = "<p><i>Table data not available for export.</i></p>"
+            elif widget.metaObject().className() == "QWebEngineView":
+                raw = widget.property("raw_content")
+                if raw is not None:
+                    html = str(raw)
+                else:
+                    html = "<p><i>Interactive Plotly figures are embedded here.</i></p>"
             else:
                 html = "<p><i>Content type not supported for export.</i></p>"
             sections.append(f"<div class='result-section'>\n<h3>{title}</h3>\n{html}\n</div>")

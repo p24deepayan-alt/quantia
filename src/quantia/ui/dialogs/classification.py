@@ -296,7 +296,7 @@ class BaseClassificationDialog(BaseAnalysisDialog):
             code.append("fig_cm.update_layout(title='Confusion Matrix',")
             code.append("                     xaxis_title='Predicted', yaxis_title='Actual')")
             code.append("if 'show_plotly' in globals():")
-            code.append(f"    show_plotly('CM: {title}', fig_cm.to_html(include_plotlyjs='cdn'))")
+            code.append("    html_output += f'<div style=\"margin-top:24px; text-align:center;\">{fig_cm.to_html(include_plotlyjs=\"cdn\", full_html=False)}</div>'")
             code.append("")
 
         if self.chk_roc.isChecked():
@@ -317,7 +317,7 @@ class BaseClassificationDialog(BaseAnalysisDialog):
             code.append("                          xaxis_title='False Positive Rate',")
             code.append("                          yaxis_title='True Positive Rate')")
             code.append("    if 'show_plotly' in globals():")
-            code.append(f"        show_plotly('ROC: {title}', fig_roc.to_html(include_plotlyjs='cdn'))")
+            code.append("        html_output += f'<div style=\"margin-top:24px; text-align:center;\">{fig_roc.to_html(include_plotlyjs=\"cdn\", full_html=False)}</div>'")
             code.append("")
 
         if self.chk_feat_imp.isChecked() and self._supports_feature_importance:
@@ -332,7 +332,7 @@ class BaseClassificationDialog(BaseAnalysisDialog):
             code.append("    fig_feat.update_layout(xaxis_title='Importance', yaxis_title='Feature',")
             code.append("                           yaxis=dict(autorange='reversed'))")
             code.append("    if 'show_plotly' in globals():")
-            code.append(f"        show_plotly('Features: {title}', fig_feat.to_html(include_plotlyjs='cdn'))")
+            code.append("        html_output += f'<div style=\"margin-top:24px; text-align:center;\">{fig_feat.to_html(include_plotlyjs=\"cdn\", full_html=False)}</div>'")
             code.append("")
 
 class RandomForestDialog(BaseClassificationDialog):

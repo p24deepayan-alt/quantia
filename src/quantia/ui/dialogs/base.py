@@ -137,7 +137,7 @@ class BaseAnalysisDialog(QDialog):
     def _populate_variables(self) -> None:
         """Populate the 'Available Variables' list from the DataFrame."""
         for col in self._df.columns:
-            item = QListWidgetItem(str(col))
+            item = QListWidgetItem(f"{col}")
             # Could add icon here based on dtype like in VariableListPanel
             self.list_available.addItem(item)
 

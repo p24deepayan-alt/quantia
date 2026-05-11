@@ -461,7 +461,7 @@ class LinearRegressionDialog(BaseAnalysisDialog):
                 code.append("    fig_res.update_layout(title='Residuals vs Fitted',")
                 code.append("                          xaxis_title='Fitted values', yaxis_title='Residuals')")
                 code.append("    if 'show_plotly' in globals():")
-                code.append("        show_plotly('Residuals vs Fitted', fig_res.to_html(include_plotlyjs='cdn'))")
+                code.append("        html_output += f'<div style=\"margin-top:24px; text-align:center;\">{fig_res.to_html(include_plotlyjs=\"cdn\", full_html=False)}</div>'")
                 # Q-Q Plot (Plotly)
                 code.append("    (osm, osr), (slope, intercept, _) = stats.probplot(results.resid, dist='norm', plot=None)")
                 code.append("    import numpy as np")
@@ -473,7 +473,7 @@ class LinearRegressionDialog(BaseAnalysisDialog):
                 code.append("    fig_qq.update_layout(title='Normal Q-Q',")
                 code.append("                         xaxis_title='Theoretical Quantiles', yaxis_title='Sample Quantiles')")
                 code.append("    if 'show_plotly' in globals():")
-                code.append("        show_plotly('Normal Q-Q', fig_qq.to_html(include_plotlyjs='cdn'))")
+                code.append("        html_output += f'<div style=\"margin-top:24px; text-align:center;\">{fig_qq.to_html(include_plotlyjs=\"cdn\", full_html=False)}</div>'")
             else:
                 style_code = generate_style_code(plot_style)
                 code.append("")

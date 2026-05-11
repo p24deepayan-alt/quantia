@@ -410,12 +410,11 @@ class MainWindow(QMainWindow):
         try:
             self.workspace = Workspace.load(path)
             self._data_view.load_dataframe(self.workspace.dataframe)
-            self._variable_panel.populate(self.workspace.dataframe.columns.tolist() if isinstance(self.workspace.dataframe, pd.DataFrame) else self.workspace.dataframe.columns)
             self._script_editor.set_text(self.workspace.script)
             self._current_project_path = path
             self._update_window_title()
-            self._results_view.clear()
-            self._plot_view.clear()
+            self._results_view.clear_all()
+            self._plot_view.clear_all()
             self._model_history.clear()
             self._console.write_success(f"Project loaded from {path}")
             self._run_all_script()
@@ -427,14 +426,13 @@ class MainWindow(QMainWindow):
 
     def _robust_read_csv(self, path: str) -> tuple[pl.DataFrame, str | None]:
         null_vals = ["NA", "N/A", "null", "NULL", "NaN", "nan", "None", "", " ", "-"]
-        robust_params = {"infer_schema_length": 10000, "truncate_ragged_lines": True, "ignore_errors": False, "null_values": null_vals}
         try:
-            return pl.read_csv(path, **robust_params), None
+            return pl.read_csv(path, infer_schema_length=10000, truncate_ragged_lines=True, ignore_errors=False, null_values=null_vals), None
         except Exception:
             pass
         try:
             with open(path, 'rb') as f: content = f.read().decode('cp1252').encode('utf-8')
-            return pl.read_csv(io.BytesIO(content), **robust_params), 'cp1252'
+            return pl.read_csv(content, infer_schema_length=10000, truncate_ragged_lines=True, ignore_errors=False, null_values=null_vals), 'cp1252'
         except Exception:
             pass
         try:
@@ -443,11 +441,10 @@ class MainWindow(QMainWindow):
             res = charset_normalizer.from_bytes(raw_data).best()
             if not res or not res.encoding: raise ValueError("No encoding detected")
             with open(path, 'rb') as f: content = f.read().decode(res.encoding).encode('utf-8')
-            return pl.read_csv(io.BytesIO(content), **robust_params), res.encoding
+            return pl.read_csv(content, infer_schema_length=10000, truncate_ragged_lines=True, ignore_errors=False, null_values=null_vals), res.encoding
         except Exception:
             with open(path, 'rb') as f: content = f.read().decode('latin1').encode('utf-8')
-            last_resort = robust_params.copy(); last_resort["ignore_errors"] = True
-            return pl.read_csv(io.BytesIO(content), **last_resort), "latin1"
+            return pl.read_csv(content, infer_schema_length=10000, truncate_ragged_lines=True, ignore_errors=True, null_values=null_vals), "latin1"
 
     def _import_any(self) -> None:
         path, _ = QFileDialog.getOpenFileName(self, "Import Data", "", "All Supported (*.csv *.xlsx *.xls *.json *.parquet);;All Files (*)")
@@ -644,7 +641,7 @@ class MainWindow(QMainWindow):
             if isinstance(df, pl.DataFrame):
                 if ext == ".csv": df.write_csv(path)
                 elif ext == ".xlsx": df.to_pandas().to_excel(path, index=False)
-                elif ext == ".json": df.write_json(path, row_oriented=True)
+                elif ext == ".json": df.write_json(path)
                 elif ext == ".parquet": df.write_parquet(path)
             else:
                 if ext == ".csv": df.to_csv(path, index=False)

@@ -497,7 +497,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append("                                  name='Random', line=dict(dash='dash')))")
                 code.append("    fig_roc.update_layout(title='ROC Curve', xaxis_title='FPR', yaxis_title='TPR')")
                 code.append("    if 'show_plotly' in globals():")
-                code.append("        show_plotly('ROC: Logistic Regression', fig_roc.to_html(include_plotlyjs='cdn'))")
+                code.append("        html_output += f'<div style=\"margin-top:24px; text-align:center;\">{fig_roc.to_html(include_plotlyjs=\"cdn\", full_html=False)}</div>'")
                 # Confusion Matrix (Plotly)
                 code.append(f"    y_pred_class = (y_pred_prob > {threshold:.2f}).astype(int)")
                 code.append("    cm = confusion_matrix(y, y_pred_class)")
@@ -507,7 +507,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
                 code.append(f"    fig_cm.update_layout(title='Confusion Matrix (Threshold={threshold:.2f})',")
                 code.append("                         xaxis_title='Predicted', yaxis_title='Actual')")
                 code.append("    if 'show_plotly' in globals():")
-                code.append("        show_plotly('CM: Logistic Regression', fig_cm.to_html(include_plotlyjs='cdn'))")
+                code.append("        html_output += f'<div style=\"margin-top:24px; text-align:center;\">{fig_cm.to_html(include_plotlyjs=\"cdn\", full_html=False)}</div>'")
             else:
                 style_code = generate_style_code(plot_style)
                 code.append("")

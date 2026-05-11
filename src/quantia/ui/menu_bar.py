@@ -6,7 +6,7 @@ File, Edit, Data, Statistics, Machine Learning, Visualize, Report, Help
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, SignalInstance
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenuBar, QWidget, QMenu
 
@@ -204,7 +204,6 @@ class QuantiaMenuBar(QMenuBar):
         reg_menu.setProperty("icon_name", "trending-up")
         self._add(reg_menu, "Linear Regression…", self.regression_linear, "trending-up", ic)
         self._add(reg_menu, "Linear Regression (ML)…", self.regression_linear_ml, "trending-up", ic)
-        self._add(reg_menu, "Logistic Regression…", self.regression_logistic, "trending-up", ic)
         self._add(reg_menu, "Ridge Regression…", self.regression_ridge, "trending-up", ic)
         self._add(reg_menu, "Lasso Regression…", self.regression_lasso, "trending-up", ic)
         self._add(reg_menu, "ElasticNet Regression…", self.regression_elasticnet, "trending-up", ic)
@@ -216,6 +215,7 @@ class QuantiaMenuBar(QMenuBar):
         cls_menu.setProperty("icon_name", "cpu")
         self._add(cls_menu, "Compare Models…", self.model_compare, "bar-chart-2", ic)
         cls_menu.addSeparator()
+        self._add(cls_menu, "Logistic Regression…", self.regression_logistic, "trending-up", ic)
         self._add(cls_menu, "Logistic Regression (ML)…", self.cls_logistic, "cpu", ic)
         self._add(cls_menu, "Random Forest…", self.cls_random_forest, "cpu", ic)
         self._add(cls_menu, "Gradient Boosting…", self.cls_gradient_boosting, "cpu", ic)
@@ -287,10 +287,10 @@ class QuantiaMenuBar(QMenuBar):
         self,
         menu: QMenu,
         text: str,
-        signal: Signal,
+        signal: SignalInstance,
         icon_name: str | None = None,
         icon_color: str | None = None,
-        shortcut: QKeySequence | None = None,
+        shortcut: QKeySequence | QKeySequence.StandardKey | str | None = None,
     ) -> QAction:
         from PySide6.QtGui import QAction
         action = QAction(text, self) # Parent to self (MenuBar)
