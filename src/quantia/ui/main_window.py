@@ -555,6 +555,7 @@ class MainWindow(QMainWindow):
         worker.signals.finished.connect(lambda: self._status_bar.hide_progress())
         worker.signals.display_result.connect(lambda t, c: (self._results_view.add_result(t, c), self._tabs.setCurrentIndex(2)))
         worker.signals.display_plot.connect(lambda t, f: (self._plot_view.add_plot(t, f), self._tabs.setCurrentIndex(4)))
+        worker.signals.display_plotly.connect(lambda t, h: (self._plot_view.add_plotly_plot(t, h), self._tabs.setCurrentIndex(4)))
         worker.signals.register_figure.connect(self._results_view.register_figure)
         self._threadpool.start(worker)
 

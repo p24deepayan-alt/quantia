@@ -20,6 +20,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+plotly = [
+    "plotly>=5.18",
+    "PySide6-WebEngine>=6.7",
+]
 dev = [
     "ruff>=0.4",
     "mypy>=1.10",

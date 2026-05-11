@@ -25,6 +25,7 @@ class WorkerSignals(QObject):
     progress = Signal(int)
     display_result = Signal(str, object)  # (title, content)
     display_plot = Signal(str, object)    # (title, figure)
+    display_plotly = Signal(str, str)     # (title, html)
     register_figure = Signal(str, object) # (b64_string, figure)
 
 
@@ -43,6 +44,7 @@ class ScriptWorker(QRunnable):
         self.namespace["progress"] = self.emit_progress
         self.namespace["show_result"] = self.emit_result
         self.namespace["show_plot"] = self.emit_plot
+        self.namespace["show_plotly"] = self.emit_plotly
         self.namespace["display_html"] = lambda html: self.emit_result("Analysis Result", html)
         self.namespace["register_figure"] = self.emit_register_figure
 
@@ -57,6 +59,10 @@ class ScriptWorker(QRunnable):
     def emit_plot(self, title: str, fig: Any):
         """Thread-safe way to show a matplotlib figure."""
         self.signals.display_plot.emit(title, fig)
+
+    def emit_plotly(self, title: str, html: str):
+        """Thread-safe way to show a Plotly interactive figure."""
+        self.signals.display_plotly.emit(title, html)
 
     def emit_register_figure(self, b64_str: str, fig: Any):
         """Register a figure object for interactive view by its base64 HTML string."""

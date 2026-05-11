@@ -2,6 +2,7 @@
 
 Generates a Quantile-Quantile plot to check if a numeric variable
 follows a theoretical distribution (typically Normal).
+Supports Plotly backend for interactive visualizations.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.ui.central.plotly_styles import generate_plotly_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
 
 
@@ -69,6 +71,11 @@ class QQPlotDialog(BaseAnalysisDialog):
         else:
             dist = "expon"
 
+        if self._is_plotly():
+            return self._generate_plotly_code(var, dist)
+        return self._generate_matplotlib_code(var, dist)
+
+    def _generate_matplotlib_code(self, var: str, dist: str) -> str:
         style_name = self.cmb_style.currentText()
         style_code = generate_style_code(style_name)
 
@@ -118,6 +125,44 @@ class QQPlotDialog(BaseAnalysisDialog):
             f"    show_plot('Q-Q Plot: {var}', fig)",
             "else:",
             "    plt.show()"
+        ]
+
+        return "\n".join(code)
+
+    def _generate_plotly_code(self, var: str, dist: str) -> str:
+        style_name = self.cmb_style.currentText()
+        style_code = generate_plotly_style_code(style_name)
+
+        code = [
+            f"# Q-Q Plot (Plotly): {var} against {dist} distribution",
+            "import plotly.graph_objects as go",
+            "import numpy as np",
+            "import scipy.stats as stats",
+            "import polars as pl",
+            style_code,
+            "",
+            "if isinstance(df, pl.DataFrame):",
+            f"    _data = df.get_column('{var}').drop_nulls().to_pandas().values",
+            "else:",
+            f"    _data = df['{var}'].dropna().values",
+            "",
+            f"dist_func = getattr(stats, '{dist}')",
+            "(osm, osr), (slope, intercept, _) = stats.probplot(_data, dist=dist_func, plot=None)",
+            "",
+            "fig = go.Figure()",
+            "fig.add_trace(go.Scatter(x=osm, y=osr, mode='markers', name='Sample',",
+            "                        marker=dict(opacity=0.7)))",
+            "fig.add_trace(go.Scatter(x=osm, y=intercept + slope * np.array(osm),",
+            "                        mode='lines', name='Reference Line',",
+            "                        line=dict(width=2, dash='dash')))",
+            f"fig.update_layout(title='Q-Q Plot of {var} vs {dist.capitalize()}',",
+            "                  xaxis_title='Theoretical Quantiles',",
+            "                  yaxis_title='Sample Quantiles')",
+            "",
+            "if 'show_plotly' in globals():",
+            f"    show_plotly('Q-Q Plot: {var}', fig.to_html(include_plotlyjs='cdn'))",
+            "else:",
+            "    fig.show()",
         ]
 
         return "\n".join(code)

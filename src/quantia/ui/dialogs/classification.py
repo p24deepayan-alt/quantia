@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from quantia.core.settings import SettingsManager, ComputeMode
-from .base import BaseAnalysisDialog
+from .base import BaseAnalysisDialog, _plotly_available
 
 class BaseClassificationDialog(BaseAnalysisDialog):
     """Base dialog for classification models."""
@@ -192,6 +192,20 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         
         # Hook for extra plots from subclasses
         self._add_extra_plots_logic(code)
+
+        # Check if Plotly backend is selected
+        if self._is_plotly():
+            self._generate_plotly_plots(code)
+            # Still show HTML report
+            code.append("")
+            code.append("if 'display_html' in globals():")
+            code.append("    display_html('\\n'.join(html_output))")
+            code.append("elif 'show_result' in globals():")
+            code.append(f"    show_result('{title}', '\\n'.join(html_output))")
+            code.append("else:")
+            code.append("    print('\\n'.join(html_output))")
+            code.append("")
+            return "\n".join(code)
         
         code.append("if plots_to_draw:")
         code.append("    for p_type in plots_to_draw:")
@@ -258,6 +272,68 @@ class BaseClassificationDialog(BaseAnalysisDialog):
         code.append("    print('\\n'.join(html_output))")
         code.append("")            
         return "\n".join(code)
+
+    def _generate_plotly_plots(self, code: list[str]) -> None:
+        """Add Plotly-based interactive plots to the generated code."""
+        title = self.windowTitle()
+        code.append("")
+        code.append("# Plotly Interactive Plots")
+        code.append("import plotly.graph_objects as go")
+        code.append("import plotly.express as px")
+        code.append("from quantia.ui.central.plotly_styles import generate_plotly_style_code")
+        code.append("")
+
+        if self.chk_cm.isChecked():
+            code.append("# Interactive Confusion Matrix")
+            code.append("cm = confusion_matrix(y_test, y_pred)")
+            code.append("classes = [str(c) for c in model.classes_]")
+            code.append("fig_cm = go.Figure(data=go.Heatmap(")
+            code.append("    z=cm, x=classes, y=classes,")
+            code.append("    text=cm, texttemplate='%{text}',")
+            code.append("    colorscale='Blues',")
+            code.append("    colorbar=dict(title='Count')")
+            code.append("))")
+            code.append("fig_cm.update_layout(title='Confusion Matrix',")
+            code.append("                     xaxis_title='Predicted', yaxis_title='Actual')")
+            code.append("if 'show_plotly' in globals():")
+            code.append(f"    show_plotly('CM: {title}', fig_cm.to_html(include_plotlyjs='cdn'))")
+            code.append("")
+
+        if self.chk_roc.isChecked():
+            code.append("# Interactive ROC Curve")
+            code.append("if len(np.unique(y)) == 2 and y_prob is not None:")
+            code.append("    classes = model.classes_")
+            code.append("    pos_class = classes[1]")
+            code.append("    y_test_bin = (y_test == pos_class).astype(int)")
+            code.append("    fpr, tpr, _ = roc_curve(y_test_bin, y_prob[:, 1])")
+            code.append("    roc_auc = auc(fpr, tpr)")
+            code.append("    fig_roc = go.Figure()")
+            code.append("    fig_roc.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines',")
+            code.append("                                  name=f'ROC (AUC={roc_auc:.3f})',")
+            code.append("                                  line=dict(width=2)))")
+            code.append("    fig_roc.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode='lines',")
+            code.append("                                  name='Random', line=dict(dash='dash')))")
+            code.append("    fig_roc.update_layout(title=f'ROC Curve (Positive: {pos_class})',")
+            code.append("                          xaxis_title='False Positive Rate',")
+            code.append("                          yaxis_title='True Positive Rate')")
+            code.append("    if 'show_plotly' in globals():")
+            code.append(f"        show_plotly('ROC: {title}', fig_roc.to_html(include_plotlyjs='cdn'))")
+            code.append("")
+
+        if self.chk_feat_imp.isChecked() and self._supports_feature_importance:
+            code.append("# Interactive Feature Importance")
+            code.append("if hasattr(model, 'feature_importances_'):")
+            code.append("    importances = model.feature_importances_")
+            code.append("    indices = np.argsort(importances)[::-1][:15]")
+            code.append("    feat_names = [X.columns[i] for i in indices]")
+            code.append("    feat_vals = importances[indices]")
+            code.append("    fig_feat = px.bar(x=feat_vals, y=feat_names, orientation='h',")
+            code.append("                      title='Top Feature Importances')")
+            code.append("    fig_feat.update_layout(xaxis_title='Importance', yaxis_title='Feature',")
+            code.append("                           yaxis=dict(autorange='reversed'))")
+            code.append("    if 'show_plotly' in globals():")
+            code.append(f"        show_plotly('Features: {title}', fig_feat.to_html(include_plotlyjs='cdn'))")
+            code.append("")
 
 class RandomForestDialog(BaseClassificationDialog):
     def __init__(self, df, parent=None):

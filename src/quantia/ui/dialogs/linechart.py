@@ -1,6 +1,7 @@
 """Line Chart Dialog.
 
 Generates seaborn lineplot code with style presets.
+Supports Plotly backend for interactive visualizations.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.ui.central.plotly_styles import generate_plotly_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
 
 
@@ -54,6 +56,11 @@ class LineChartDialog(BaseAnalysisDialog):
             QMessageBox.warning(self, "Missing Input", "Please select both X and Y variables.")
             return ""
 
+        if self._is_plotly():
+            return self._generate_plotly_code(var_x, var_y, hue)
+        return self._generate_matplotlib_code(var_x, var_y, hue)
+
+    def _generate_matplotlib_code(self, var_x: str, var_y: str, hue: str | None) -> str:
         style_name = self.cmb_style.currentText()
         style_code = generate_style_code(style_name)
 
@@ -78,6 +85,38 @@ class LineChartDialog(BaseAnalysisDialog):
             f"    show_plot('{title}', fig)",
             "else:",
             "    plt.show()",
+        ]
+
+        return "\n".join(code)
+
+    def _generate_plotly_code(self, var_x: str, var_y: str, hue: str | None) -> str:
+        style_name = self.cmb_style.currentText()
+        style_code = generate_plotly_style_code(style_name)
+
+        title = f"Line Chart: {var_y} over {var_x}"
+        if hue:
+            title += f" by {hue}"
+
+        color_arg = f", color='{hue}'" if hue else ""
+
+        code = [
+            f"# {title} (Plotly)",
+            "import plotly.express as px",
+            style_code,
+            "",
+            "import polars as pl",
+            "if isinstance(df, pl.DataFrame):",
+            "    _plot_df = df.to_pandas()",
+            "else:",
+            "    _plot_df = df",
+            "",
+            f"fig = px.line(_plot_df, x='{var_x}', y='{var_y}'{color_arg}, markers=True,",
+            f"              title='{title}')",
+            "",
+            "if 'show_plotly' in globals():",
+            f"    show_plotly('{title}', fig.to_html(include_plotlyjs='cdn'))",
+            "else:",
+            "    fig.show()",
         ]
 
         return "\n".join(code)

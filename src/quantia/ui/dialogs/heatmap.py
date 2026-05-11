@@ -1,6 +1,7 @@
 """Correlation Heatmap Dialog.
 
 Generates a seaborn heatmap for a correlation matrix.
+Supports Plotly backend for interactive visualizations.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.ui.central.plotly_styles import generate_plotly_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
 
 
@@ -57,6 +59,11 @@ class HeatmapDialog(BaseAnalysisDialog):
             QMessageBox.warning(self, "Missing Input", "Please select at least 2 numeric variables.")
             return ""
 
+        if self._is_plotly():
+            return self._generate_plotly_code(vars_selected)
+        return self._generate_matplotlib_code(vars_selected)
+
+    def _generate_matplotlib_code(self, vars_selected: list[str]) -> str:
         style_name = self.cmb_style.currentText()
         method = self.cmb_method.currentText().lower()
 
@@ -98,6 +105,49 @@ class HeatmapDialog(BaseAnalysisDialog):
             f"    show_plot('{title}', fig)",
             "else:",
             "    plt.show()",
+        ]
+
+        return "\n".join(code)
+
+    def _generate_plotly_code(self, vars_selected: list[str]) -> str:
+        style_name = self.cmb_style.currentText()
+        method = self.cmb_method.currentText().lower()
+        style_code = generate_plotly_style_code(style_name)
+        title = f"Correlation Heatmap ({method.capitalize()})"
+
+        code = [
+            f"# {title} (Plotly)",
+            "import plotly.express as px",
+            "import plotly.graph_objects as go",
+            "import polars as pl",
+            "import pandas as pd",
+            "import numpy as np",
+            style_code,
+            "",
+            f"cols = {vars_selected}",
+            "if isinstance(df, pl.DataFrame):",
+            "    sub = df.select(cols).drop_nulls().to_pandas()",
+            "else:",
+            "    sub = df[cols].dropna()",
+            "",
+            f"corr = sub.corr(method='{method}')",
+            "",
+            "fig = go.Figure(data=go.Heatmap(",
+            "    z=corr.values,",
+            "    x=corr.columns.tolist(),",
+            "    y=corr.index.tolist(),",
+            "    text=np.round(corr.values, 2),",
+            "    texttemplate='%{text:.2f}',",
+            "    colorscale='RdBu_r',",
+            "    zmin=-1, zmax=1,",
+            "    colorbar=dict(title='Correlation')",
+            "))",
+            f"fig.update_layout(title='{title}', width=700, height=600)",
+            "",
+            "if 'show_plotly' in globals():",
+            f"    show_plotly('{title}', fig.to_html(include_plotlyjs='cdn'))",
+            "else:",
+            "    fig.show()",
         ]
 
         return "\n".join(code)

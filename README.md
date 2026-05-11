@@ -207,12 +207,18 @@ Histogram, Box Plot, Scatter Plot, Violin Plot, Q-Q Plot, Line Chart, Bar Chart,
    uv pip install scikit-learn matplotlib seaborn
    ```
 
-7. **Install development tools (optional):**
+7. **Install interactive Plotly visualizations (optional):**
+   ```bash
+   uv pip install -e ".[plotly]"
+   ```
+   This enables the **Plotly** rendering backend across all visualization and ML dialogs, providing interactive zoom, pan, hover, and export capabilities via an embedded web view.
+
+8. **Install development tools (optional):**
    ```bash
    uv pip install -e ".[dev]"
    ```
 
-8. **Run Quantia:**
+9. **Run Quantia:**
    ```bash
    uv run -m quantia
    ```

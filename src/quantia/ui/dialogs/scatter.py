@@ -1,6 +1,7 @@
 """Scatter Plot Dialog.
 
 Generates seaborn scatterplot code with style presets.
+Supports Plotly backend for interactive visualizations.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.ui.central.plotly_styles import PLOTLY_STYLE_NAMES, generate_plotly_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
 
 
@@ -61,6 +63,9 @@ class ScatterPlotDialog(BaseAnalysisDialog):
         self.spn_alpha.setSingleStep(0.1)
         l_opts.addWidget(self.spn_alpha)
 
+        # Animation frame (Plotly-only feature)
+        l_opts.addWidget(QLabel("Animation Frame (Plotly only):"))
+        self.list_anim = QListWidget()
         layout.addWidget(group_opts)
 
     def generate_code(self) -> str:
@@ -72,6 +77,11 @@ class ScatterPlotDialog(BaseAnalysisDialog):
             QMessageBox.warning(self, "Missing Input", "Please select both X and Y variables.")
             return ""
 
+        if self._is_plotly():
+            return self._generate_plotly_code(x, y, hue)
+        return self._generate_matplotlib_code(x, y, hue)
+
+    def _generate_matplotlib_code(self, x: str, y: str, hue: str | None) -> str:
         style_name = self.cmb_style.currentText()
         alpha = self.spn_alpha.value()
         reg = self.chk_reg.isChecked()
@@ -99,6 +109,38 @@ class ScatterPlotDialog(BaseAnalysisDialog):
             f"    show_plot('Scatter: {x} vs {y}', fig)",
             "else:",
             "    plt.show()",
+        ]
+
+        return "\n".join(code)
+
+    def _generate_plotly_code(self, x: str, y: str, hue: str | None) -> str:
+        style_name = self.cmb_style.currentText()
+        alpha = self.spn_alpha.value()
+        reg = self.chk_reg.isChecked()
+
+        style_code = generate_plotly_style_code(style_name)
+
+        color_arg = f", color='{hue}'" if hue else ""
+        trendline_arg = ", trendline='ols'" if reg else ""
+
+        code = [
+            f"# Scatter Plot (Plotly): {x} vs {y}",
+            "import plotly.express as px",
+            style_code,
+            "",
+            "import polars as pl",
+            "if isinstance(df, pl.DataFrame):",
+            f"    _plot_df = df.to_pandas()",
+            "else:",
+            f"    _plot_df = df",
+            "",
+            f"fig = px.scatter(_plot_df, x='{x}', y='{y}'{color_arg}{trendline_arg},",
+            f"                 opacity={alpha}, title='{y} vs {x}')",
+            "",
+            "if 'show_plotly' in globals():",
+            f"    show_plotly('Scatter: {x} vs {y}', fig.to_html(include_plotlyjs='cdn'))",
+            "else:",
+            "    fig.show()",
         ]
 
         return "\n".join(code)

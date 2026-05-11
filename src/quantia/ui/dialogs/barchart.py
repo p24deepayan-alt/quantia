@@ -1,6 +1,7 @@
 """Bar Chart Dialog.
 
 Generates seaborn barplot / countplot code with style presets.
+Supports Plotly backend for interactive visualizations.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.ui.central.plotly_styles import generate_plotly_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
 
 
@@ -71,6 +73,11 @@ class BarChartDialog(BaseAnalysisDialog):
             QMessageBox.warning(self, "Missing Input", "Please select a category variable.")
             return ""
 
+        if self._is_plotly():
+            return self._generate_plotly_code(cat, val)
+        return self._generate_matplotlib_code(cat, val)
+
+    def _generate_matplotlib_code(self, cat: str, val: str | None) -> str:
         style_name = self.cmb_style.currentText()
         agg = self.cmb_agg.currentText()
         orient = self.cmb_orient.currentText()
@@ -107,6 +114,53 @@ class BarChartDialog(BaseAnalysisDialog):
             f"    show_plot('Bar Chart: {title}', fig)",
             "else:",
             "    plt.show()",
+        ]
+
+        return "\n".join(code)
+
+    def _generate_plotly_code(self, cat: str, val: str | None) -> str:
+        style_name = self.cmb_style.currentText()
+        style_code = generate_plotly_style_code(style_name)
+        agg = self.cmb_agg.currentText()
+        orient = self.cmb_orient.currentText()
+
+        code = [
+            f"# Bar Chart (Plotly): {cat}" + (f" vs {val}" if val else ""),
+            "import plotly.express as px",
+            "import pandas as pd",
+            style_code,
+            "",
+            "import polars as pl",
+            "if isinstance(df, pl.DataFrame):",
+            "    _plot_df = df.to_pandas()",
+            "else:",
+            "    _plot_df = df.copy()",
+            "",
+        ]
+
+        if val:
+            title = f"{agg.title()} of {val} by {cat}"
+            if orient == "Vertical":
+                code.append(f"fig = px.bar(_plot_df.groupby('{cat}', as_index=False)['{val}'].{agg}(),")
+                code.append(f"            x='{cat}', y='{val}', title='{title}')")
+            else:
+                code.append(f"fig = px.bar(_plot_df.groupby('{cat}', as_index=False)['{val}'].{agg}(),")
+                code.append(f"            x='{val}', y='{cat}', orientation='h', title='{title}')")
+        else:
+            title = f"Count of {cat}"
+            code.append(f"_counts = _plot_df['{cat}'].value_counts().reset_index()")
+            code.append(f"_counts.columns = ['{cat}', 'count']")
+            if orient == "Vertical":
+                code.append(f"fig = px.bar(_counts, x='{cat}', y='count', title='{title}')")
+            else:
+                code.append(f"fig = px.bar(_counts, x='count', y='{cat}', orientation='h', title='{title}')")
+
+        code += [
+            "",
+            "if 'show_plotly' in globals():",
+            f"    show_plotly('Bar Chart: {title}', fig.to_html(include_plotlyjs='cdn'))",
+            "else:",
+            "    fig.show()",
         ]
 
         return "\n".join(code)

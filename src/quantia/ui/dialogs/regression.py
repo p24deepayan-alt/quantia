@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 import itertools
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.ui.central.plotly_styles import generate_plotly_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
 
 
@@ -445,46 +446,75 @@ class LinearRegressionDialog(BaseAnalysisDialog):
         code.append("    html_output = eq_html + stats_html + coef_html + legend")
         
         if show_plots:
-            style_code = generate_style_code(plot_style)
-            code.append("")
-            code.append("    import matplotlib.pyplot as plt")
-            code.append("    import seaborn as sns")
-            code.append("    import io, base64")
-            code.append("    from scipy import stats")
-            for line in style_code.split("\n"):
-                if line.strip():
-                    code.append(f"    {line}")
-            code.append("    # Residuals vs Fitted")
-            code.append("    fig, ax = plt.subplots(figsize=(8, 8))")
-            code.append("    sns.residplot(x=results.fittedvalues, y=results.resid, ax=ax, lowess=True, scatter_kws={'alpha': 0.5})")
-            code.append("    ax.set_title('Residuals vs Fitted')")
-            code.append("    ax.set_xlabel('Fitted values')")
-            code.append("    ax.set_ylabel('Residuals')")
-            code.append("    fig.tight_layout()")
-            code.append("    buf = io.BytesIO()")
-            code.append("    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
-            code.append("    plt.close(fig)")
-            code.append("    buf.seek(0)")
-            code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
-            code.append("    if \'register_figure\' in globals():")
-            code.append("        register_figure(img_b64, fig)")
-            code.append("    html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>'")
-            
-            # Manual Q-Q plot
-            code.append("    fig, ax = plt.subplots(figsize=(8, 8))")
-            code.append("    (osm, osr), (slope, intercept, _) = stats.probplot(results.resid, dist='norm', plot=None)")
-            code.append("    ax.scatter(osm, osr, alpha=0.5)")
-            code.append("    ax.plot(osm, intercept + slope*osm, color='red', lw=2)")
-            code.append("    ax.set_title('Normal Q-Q')")
-            code.append("    fig.tight_layout()")
-            code.append("    buf = io.BytesIO()")
-            code.append("    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
-            code.append("    plt.close(fig)")
-            code.append("    buf.seek(0)")
-            code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
-            code.append("    if \'register_figure\' in globals():")
-            code.append("        register_figure(img_b64, fig)")
-            code.append("    html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>'")
+            if self._is_plotly():
+                plotly_style_code = generate_plotly_style_code(plot_style)
+                code.append("")
+                code.append("    import plotly.graph_objects as go")
+                code.append("    from scipy import stats")
+                for line in plotly_style_code.split("\n"):
+                    if line.strip():
+                        code.append(f"    {line}")
+                # Residuals vs Fitted (Plotly)
+                code.append("    fig_res = go.Figure()")
+                code.append("    fig_res.add_trace(go.Scatter(x=results.fittedvalues, y=results.resid,")
+                code.append("                                  mode='markers', opacity=0.5, name='Residuals'))")
+                code.append("    fig_res.update_layout(title='Residuals vs Fitted',")
+                code.append("                          xaxis_title='Fitted values', yaxis_title='Residuals')")
+                code.append("    if 'show_plotly' in globals():")
+                code.append("        show_plotly('Residuals vs Fitted', fig_res.to_html(include_plotlyjs='cdn'))")
+                # Q-Q Plot (Plotly)
+                code.append("    (osm, osr), (slope, intercept, _) = stats.probplot(results.resid, dist='norm', plot=None)")
+                code.append("    import numpy as np")
+                code.append("    fig_qq = go.Figure()")
+                code.append("    fig_qq.add_trace(go.Scatter(x=osm, y=osr, mode='markers', name='Sample', opacity=0.5))")
+                code.append("    fig_qq.add_trace(go.Scatter(x=osm, y=intercept + slope * np.array(osm),")
+                code.append("                                mode='lines', name='Reference',")
+                code.append("                                line=dict(color='red', width=2)))")
+                code.append("    fig_qq.update_layout(title='Normal Q-Q',")
+                code.append("                         xaxis_title='Theoretical Quantiles', yaxis_title='Sample Quantiles')")
+                code.append("    if 'show_plotly' in globals():")
+                code.append("        show_plotly('Normal Q-Q', fig_qq.to_html(include_plotlyjs='cdn'))")
+            else:
+                style_code = generate_style_code(plot_style)
+                code.append("")
+                code.append("    import matplotlib.pyplot as plt")
+                code.append("    import seaborn as sns")
+                code.append("    import io, base64")
+                code.append("    from scipy import stats")
+                for line in style_code.split("\n"):
+                    if line.strip():
+                        code.append(f"    {line}")
+                code.append("    # Residuals vs Fitted")
+                code.append("    fig, ax = plt.subplots(figsize=(8, 8))")
+                code.append("    sns.residplot(x=results.fittedvalues, y=results.resid, ax=ax, lowess=True, scatter_kws={'alpha': 0.5})")
+                code.append("    ax.set_title('Residuals vs Fitted')")
+                code.append("    ax.set_xlabel('Fitted values')")
+                code.append("    ax.set_ylabel('Residuals')")
+                code.append("    fig.tight_layout()")
+                code.append("    buf = io.BytesIO()")
+                code.append("    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
+                code.append("    plt.close(fig)")
+                code.append("    buf.seek(0)")
+                code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+                code.append("    if \'register_figure\' in globals():")
+                code.append("        register_figure(img_b64, fig)")
+                code.append("    html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>'")
+                
+                # Manual Q-Q plot
+                code.append("    fig, ax = plt.subplots(figsize=(8, 8))")
+                code.append("    (osm, osr), (slope, intercept, _) = stats.probplot(results.resid, dist='norm', plot=None)")
+                code.append("    ax.scatter(osm, osr, alpha=0.5)")
+                code.append("    ax.plot(osm, intercept + slope*osm, color='red', lw=2)")
+                code.append("    ax.set_title('Normal Q-Q')")
+                code.append("    fig.tight_layout()")
+                code.append("    buf = io.BytesIO()")
+                code.append("    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')")
+                code.append("    plt.close(fig)")
+                code.append("    buf.seek(0)")
+                code.append("    img_b64 = base64.b64encode(buf.read()).decode('utf-8')")
+                code.append("    if \'register_figure\' in globals():")
+                code.append("        register_figure(img_b64, fig)")
+                code.append("    html_output += f'<div style=\"margin-top:24px; text-align:center;\"><img src=\"data:image/png;base64,{img_b64}\" width=\"800\" height=\"800\" style=\"border:1px solid #E2E8F0; border-radius:4px;\"/></div>'")
 
         code.append("")
         code.append("    show_result('Linear Regression', html_output)")

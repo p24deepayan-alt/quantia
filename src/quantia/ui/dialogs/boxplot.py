@@ -1,6 +1,7 @@
 """Box Plot Dialog.
 
 Generates seaborn boxplot code with style presets.
+Supports Plotly backend for interactive visualizations.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.ui.central.plotly_styles import generate_plotly_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
 
 
@@ -68,6 +70,11 @@ class BoxPlotDialog(BaseAnalysisDialog):
             QMessageBox.warning(self, "Missing Input", "Please select a numeric variable.")
             return ""
 
+        if self._is_plotly():
+            return self._generate_plotly_code(var, group)
+        return self._generate_matplotlib_code(var, group)
+
+    def _generate_matplotlib_code(self, var: str, group: str | None) -> str:
         style_name = self.cmb_style.currentText()
         orient = "h" if self.cmb_orient.currentText() == "Horizontal" else "v"
         notch = self.chk_notch.isChecked()
@@ -109,6 +116,37 @@ class BoxPlotDialog(BaseAnalysisDialog):
             f"    show_plot('Box Plot: {title}', fig)",
             "else:",
             "    plt.show()",
+        ]
+
+        return "\n".join(code)
+
+    def _generate_plotly_code(self, var: str, group: str | None) -> str:
+        style_name = self.cmb_style.currentText()
+        style_code = generate_plotly_style_code(style_name)
+        notch = self.chk_notch.isChecked()
+        points = "'all'" if self.chk_swarm.isChecked() else "False"
+
+        title = f"{var} by {group}" if group else f"Distribution of {var}"
+        color_arg = f", color='{group}'" if group else ""
+
+        code = [
+            f"# Box Plot (Plotly): {title}",
+            "import plotly.express as px",
+            style_code,
+            "",
+            "import polars as pl",
+            "if isinstance(df, pl.DataFrame):",
+            "    _plot_df = df.to_pandas()",
+            "else:",
+            "    _plot_df = df",
+            "",
+            f"fig = px.box(_plot_df, y='{var}'{color_arg}, notched={notch}, points={points},",
+            f"             title='{title}')",
+            "",
+            "if 'show_plotly' in globals():",
+            f"    show_plotly('Box Plot: {title}', fig.to_html(include_plotlyjs='cdn'))",
+            "else:",
+            "    fig.show()",
         ]
 
         return "\n".join(code)

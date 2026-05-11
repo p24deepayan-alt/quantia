@@ -26,6 +26,15 @@ from PySide6.QtWidgets import (
 from quantia.ui.icons import feather_icon
 
 
+def _plotly_available() -> bool:
+    """Check if plotly is importable."""
+    try:
+        import plotly  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
 class BaseAnalysisDialog(QDialog):
     """Base dialog for statistical tests.
 
@@ -82,6 +91,19 @@ class BaseAnalysisDialog(QDialog):
         self._right_layout.addWidget(lbl_options)
         
         self.build_options(self._right_layout)
+
+        # Backend selector (only when plotly is installed)
+        self._backend = "matplotlib"
+        if _plotly_available():
+            from PySide6.QtWidgets import QGroupBox, QComboBox
+            group_backend = QGroupBox("Rendering Backend")
+            l_backend = QVBoxLayout(group_backend)
+            self.cmb_backend = QComboBox()
+            self.cmb_backend.addItems(["Matplotlib", "Plotly"])
+            self.cmb_backend.currentTextChanged.connect(self._on_backend_changed)
+            l_backend.addWidget(self.cmb_backend)
+            self._right_layout.addWidget(group_backend)
+
         self._right_layout.addStretch()
 
         splitter.addWidget(self._right_pane)
@@ -222,3 +244,11 @@ class BaseAnalysisDialog(QDialog):
     def generate_code(self) -> str:
         """Override to return the generated Python code."""
         return ""
+
+    def _on_backend_changed(self, text: str) -> None:
+        """Called when the backend combo box changes."""
+        self._backend = text.lower()
+
+    def _is_plotly(self) -> bool:
+        """Return True if the user selected Plotly backend."""
+        return self._backend == "plotly"

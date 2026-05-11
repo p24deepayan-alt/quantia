@@ -1,6 +1,7 @@
 """Histogram Dialog.
 
 Generates seaborn histplot code with style presets.
+Supports Plotly backend for interactive visualizations.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from quantia.ui.central.plot_styles import STYLE_NAMES, generate_style_code
+from quantia.ui.central.plotly_styles import PLOTLY_STYLE_NAMES, generate_plotly_style_code
 from quantia.ui.dialogs.base import BaseAnalysisDialog
 
 
@@ -67,6 +69,11 @@ class HistogramDialog(BaseAnalysisDialog):
             QMessageBox.warning(self, "Missing Input", "Please select a variable.")
             return ""
 
+        if self._is_plotly():
+            return self._generate_plotly_code(var)
+        return self._generate_matplotlib_code(var)
+
+    def _generate_matplotlib_code(self, var: str) -> str:
         style_name = self.cmb_style.currentText()
         bins = self.spn_bins.value()
         kde = self.chk_kde.isChecked()
@@ -95,6 +102,55 @@ class HistogramDialog(BaseAnalysisDialog):
             f"    show_plot('Histogram: {var}', fig)",
             "else:",
             "    plt.show()",
+        ]
+
+        return "\n".join(code)
+
+    def _generate_plotly_code(self, var: str) -> str:
+        style_name = self.cmb_style.currentText()
+        bins = self.spn_bins.value()
+        kde = self.chk_kde.isChecked()
+        rug = self.chk_rug.isChecked()
+
+        style_code = generate_plotly_style_code(style_name)
+
+        marginal = "'rug'" if rug else ("'violin'" if kde else "None")
+
+        code = [
+            f"# Histogram (Plotly): {var}",
+            "import plotly.express as px",
+            "import plotly.graph_objects as go",
+            style_code,
+            "",
+            "import polars as pl",
+            "if isinstance(df, pl.DataFrame):",
+            f"    _plot_df = df.select('{var}').drop_nulls().to_pandas()",
+            "else:",
+            f"    _plot_df = df[['{var}']].dropna()",
+            "",
+            f"fig = px.histogram(_plot_df, x='{var}', nbins={bins}, marginal={marginal},",
+            f"                   title='Distribution of {var}')",
+        ]
+
+        if kde and not rug:
+            code.append("fig.update_traces(opacity=0.75)")
+            code.append(f"# Add KDE overlay")
+            code.append(f"import numpy as np")
+            code.append(f"from scipy.stats import gaussian_kde")
+            code.append(f"_data = _plot_df['{var}'].values")
+            code.append(f"_kde = gaussian_kde(_data)")
+            code.append(f"_x_range = np.linspace(_data.min(), _data.max(), 200)")
+            code.append(f"_kde_vals = _kde(_x_range) * len(_data) * (_data.max() - _data.min()) / {bins}")
+            code.append(f"fig.add_trace(go.Scatter(x=_x_range, y=_kde_vals, mode='lines', name='KDE',")
+            code.append(f"                        line=dict(width=2)))")
+
+        code += [
+            f"fig.update_layout(xaxis_title='{var}', yaxis_title='Count')",
+            "",
+            "if 'show_plotly' in globals():",
+            f"    show_plotly('Histogram: {var}', fig.to_html(include_plotlyjs='cdn'))",
+            "else:",
+            "    fig.show()",
         ]
 
         return "\n".join(code)

@@ -25,6 +25,16 @@ from PySide6.QtCore import Qt
 from quantia.ui.icons import feather_icon
 from quantia.utils.paths import get_plots_dir
 from quantia.ui.central.interactive_plot import InteractivePlotDialog
+from quantia.ui.central.plotly_view import InteractivePlotlyDialog
+
+
+def _webengine_available() -> bool:
+    """Check if PySide6-WebEngine is installed."""
+    try:
+        from PySide6.QtWebEngineWidgets import QWebEngineView  # noqa: F401
+        return True
+    except ImportError:
+        return False
 
 class PlotViewWidget(QWidget):
     """Container for matplotlib plots. Each figure opens in a new tab."""
@@ -74,6 +84,37 @@ class PlotViewWidget(QWidget):
 
         idx = self._tabs.addTab(canvas, feather_icon("image", self._chrome_icon_color, 14), title)
         self._tabs.setCurrentIndex(idx)
+
+    def add_plotly_plot(self, title: str, html: str) -> None:
+        """Embed a Plotly interactive figure (HTML) in a new tab."""
+        if _webengine_available():
+            from PySide6.QtWebEngineWidgets import QWebEngineView
+            view = QWebEngineView()
+            view.setHtml(html)
+            # Store html for popup
+            view.setProperty("plotly_html", html)
+            view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            view.customContextMenuRequested.connect(
+                lambda pos, v=view, h=html: self._show_plotly_context_menu(v, pos, h)
+            )
+            idx = self._tabs.addTab(view, feather_icon("activity", self._chrome_icon_color, 14), title)
+        else:
+            from PySide6.QtWidgets import QLabel
+            lbl = QLabel(
+                "PySide6-WebEngine is required for interactive Plotly plots.\n"
+                "Install with: pip install PySide6-WebEngine"
+            )
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet("padding: 24px; font-size: 11pt; color: #EF4444;")
+            idx = self._tabs.addTab(lbl, feather_icon("alert-circle", self._chrome_icon_color, 14), title)
+        self._tabs.setCurrentIndex(idx)
+
+    def _show_plotly_context_menu(self, widget: QWidget, pos, html: str) -> None:
+        menu = QMenu(self)
+        action = menu.addAction(feather_icon("external-link", self._chrome_icon_color, 14), "Open Interactive Plot")
+        if menu.exec(widget.mapToGlobal(pos)) == action:
+            dialog = InteractivePlotlyDialog(html, self)
+            dialog.show()
 
     def _show_context_menu(self, widget: QWidget, pos, fig: Figure) -> None:
         menu = QMenu(self)
