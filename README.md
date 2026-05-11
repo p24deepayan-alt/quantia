@@ -156,7 +156,68 @@ Histogram, Box Plot, Scatter Plot, Violin Plot, Q-Q Plot, Line Chart, Bar Chart,
    ```
    This adds `ruff`, `mypy`, and `pytest`.
 
-### Option 2: Windows Installer
+### Option 2: Install with uv (Recommended)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager that can replace `pip` and `venv`. Since this project uses `pyproject.toml`, uv works out of the box.
+
+1. **Install uv:**
+
+   Windows (PowerShell):
+   ```powershell
+   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+   ```
+
+   macOS / Linux:
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. **Clone the repository:**
+   ```bash
+   git clone https://github.com/p24deepayan-alt/quantia.git
+   cd quantia
+   ```
+
+3. **Install Python (if not already available):**
+   ```bash
+   uv python install 3.14
+   ```
+
+4. **Create and activate a virtual environment:**
+
+   Windows:
+   ```cmd
+   uv venv --python 3.14
+   .venv\Scripts\activate
+   ```
+
+   macOS / Linux:
+   ```bash
+   uv venv --python 3.14
+   source .venv/bin/activate
+   ```
+
+5. **Install the package in editable mode:**
+   ```bash
+   uv pip install -e .
+   ```
+
+6. **Install optional dependencies for ML and visualization:**
+   ```bash
+   uv pip install scikit-learn matplotlib seaborn
+   ```
+
+7. **Install development tools (optional):**
+   ```bash
+   uv pip install -e ".[dev]"
+   ```
+
+8. **Run Quantia:**
+   ```bash
+   uv run -m quantia
+   ```
+
+### Option 3: Windows Installer
 
 A standalone Windows installer is available (built with PyInstaller + Inno Setup). See `installer/quantia_setup.iss` for the Inno Setup configuration. After installation, launch `Quantia.exe` — no Python installation required.
 
