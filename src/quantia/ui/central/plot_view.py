@@ -174,3 +174,31 @@ class PlotViewWidget(QWidget):
 
     def clear_all(self) -> None:
         self._tabs.clear()
+
+    def get_all_html(self) -> str:
+        """Collect HTML content from all plot tabs for report generation."""
+        import io, base64
+        sections = []
+        for i in range(self._tabs.count()):
+            title = self._tabs.tabText(i)
+            widget = self._tabs.widget(i)
+            if widget is None:
+                continue
+                
+            from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+            if isinstance(widget, FigureCanvasQTAgg):
+                buf = io.BytesIO()
+                widget.figure.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+                buf.seek(0)
+                img_b64 = base64.b64encode(buf.read()).decode('utf-8')
+                html = f'<div style="margin-top:24px; text-align:center;"><img src="data:image/png;base64,{img_b64}" style="max-width:800px; height:auto; border:1px solid #E2E8F0; border-radius:4px;"/></div>'
+            elif widget.metaObject().className() == "QWebEngineView":
+                raw = widget.property("plotly_html")
+                if raw is not None:
+                    html = f'<div style="margin-top:24px; text-align:center;">{str(raw)}</div>'
+                else:
+                    html = "<p><i>Interactive Plotly figures are embedded here.</i></p>"
+            else:
+                html = "<p><i>Content type not supported for export.</i></p>"
+            sections.append(f"<div class='result-section'>\n<h3>{title}</h3>\n{html}\n</div>")
+        return "\n".join(sections)

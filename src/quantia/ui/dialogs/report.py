@@ -32,6 +32,7 @@ class ReportDialog(QDialog):
         df,
         script_text: str,
         results_html: str,
+        plots_html: str = "",
         parent=None,
     ) -> None:
         super().__init__(parent)
@@ -40,6 +41,7 @@ class ReportDialog(QDialog):
         self._df = df
         self._script_text = script_text
         self._results_html = results_html
+        self._plots_html = plots_html
 
         layout = QVBoxLayout(self)
 
@@ -59,6 +61,10 @@ class ReportDialog(QDialog):
         self.chk_results = QCheckBox("Statistical Results")
         self.chk_results.setChecked(True)
         sec_layout.addWidget(self.chk_results)
+
+        self.chk_plots = QCheckBox("Visualizations")
+        self.chk_plots.setChecked(True)
+        sec_layout.addWidget(self.chk_plots)
 
         sec_group.setLayout(sec_layout)
         layout.addWidget(sec_group)
@@ -275,6 +281,10 @@ class ReportDialog(QDialog):
         if self.chk_results.isChecked() and self._results_html.strip():
             parts.append("<h2>Statistical Results</h2>")
             parts.append(self._results_html)
+
+        if self.chk_plots.isChecked() and self._plots_html.strip():
+            parts.append("<h2>Visualizations</h2>")
+            parts.append(self._plots_html)
 
         parts.append("</body></html>")
         return "\n".join(parts)

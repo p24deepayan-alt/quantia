@@ -684,7 +684,8 @@ class MainWindow(QMainWindow):
         if path: Path(path).write_text(script, encoding="utf-8")
 
     def _generate_report(self) -> None:
-        dialog = ReportDialog(self._data_view.get_dataframe(), self._script_editor.editor.get_all_text(), self._results_view.get_all_html(), self)
+        from quantia.ui.dialogs.report import ReportDialog
+        dialog = ReportDialog(self._data_view.get_dataframe(), self._script_editor.editor.get_all_text(), self._results_view.get_all_html(), self._plot_view.get_all_html(), self)
         dialog.exec()
 
     def _show_preferences(self) -> None:
