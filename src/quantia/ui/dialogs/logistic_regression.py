@@ -127,7 +127,7 @@ class LogisticRegressionDialog(BaseAnalysisDialog):
         # Diagnostic Plots
         group_plots = QGroupBox("Diagnostic Plots")
         l_plots = QVBoxLayout(group_plots)
-        self.chk_plots = QCheckBox("Generate ROC Curve & Confusion Matrix")
+        self.chk_plots = QCheckBox("Generate ROC, PR Curve & Confusion Matrix")
         l_plots.addWidget(self.chk_plots)
 
         l_plots.addWidget(QLabel("Plot Style:"))

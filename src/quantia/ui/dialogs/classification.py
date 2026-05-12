@@ -240,6 +240,22 @@ class BaseClassificationDialog(BaseAnalysisDialog):
             code.append("            ax.legend(loc='lower right')")
             first_p = False
         
+        if self.chk_pr.isChecked():
+            if_str = "if" if first_p else "elif"
+            code.append(f"        {if_str} p_type == 'pr':")
+            code.append("            from sklearn.metrics import precision_recall_curve, average_precision_score")
+            code.append("            classes = model.classes_")
+            code.append("            pos_class = classes[1]")
+            code.append("            y_test_bin = (y_test == pos_class).astype(int)")
+            code.append("            precision, recall, _ = precision_recall_curve(y_test_bin, y_prob[:, 1])")
+            code.append("            ap_score = average_precision_score(y_test_bin, y_prob[:, 1])")
+            code.append("            ax.plot(recall, precision, lw=2, label=f'AP = {ap_score:.3f}')")
+            code.append("            ax.set_title(f'Precision-Recall Curve (Positive: {pos_class})')")
+            code.append("            ax.set_xlabel('Recall')")
+            code.append("            ax.set_ylabel('Precision')")
+            code.append("            ax.legend(loc='lower left')")
+            first_p = False
+        
         if self.chk_feat_imp.isChecked() and self._supports_feature_importance:
             if_str = "if" if first_p else "elif"
             code.append(f"        {if_str} p_type == 'feat_imp' and hasattr(model, 'feature_importances_'):")

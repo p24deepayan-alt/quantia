@@ -98,6 +98,18 @@ class QuantiaMenuBar(QMenuBar):
     bar_chart = Signal()
     heatmap = Signal()
 
+    pairplot = Signal()
+    stripplot = Signal()
+    ridgeplot = Signal()
+    density2d = Signal()
+    piechart = Signal()
+    treemap = Signal()
+
+    actual_vs_predicted = Signal()
+    residuals_plot = Signal()
+    pr_curve = Signal()
+    silhouette_plot = Signal()
+
     # View
     toggle_theme = Signal()
 
@@ -249,8 +261,15 @@ class QuantiaMenuBar(QMenuBar):
         self._add(menu, "Violin Plot", self.violin, "activity", ic)
         self._add(menu, "Q-Q Plot", self.qqplot, "trending-up", ic)
         menu.addSeparator()
+        self._add(menu, "Pair Plot", self.pairplot, "grid", ic)
+        self._add(menu, "Strip / Swarm Plot", self.stripplot, "more-horizontal", ic)
+        self._add(menu, "Ridge Plot", self.ridgeplot, "align-justify", ic)
+        self._add(menu, "2D Density Plot", self.density2d, "map", ic)
+        menu.addSeparator()
         self._add(menu, "Line Chart", self.line_chart, "trending-up", ic)
         self._add(menu, "Bar Chart", self.bar_chart, "bar-chart", ic)
+        self._add(menu, "Pie / Donut Chart", self.piechart, "pie-chart", ic)
+        self._add(menu, "Treemap / Sunburst", self.treemap, "layout", ic)
         self._add(menu, "Heatmap", self.heatmap, "grid", ic)
 
     # ── Report ───────────────────────────────────────────────────────────

@@ -32,7 +32,7 @@ class LineChartDialog(BaseAnalysisDialog):
         layout.addWidget(self._create_selector_row("X-Axis (e.g. Date/Time):", self.list_x, multi_select=False))
 
         self.list_y = QListWidget()
-        layout.addWidget(self._create_selector_row("Y-Axis (numeric):", self.list_y, multi_select=False))
+        layout.addWidget(self._create_selector_row("Y-Axes (generates multiple plots):", self.list_y, multi_select=True))
 
         self.list_hue = QListWidget()
         layout.addWidget(self._create_selector_row("Group By (Hue) (optional):", self.list_hue, multi_select=False))
@@ -49,58 +49,60 @@ class LineChartDialog(BaseAnalysisDialog):
 
     def generate_code(self) -> str:
         var_x = self.list_x.item(0).text() if self.list_x.count() > 0 else None
-        var_y = self.list_y.item(0).text() if self.list_y.count() > 0 else None
+        y_vars = [self.list_y.item(i).text() for i in range(self.list_y.count())]
         hue = self.list_hue.item(0).text() if self.list_hue.count() > 0 else None
 
-        if not var_x or not var_y:
-            QMessageBox.warning(self, "Missing Input", "Please select both X and Y variables.")
+        if not var_x or not y_vars:
+            QMessageBox.warning(self, "Missing Input", "Please select an X variable and at least one Y variable.")
             return ""
 
         if self._is_plotly():
-            return self._generate_plotly_code(var_x, var_y, hue)
-        return self._generate_matplotlib_code(var_x, var_y, hue)
+            return self._generate_plotly_code(var_x, y_vars, hue)
+        return self._generate_matplotlib_code(var_x, y_vars, hue)
 
-    def _generate_matplotlib_code(self, var_x: str, var_y: str, hue: str | None) -> str:
+    def _generate_matplotlib_code(self, var_x: str, y_vars: list[str], hue: str | None) -> str:
         style_name = self.cmb_style.currentText()
         style_code = generate_style_code(style_name)
 
-        title = f"Line Chart: {var_y} over {var_x}"
-        if hue:
-            title += f" by {hue}"
-
-        args = [f"data=df", f"x='{var_x}'", f"y='{var_y}'"]
-        if hue:
-            args.append(f"hue='{hue}'")
-
         code = [
-            f"# {title}",
+            f"# Line Charts",
             style_code,
             "",
-            "fig, ax = plt.subplots(figsize=(9, 5))",
-            f"sns.lineplot({', '.join(args)}, marker='o', ax=ax)",
-            f"ax.set_title('{title}')",
-            "fig.tight_layout()",
-            "",
-            "if 'show_plot' in globals():",
-            f"    show_plot('{title}', fig)",
-            "else:",
-            "    plt.show()",
         ]
+
+        for var_y in y_vars:
+            title = f"Line Chart: {var_y} over {var_x}"
+            if hue:
+                title += f" by {hue}"
+
+            args = [f"data=df", f"x='{var_x}'", f"y='{var_y}'"]
+            if hue:
+                args.append(f"hue='{hue}'")
+
+            code += [
+                f"# {title}",
+                "fig, ax = plt.subplots(figsize=(9, 5))",
+                f"sns.lineplot({', '.join(args)}, marker='o', ax=ax)",
+                f"ax.set_title('{title}')",
+                "fig.tight_layout()",
+                "",
+                "if 'show_plot' in globals():",
+                f"    show_plot('{title}', fig)",
+                "else:",
+                "    plt.show()",
+                "",
+            ]
 
         return "\n".join(code)
 
-    def _generate_plotly_code(self, var_x: str, var_y: str, hue: str | None) -> str:
+    def _generate_plotly_code(self, var_x: str, y_vars: list[str], hue: str | None) -> str:
         style_name = self.cmb_style.currentText()
         style_code = generate_plotly_style_code(style_name)
-
-        title = f"Line Chart: {var_y} over {var_x}"
-        if hue:
-            title += f" by {hue}"
 
         color_arg = f", color='{hue}'" if hue else ""
 
         code = [
-            f"# {title} (Plotly)",
+            f"# Line Charts (Plotly)",
             "import plotly.express as px",
             style_code,
             "",
@@ -110,13 +112,23 @@ class LineChartDialog(BaseAnalysisDialog):
             "else:",
             "    _plot_df = df",
             "",
-            f"fig = px.line(_plot_df, x='{var_x}', y='{var_y}'{color_arg}, markers=True,",
-            f"              title='{title}')",
-            "",
-            "if 'show_plotly' in globals():",
-            f"    show_plotly('{title}', fig.to_html(include_plotlyjs='cdn'))",
-            "else:",
-            "    fig.show()",
         ]
+
+        for var_y in y_vars:
+            title = f"Line Chart: {var_y} over {var_x}"
+            if hue:
+                title += f" by {hue}"
+
+            code += [
+                f"# {title} (Plotly)",
+                f"fig = px.line(_plot_df, x='{var_x}', y='{var_y}'{color_arg}, markers=True,",
+                f"              title='{title}')",
+                "",
+                "if 'show_plotly' in globals():",
+                f"    show_plotly('{title}', fig.to_html(include_plotlyjs='cdn'))",
+                "else:",
+                "    fig.show()",
+                "",
+            ]
 
         return "\n".join(code)

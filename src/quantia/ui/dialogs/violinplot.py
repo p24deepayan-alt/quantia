@@ -30,7 +30,7 @@ class ViolinPlotDialog(BaseAnalysisDialog):
 
     def _build_selectors(self, layout: QVBoxLayout) -> None:
         self.list_variable = QListWidget()
-        layout.addWidget(self._create_selector_row("Variable (numeric):", self.list_variable, multi_select=False))
+        layout.addWidget(self._create_selector_row("Variables (numeric, generates multiple plots):", self.list_variable, multi_select=True))
 
         self.list_group = QListWidget()
         layout.addWidget(self._create_selector_row("Group By (optional):", self.list_group, multi_select=False))
@@ -60,72 +60,76 @@ class ViolinPlotDialog(BaseAnalysisDialog):
         layout.addWidget(group_opts)
 
     def generate_code(self) -> str:
-        var = self.list_variable.item(0).text() if self.list_variable.count() > 0 else None
+        vars_selected = [self.list_variable.item(i).text() for i in range(self.list_variable.count())]
         group = self.list_group.item(0).text() if self.list_group.count() > 0 else None
 
-        if not var:
-            QMessageBox.warning(self, "Missing Input", "Please select a numeric variable.")
+        if not vars_selected:
+            QMessageBox.warning(self, "Missing Input", "Please select at least one numeric variable.")
             return ""
 
         if self._is_plotly():
-            return self._generate_plotly_code(var, group)
-        return self._generate_matplotlib_code(var, group)
+            return self._generate_plotly_code(vars_selected, group)
+        return self._generate_matplotlib_code(vars_selected, group)
 
-    def _generate_matplotlib_code(self, var: str, group: str | None) -> str:
+    def _generate_matplotlib_code(self, vars_selected: list[str], group: str | None) -> str:
         style_name = self.cmb_style.currentText()
         orient = "h" if self.cmb_orient.currentText() == "Horizontal" else "v"
         swarm = self.chk_swarm.isChecked()
 
         style_code = generate_style_code(style_name)
 
-        if group:
-            if orient == "v":
-                x_arg, y_arg = f"x='{group}'", f"y='{var}'"
-            else:
-                x_arg, y_arg = f"x='{var}'", f"y='{group}'"
-            title = f"Violin Plot: {var} by {group}"
-        else:
-            if orient == "v":
-                x_arg, y_arg = "", f"y='{var}'"
-            else:
-                x_arg, y_arg = f"x='{var}'", ""
-            title = f"Violin Plot: {var}"
-
-        args = ", ".join(a for a in [f"data=df", x_arg, y_arg] if a)
-
         code = [
-            f"# {title}",
+            f"# Violin Plots",
             style_code,
             "",
-            "fig, ax = plt.subplots(figsize=(8, 5))",
-            f"sns.violinplot({args}, inner='quartile', ax=ax)",
         ]
 
-        if swarm:
-            code.append(f"sns.swarmplot({args}, color='white', edgecolor='gray', linewidth=1, size=3, ax=ax)")
+        for var in vars_selected:
+            if group:
+                if orient == "v":
+                    x_arg, y_arg = f"x='{group}'", f"y='{var}'"
+                else:
+                    x_arg, y_arg = f"x='{var}'", f"y='{group}'"
+                title = f"Violin Plot: {var} by {group}"
+            else:
+                if orient == "v":
+                    x_arg, y_arg = "", f"y='{var}'"
+                else:
+                    x_arg, y_arg = f"x='{var}'", ""
+                title = f"Violin Plot: {var}"
 
-        code += [
-            f"ax.set_title('{title}')",
-            "fig.tight_layout()",
-            "",
-            "if 'show_plot' in globals():",
-            f"    show_plot('{title}', fig)",
-            "else:",
-            "    plt.show()",
-        ]
+            args = ", ".join(a for a in [f"data=df", x_arg, y_arg] if a)
+
+            code += [
+                f"# {title}",
+                "fig, ax = plt.subplots(figsize=(8, 5))",
+                f"sns.violinplot({args}, inner='quartile', ax=ax)",
+            ]
+
+            if swarm:
+                code.append(f"sns.swarmplot({args}, color='white', edgecolor='gray', linewidth=1, size=3, ax=ax)")
+
+            code += [
+                f"ax.set_title('{title}')",
+                "fig.tight_layout()",
+                "",
+                "if 'show_plot' in globals():",
+                f"    show_plot('{title}', fig)",
+                "else:",
+                "    plt.show()",
+                "",
+            ]
 
         return "\n".join(code)
 
-    def _generate_plotly_code(self, var: str, group: str | None) -> str:
+    def _generate_plotly_code(self, vars_selected: list[str], group: str | None) -> str:
         style_name = self.cmb_style.currentText()
         style_code = generate_plotly_style_code(style_name)
         points = "'all'" if self.chk_swarm.isChecked() else "False"
-
-        title = f"Violin Plot: {var} by {group}" if group else f"Violin Plot: {var}"
         color_arg = f", color='{group}'" if group else ""
 
         code = [
-            f"# {title} (Plotly)",
+            f"# Violin Plots (Plotly)",
             "import plotly.express as px",
             style_code,
             "",
@@ -133,15 +137,23 @@ class ViolinPlotDialog(BaseAnalysisDialog):
             "if isinstance(df, pl.DataFrame):",
             "    _plot_df = df.to_pandas()",
             "else:",
-            "    _plot_df = df",
+            "    _plot_df = df.copy()",
             "",
-            f"fig = px.violin(_plot_df, y='{var}'{color_arg}, box=True, points={points},",
-            f"                title='{title}')",
-            "",
-            "if 'show_plotly' in globals():",
-            f"    show_plotly('{title}', fig.to_html(include_plotlyjs='cdn'))",
-            "else:",
-            "    fig.show()",
         ]
+
+        for var in vars_selected:
+            title = f"Violin Plot: {var} by {group}" if group else f"Violin Plot: {var}"
+
+            code += [
+                f"# {title} (Plotly)",
+                f"fig = px.violin(_plot_df, y='{var}'{color_arg}, box=True, points={points},",
+                f"                title='{title}')",
+                "",
+                "if 'show_plotly' in globals():",
+                f"    show_plotly('{title}', fig.to_html(include_plotlyjs='cdn'))",
+                "else:",
+                "    fig.show()",
+                "",
+            ]
 
         return "\n".join(code)

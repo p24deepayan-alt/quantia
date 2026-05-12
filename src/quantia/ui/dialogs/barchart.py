@@ -33,7 +33,7 @@ class BarChartDialog(BaseAnalysisDialog):
         layout.addWidget(self._create_selector_row("Category Variable:", self.list_category, multi_select=False))
 
         self.list_value = QListWidget()
-        layout.addWidget(self._create_selector_row("Value Variable (optional):", self.list_value, multi_select=False))
+        layout.addWidget(self._create_selector_row("Value Variables (generates multiple plots if selected):", self.list_value, multi_select=True))
 
     def build_options(self, layout: QVBoxLayout) -> None:
         # Style
@@ -67,17 +67,17 @@ class BarChartDialog(BaseAnalysisDialog):
 
     def generate_code(self) -> str:
         cat = self.list_category.item(0).text() if self.list_category.count() > 0 else None
-        val = self.list_value.item(0).text() if self.list_value.count() > 0 else None
+        vals = [self.list_value.item(i).text() for i in range(self.list_value.count())]
 
         if not cat:
             QMessageBox.warning(self, "Missing Input", "Please select a category variable.")
             return ""
 
         if self._is_plotly():
-            return self._generate_plotly_code(cat, val)
-        return self._generate_matplotlib_code(cat, val)
+            return self._generate_plotly_code(cat, vals)
+        return self._generate_matplotlib_code(cat, vals)
 
-    def _generate_matplotlib_code(self, cat: str, val: str | None) -> str:
+    def _generate_matplotlib_code(self, cat: str, vals: list[str]) -> str:
         style_name = self.cmb_style.currentText()
         agg = self.cmb_agg.currentText()
         orient = self.cmb_orient.currentText()
@@ -87,45 +87,66 @@ class BarChartDialog(BaseAnalysisDialog):
         ci_arg = "('ci', 95)" if errorbars else "None"
 
         code = [
-            f"# Bar Chart: {cat}" + (f" vs {val}" if val else ""),
+            f"# Bar Charts",
             style_code,
             "",
-            "fig, ax = plt.subplots(figsize=(8, 5))",
         ]
 
-        if val:
-            if orient == "Vertical":
-                code.append(f"sns.barplot(data=df, x='{cat}', y='{val}', estimator='{agg}', errorbar={ci_arg}, ax=ax)")
-            else:
-                code.append(f"sns.barplot(data=df, x='{val}', y='{cat}', estimator='{agg}', errorbar={ci_arg}, orient='h', ax=ax)")
-            title = f"{agg.title()} of {val} by {cat}"
-        else:
+        if not vals:
+            # Generate a single count plot
+            code.append(f"# Bar Chart: {cat} (Count)")
+            code.append("fig, ax = plt.subplots(figsize=(8, 5))")
             if orient == "Vertical":
                 code.append(f"sns.countplot(data=df, x='{cat}', ax=ax)")
             else:
                 code.append(f"sns.countplot(data=df, y='{cat}', ax=ax)")
             title = f"Count of {cat}"
+            code += [
+                f"ax.set_title('{title}')",
+                "fig.tight_layout()",
+                "",
+                "if 'show_plot' in globals():",
+                f"    show_plot('Bar Chart: {title}', fig)",
+                "else:",
+                "    plt.show()",
+            ]
+            return "\n".join(code)
 
-        code += [
-            f"ax.set_title('{title}')",
-            "fig.tight_layout()",
-            "",
-            "if 'show_plot' in globals():",
-            f"    show_plot('Bar Chart: {title}', fig)",
-            "else:",
-            "    plt.show()",
-        ]
+        # Generate a plot for each value
+        for val in vals:
+            code += [
+                f"# Bar Chart: {cat} vs {val}",
+                "fig, ax = plt.subplots(figsize=(8, 5))",
+            ]
+
+            if orient == "Vertical":
+                code.append(f"sns.barplot(data=df, x='{cat}', y='{val}', estimator='{agg}', errorbar={ci_arg}, ax=ax)")
+            else:
+                code.append(f"sns.barplot(data=df, x='{val}', y='{cat}', estimator='{agg}', errorbar={ci_arg}, orient='h', ax=ax)")
+            
+            title = f"{agg.title()} of {val} by {cat}"
+
+            code += [
+                f"ax.set_title('{title}')",
+                "fig.tight_layout()",
+                "",
+                "if 'show_plot' in globals():",
+                f"    show_plot('Bar Chart: {title}', fig)",
+                "else:",
+                "    plt.show()",
+                "",
+            ]
 
         return "\n".join(code)
 
-    def _generate_plotly_code(self, cat: str, val: str | None) -> str:
+    def _generate_plotly_code(self, cat: str, vals: list[str]) -> str:
         style_name = self.cmb_style.currentText()
         style_code = generate_plotly_style_code(style_name)
         agg = self.cmb_agg.currentText()
         orient = self.cmb_orient.currentText()
 
         code = [
-            f"# Bar Chart (Plotly): {cat}" + (f" vs {val}" if val else ""),
+            f"# Bar Charts (Plotly)",
             "import plotly.express as px",
             "import pandas as pd",
             style_code,
@@ -138,29 +159,42 @@ class BarChartDialog(BaseAnalysisDialog):
             "",
         ]
 
-        if val:
-            title = f"{agg.title()} of {val} by {cat}"
-            if orient == "Vertical":
-                code.append(f"fig = px.bar(_plot_df.groupby('{cat}', as_index=False)['{val}'].{agg}(),")
-                code.append(f"            x='{cat}', y='{val}', title='{title}')")
-            else:
-                code.append(f"fig = px.bar(_plot_df.groupby('{cat}', as_index=False)['{val}'].{agg}(),")
-                code.append(f"            x='{val}', y='{cat}', orientation='h', title='{title}')")
-        else:
+        if not vals:
             title = f"Count of {cat}"
+            code.append(f"# Bar Chart (Plotly): {cat} (Count)")
             code.append(f"_counts = _plot_df['{cat}'].value_counts().reset_index()")
             code.append(f"_counts.columns = ['{cat}', 'count']")
             if orient == "Vertical":
                 code.append(f"fig = px.bar(_counts, x='{cat}', y='count', title='{title}')")
             else:
                 code.append(f"fig = px.bar(_counts, x='count', y='{cat}', orientation='h', title='{title}')")
+            
+            code += [
+                "",
+                "if 'show_plotly' in globals():",
+                f"    show_plotly('Bar Chart: {title}', fig.to_html(include_plotlyjs='cdn'))",
+                "else:",
+                "    fig.show()",
+            ]
+            return "\n".join(code)
 
-        code += [
-            "",
-            "if 'show_plotly' in globals():",
-            f"    show_plotly('Bar Chart: {title}', fig.to_html(include_plotlyjs='cdn'))",
-            "else:",
-            "    fig.show()",
-        ]
+        for val in vals:
+            title = f"{agg.title()} of {val} by {cat}"
+            code.append(f"# Bar Chart (Plotly): {cat} vs {val}")
+            if orient == "Vertical":
+                code.append(f"fig = px.bar(_plot_df.groupby('{cat}', as_index=False)['{val}'].{agg}(),")
+                code.append(f"            x='{cat}', y='{val}', title='{title}')")
+            else:
+                code.append(f"fig = px.bar(_plot_df.groupby('{cat}', as_index=False)['{val}'].{agg}(),")
+                code.append(f"            x='{val}', y='{cat}', orientation='h', title='{title}')")
+
+            code += [
+                "",
+                "if 'show_plotly' in globals():",
+                f"    show_plotly('Bar Chart: {title}', fig.to_html(include_plotlyjs='cdn'))",
+                "else:",
+                "    fig.show()",
+                "",
+            ]
 
         return "\n".join(code)

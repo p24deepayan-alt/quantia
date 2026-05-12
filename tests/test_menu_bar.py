@@ -1,13 +1,12 @@
 """Tests for Quantia Menu Bar."""
 
 import pytest
-from quantia.ui.main_window import MainWindow
+from quantia.ui.menu_bar import QuantiaMenuBar
 
 def test_menu_bar_structure(qtbot):
     """Test that the main menus are created correctly."""
-    window = MainWindow()
-    qtbot.addWidget(window)
-    menu_bar = window._menu_bar
+    menu_bar = QuantiaMenuBar()
+    qtbot.addWidget(menu_bar)
     
     # Extract top-level menu titles
     menus = [action.text() for action in menu_bar.actions()]
@@ -21,19 +20,18 @@ def test_menu_bar_structure(qtbot):
     assert "&Report" in menus
     assert "&Help" in menus
 
-def _find_action(window, text_substring):
+def _find_action(menu_bar, text_substring):
     """Recursively search for an action by text using findChildren."""
     from PySide6.QtGui import QAction
-    for action in window.findChildren(QAction):
+    for action in menu_bar.findChildren(QAction):
         if action.text() and text_substring in action.text():
             return action
     return None
 
 def test_menu_bar_signals(qtbot):
     """Test that triggering actions emits the correct signals."""
-    window = MainWindow()
-    qtbot.addWidget(window)
-    menu_bar = window._menu_bar
+    menu_bar = QuantiaMenuBar()
+    qtbot.addWidget(menu_bar)
 
     # List of tuples: (Action text substring, signal to wait for)
     actions_to_test = [
@@ -58,7 +56,7 @@ def test_menu_bar_signals(qtbot):
     for action_text, signal in actions_to_test:
         action = None
         from PySide6.QtGui import QAction
-        for act in window.findChildren(QAction):
+        for act in menu_bar.findChildren(QAction):
             if act.text() and action_text in act.text():
                 action = act
                 # Break on exact match to prevent finding broader ones later
@@ -72,15 +70,14 @@ def test_menu_bar_signals(qtbot):
 
 def test_menu_bar_shortcuts(qtbot):
     """Test that some key shortcuts are assigned correctly."""
-    window = MainWindow()
-    qtbot.addWidget(window)
-    menu_bar = window._menu_bar
+    menu_bar = QuantiaMenuBar()
+    qtbot.addWidget(menu_bar)
 
-    open_action = _find_action(window, "Open Project")
+    open_action = _find_action(menu_bar, "Open Project")
     assert open_action.shortcut().toString() == "Ctrl+O"
 
-    save_action = _find_action(window, "Save Project")
+    save_action = _find_action(menu_bar, "Save Project")
     assert save_action.shortcut().toString() == "Ctrl+S"
 
-    exit_action = _find_action(window, "Exit")
+    exit_action = _find_action(menu_bar, "Exit")
     assert exit_action.shortcut().toString() == "Ctrl+Q"

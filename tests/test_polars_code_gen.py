@@ -39,8 +39,8 @@ class TestDialogCodeGeneration(unittest.TestCase):
         code = dialog.generate_code()
         self.assertIn("import polars as pl", code)
         self.assertIn("if isinstance(df, pl.DataFrame):", code)
-        self.assertIn("'Count': s.len() - s.null_count()", code)
-        self.assertIn("s.n_unique()", code)
+        self.assertIn("_pdf = df.select(vars_to_analyze).to_pandas()", code)
+        self.assertIn("count = int(s.count())", code)
 
     def test_filter_data_code_gen(self):
         dialog = FilterDataDialog(self.sample_df)

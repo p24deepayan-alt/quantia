@@ -274,6 +274,13 @@ class MainWindow(QMainWindow):
         self._menu_bar.line_chart.connect(self._show_linechart)
         self._menu_bar.qqplot.connect(self._show_qqplot)
         self._menu_bar.heatmap.connect(self._show_heatmap)
+        
+        self._menu_bar.pairplot.connect(self._show_pairplot)
+        self._menu_bar.stripplot.connect(self._show_stripplot)
+        self._menu_bar.ridgeplot.connect(self._show_ridgeplot)
+        self._menu_bar.density2d.connect(self._show_density2d)
+        self._menu_bar.piechart.connect(self._show_piechart)
+        self._menu_bar.treemap.connect(self._show_treemap)
 
         # Export / Report signals
         self._menu_bar.export_data.connect(self._export_data)
@@ -611,6 +618,25 @@ class MainWindow(QMainWindow):
     def _show_linechart(self) -> None: self._show_data_dialog(LineChartDialog)
     def _show_heatmap(self) -> None: self._show_data_dialog(HeatmapDialog)
     def _show_qqplot(self) -> None: self._show_data_dialog(QQPlotDialog)
+
+    def _show_pairplot(self) -> None: 
+        from quantia.ui.dialogs.pairplot import PairPlotDialog
+        self._show_data_dialog(PairPlotDialog)
+    def _show_stripplot(self) -> None: 
+        from quantia.ui.dialogs.stripplot import StripPlotDialog
+        self._show_data_dialog(StripPlotDialog)
+    def _show_ridgeplot(self) -> None: 
+        from quantia.ui.dialogs.ridgeplot import RidgePlotDialog
+        self._show_data_dialog(RidgePlotDialog)
+    def _show_density2d(self) -> None: 
+        from quantia.ui.dialogs.density2d import Density2DPlotDialog
+        self._show_data_dialog(Density2DPlotDialog)
+    def _show_piechart(self) -> None: 
+        from quantia.ui.dialogs.piechart import PieChartDialog
+        self._show_data_dialog(PieChartDialog)
+    def _show_treemap(self) -> None: 
+        from quantia.ui.dialogs.treemap import TreemapDialog
+        self._show_data_dialog(TreemapDialog)
 
     def _show_model_compare(self) -> None: self._show_data_dialog(ModelComparisonDialog)
     def _show_cls_logistic_ml(self) -> None: self._show_data_dialog(LogisticRegressionMLDialog)

@@ -52,6 +52,10 @@ class BaseClusteringDialog(BaseAnalysisDialog):
         self.chk_plot.setChecked(True)
         out_layout.addWidget(self.chk_plot)
         
+        self.chk_silhouette = QCheckBox("Silhouette Plot")
+        self.chk_silhouette.setChecked(False)
+        out_layout.addWidget(self.chk_silhouette)
+        
         self.chk_dendrogram = QCheckBox("Dendrogram")
         self.chk_dendrogram.setChecked(True)
         if not self._supports_dendrogram:
@@ -205,8 +209,9 @@ class BaseClusteringDialog(BaseAnalysisDialog):
         code.append("    plots_to_draw = []")
         if self.chk_plot.isChecked(): code.append("    plots_to_draw.append('scatter')")
         if self.chk_dendrogram.isChecked() and self._supports_dendrogram: code.append("    plots_to_draw.append('dendrogram')")
+        if self.chk_silhouette.isChecked(): code.append("    if sum(valid_idx) > 1 and len(np.unique(labels[valid_idx])) > 1: plots_to_draw.append('silhouette')")
 
-        if self.chk_plot.isChecked() or (self.chk_dendrogram.isChecked() and self._supports_dendrogram):
+        if self.chk_plot.isChecked() or (self.chk_dendrogram.isChecked() and self._supports_dendrogram) or self.chk_silhouette.isChecked():
             style_code = generate_style_code(plot_style)
             code.append("")
             code.append("    # ── Plots ──")

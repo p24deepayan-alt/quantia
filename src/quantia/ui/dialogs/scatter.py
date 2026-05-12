@@ -31,7 +31,7 @@ class ScatterPlotDialog(BaseAnalysisDialog):
 
     def _build_selectors(self, layout: QVBoxLayout) -> None:
         self.list_x = QListWidget()
-        layout.addWidget(self._create_selector_row("X Variable:", self.list_x, multi_select=False))
+        layout.addWidget(self._create_selector_row("X Variables (generates multiple plots):", self.list_x, multi_select=True))
 
         self.list_y = QListWidget()
         layout.addWidget(self._create_selector_row("Y Variable:", self.list_y, multi_select=False))
@@ -69,19 +69,19 @@ class ScatterPlotDialog(BaseAnalysisDialog):
         layout.addWidget(group_opts)
 
     def generate_code(self) -> str:
-        x = self.list_x.item(0).text() if self.list_x.count() > 0 else None
+        x_vars = [self.list_x.item(i).text() for i in range(self.list_x.count())]
         y = self.list_y.item(0).text() if self.list_y.count() > 0 else None
         hue = self.list_hue.item(0).text() if self.list_hue.count() > 0 else None
 
-        if not x or not y:
-            QMessageBox.warning(self, "Missing Input", "Please select both X and Y variables.")
+        if not x_vars or not y:
+            QMessageBox.warning(self, "Missing Input", "Please select at least one X variable and a Y variable.")
             return ""
 
         if self._is_plotly():
-            return self._generate_plotly_code(x, y, hue)
-        return self._generate_matplotlib_code(x, y, hue)
+            return self._generate_plotly_code(x_vars, y, hue)
+        return self._generate_matplotlib_code(x_vars, y, hue)
 
-    def _generate_matplotlib_code(self, x: str, y: str, hue: str | None) -> str:
+    def _generate_matplotlib_code(self, x_vars: list[str], y: str, hue: str | None) -> str:
         style_name = self.cmb_style.currentText()
         alpha = self.spn_alpha.value()
         reg = self.chk_reg.isChecked()
@@ -90,30 +90,36 @@ class ScatterPlotDialog(BaseAnalysisDialog):
         hue_arg = f", hue='{hue}'" if hue else ""
 
         code = [
-            f"# Scatter Plot: {x} vs {y}",
+            f"# Scatter Plots",
             style_code,
             "",
-            "fig, ax = plt.subplots(figsize=(8, 6))",
         ]
 
-        if reg:
-            code.append(f"sns.regplot(data=df, x='{x}', y='{y}', scatter_kws={{'alpha': {alpha}}}, ax=ax)")
-        else:
-            code.append(f"sns.scatterplot(data=df, x='{x}', y='{y}'{hue_arg}, alpha={alpha}, ax=ax)")
+        for x in x_vars:
+            code += [
+                f"# Scatter Plot: {x} vs {y}",
+                "fig, ax = plt.subplots(figsize=(8, 6))",
+            ]
 
-        code += [
-            f"ax.set_title('{y} vs {x}')",
-            "fig.tight_layout()",
-            "",
-            "if 'show_plot' in globals():",
-            f"    show_plot('Scatter: {x} vs {y}', fig)",
-            "else:",
-            "    plt.show()",
-        ]
+            if reg:
+                code.append(f"sns.regplot(data=df, x='{x}', y='{y}', scatter_kws={{'alpha': {alpha}}}, ax=ax)")
+            else:
+                code.append(f"sns.scatterplot(data=df, x='{x}', y='{y}'{hue_arg}, alpha={alpha}, ax=ax)")
+
+            code += [
+                f"ax.set_title('{y} vs {x}')",
+                "fig.tight_layout()",
+                "",
+                "if 'show_plot' in globals():",
+                f"    show_plot('Scatter: {x} vs {y}', fig)",
+                "else:",
+                "    plt.show()",
+                "",
+            ]
 
         return "\n".join(code)
 
-    def _generate_plotly_code(self, x: str, y: str, hue: str | None) -> str:
+    def _generate_plotly_code(self, x_vars: list[str], y: str, hue: str | None) -> str:
         style_name = self.cmb_style.currentText()
         alpha = self.spn_alpha.value()
         reg = self.chk_reg.isChecked()
@@ -124,7 +130,7 @@ class ScatterPlotDialog(BaseAnalysisDialog):
         trendline_arg = ", trendline='ols'" if reg else ""
 
         code = [
-            f"# Scatter Plot (Plotly): {x} vs {y}",
+            f"# Scatter Plots (Plotly)",
             "import plotly.express as px",
             style_code,
             "",
@@ -134,13 +140,19 @@ class ScatterPlotDialog(BaseAnalysisDialog):
             "else:",
             f"    _plot_df = df",
             "",
-            f"fig = px.scatter(_plot_df, x='{x}', y='{y}'{color_arg}{trendline_arg},",
-            f"                 opacity={alpha}, title='{y} vs {x}')",
-            "",
-            "if 'show_plotly' in globals():",
-            f"    show_plotly('Scatter: {x} vs {y}', fig.to_html(include_plotlyjs='cdn'))",
-            "else:",
-            "    fig.show()",
         ]
+
+        for x in x_vars:
+            code += [
+                f"# Scatter Plot (Plotly): {x} vs {y}",
+                f"fig = px.scatter(_plot_df, x='{x}', y='{y}'{color_arg}{trendline_arg},",
+                f"                 opacity={alpha}, title='{y} vs {x}')",
+                "",
+                "if 'show_plotly' in globals():",
+                f"    show_plotly('Scatter: {x} vs {y}', fig.to_html(include_plotlyjs='cdn'))",
+                "else:",
+                "    fig.show()",
+                "",
+            ]
 
         return "\n".join(code)

@@ -32,7 +32,7 @@ class HistogramDialog(BaseAnalysisDialog):
 
     def _build_selectors(self, layout: QVBoxLayout) -> None:
         self.list_variable = QListWidget()
-        row = self._create_selector_row("Variable:", self.list_variable, multi_select=False)
+        row = self._create_selector_row("Variables (generates multiple plots):", self.list_variable, multi_select=True)
         layout.addWidget(row)
 
     def build_options(self, layout: QVBoxLayout) -> None:
@@ -74,16 +74,16 @@ class HistogramDialog(BaseAnalysisDialog):
         layout.addWidget(group_opts)
 
     def generate_code(self) -> str:
-        var = self.list_variable.item(0).text() if self.list_variable.count() > 0 else None
-        if not var:
-            QMessageBox.warning(self, "Missing Input", "Please select a variable.")
+        vars_selected = [self.list_variable.item(i).text() for i in range(self.list_variable.count())]
+        if not vars_selected:
+            QMessageBox.warning(self, "Missing Input", "Please select at least one variable.")
             return ""
 
         if self._is_plotly():
-            return self._generate_plotly_code(var)
-        return self._generate_matplotlib_code(var)
+            return self._generate_plotly_code(vars_selected)
+        return self._generate_matplotlib_code(vars_selected)
 
-    def _generate_matplotlib_code(self, var: str) -> str:
+    def _generate_matplotlib_code(self, vars_selected: list[str]) -> str:
         style_name = self.cmb_style.currentText()
         kde = self.chk_kde.isChecked()
         rug = self.chk_rug.isChecked()
@@ -93,31 +93,37 @@ class HistogramDialog(BaseAnalysisDialog):
         bins_arg = "bins='auto'" if self.chk_auto_bins.isChecked() else f"bins={self.spn_bins.value()}"
 
         code = [
-            f"# Histogram: {var}",
+            f"# Histograms",
             style_code,
             "",
-            "fig, ax = plt.subplots(figsize=(8, 5))",
-            f"sns.histplot(data=df, x='{var}', {bins_arg}, kde={kde}, ax=ax)",
         ]
 
-        if rug:
-            code.append(f"sns.rugplot(data=df, x='{var}', ax=ax, alpha=0.3)")
+        for var in vars_selected:
+            code += [
+                f"# Histogram: {var}",
+                "fig, ax = plt.subplots(figsize=(8, 5))",
+                f"sns.histplot(data=df, x='{var}', {bins_arg}, kde={kde}, ax=ax)",
+            ]
 
-        code += [
-            f"ax.set_title('Distribution of {var}')",
-            f"ax.set_xlabel('{var}')",
-            "ax.set_ylabel('Count')",
-            "fig.tight_layout()",
-            "",
-            "if 'show_plot' in globals():",
-            f"    show_plot('Histogram: {var}', fig)",
-            "else:",
-            "    plt.show()",
-        ]
+            if rug:
+                code.append(f"sns.rugplot(data=df, x='{var}', ax=ax, alpha=0.3)")
+
+            code += [
+                f"ax.set_title('Distribution of {var}')",
+                f"ax.set_xlabel('{var}')",
+                "ax.set_ylabel('Count')",
+                "fig.tight_layout()",
+                "",
+                "if 'show_plot' in globals():",
+                f"    show_plot('Histogram: {var}', fig)",
+                "else:",
+                "    plt.show()",
+                "",
+            ]
 
         return "\n".join(code)
 
-    def _generate_plotly_code(self, var: str) -> str:
+    def _generate_plotly_code(self, vars_selected: list[str]) -> str:
         style_name = self.cmb_style.currentText()
         kde = self.chk_kde.isChecked()
         rug = self.chk_rug.isChecked()
@@ -129,45 +135,53 @@ class HistogramDialog(BaseAnalysisDialog):
         bins_arg = "" if self.chk_auto_bins.isChecked() else f"nbins={self.spn_bins.value()}, "
 
         code = [
-            f"# Histogram (Plotly): {var}",
+            f"# Histograms (Plotly)",
             "import plotly.express as px",
             "import plotly.graph_objects as go",
             style_code,
             "",
             "import polars as pl",
-            "if isinstance(df, pl.DataFrame):",
-            f"    _plot_df = df.select('{var}').drop_nulls().to_pandas()",
-            "else:",
-            f"    _plot_df = df[['{var}']].dropna()",
+            "is_pl = isinstance(df, pl.DataFrame)",
             "",
-            f"fig = px.histogram(_plot_df, x='{var}', {bins_arg}marginal={marginal},",
-            f"                   title='Distribution of {var}')",
         ]
 
-        if kde and not rug:
-            code.append("fig.update_traces(opacity=0.75)")
-            code.append(f"# Add KDE overlay")
-            code.append(f"import numpy as np")
-            code.append(f"from scipy.stats import gaussian_kde")
-            code.append(f"_data = _plot_df['{var}'].values")
-            code.append(f"_kde = gaussian_kde(_data)")
-            code.append(f"_x_range = np.linspace(_data.min(), _data.max(), 200)")
-            if self.chk_auto_bins.isChecked():
-                code.append(f"_, _bins = np.histogram(_data, bins='auto')")
-                code.append(f"_bin_width = _bins[1] - _bins[0]")
-                code.append(f"_kde_vals = _kde(_x_range) * len(_data) * _bin_width")
-            else:
-                code.append(f"_kde_vals = _kde(_x_range) * len(_data) * (_data.max() - _data.min()) / {self.spn_bins.value()}")
-            code.append(f"fig.add_trace(go.Scatter(x=_x_range, y=_kde_vals, mode='lines', name='KDE',")
-            code.append(f"                        line=dict(width=2)))")
+        for var in vars_selected:
+            code += [
+                f"# Histogram (Plotly): {var}",
+                f"if is_pl:",
+                f"    _plot_df = df.select('{var}').drop_nulls().to_pandas()",
+                "else:",
+                f"    _plot_df = df[['{var}']].dropna()",
+                "",
+                f"fig = px.histogram(_plot_df, x='{var}', {bins_arg}marginal={marginal},",
+                f"                   title='Distribution of {var}')",
+            ]
 
-        code += [
-            f"fig.update_layout(xaxis_title='{var}', yaxis_title='Count')",
-            "",
-            "if 'show_plotly' in globals():",
-            f"    show_plotly('Histogram: {var}', fig.to_html(include_plotlyjs='cdn'))",
-            "else:",
-            "    fig.show()",
-        ]
+            if kde and not rug:
+                code.append("fig.update_traces(opacity=0.75)")
+                code.append(f"# Add KDE overlay")
+                code.append(f"import numpy as np")
+                code.append(f"from scipy.stats import gaussian_kde")
+                code.append(f"_data = _plot_df['{var}'].values")
+                code.append(f"_kde = gaussian_kde(_data)")
+                code.append(f"_x_range = np.linspace(_data.min(), _data.max(), 200)")
+                if self.chk_auto_bins.isChecked():
+                    code.append(f"_, _bins = np.histogram(_data, bins='auto')")
+                    code.append(f"_bin_width = _bins[1] - _bins[0]")
+                    code.append(f"_kde_vals = _kde(_x_range) * len(_data) * _bin_width")
+                else:
+                    code.append(f"_kde_vals = _kde(_x_range) * len(_data) * (_data.max() - _data.min()) / {self.spn_bins.value()}")
+                code.append(f"fig.add_trace(go.Scatter(x=_x_range, y=_kde_vals, mode='lines', name='KDE',")
+                code.append(f"                        line=dict(width=2)))")
+
+            code += [
+                f"fig.update_layout(xaxis_title='{var}', yaxis_title='Count')",
+                "",
+                "if 'show_plotly' in globals():",
+                f"    show_plotly('Histogram: {var}', fig.to_html(include_plotlyjs='cdn'))",
+                "else:",
+                "    fig.show()",
+                "",
+            ]
 
         return "\n".join(code)
