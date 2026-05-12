@@ -107,8 +107,7 @@ class ReportDialog(QDialog):
         <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1E293B; background: #fff; margin: 40px; line-height: 1.6; }
             h1 { color: #0F172A; border-bottom: 3px solid #3B82F6; padding-bottom: 8px; }
-            h2 { color: #1E40AF; margin-top: 32px; page-break-before: always; }
-            h2:first-of-type { page-break-before: avoid; }
+            h2 { color: #1E40AF; page-break-before: always; page-break-after: always; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-weight: bold; font-size: 48px; }
             h3 { color: #334155; }
             table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12px; }
             th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid #E2E8F0; }
@@ -127,8 +126,7 @@ class ReportDialog(QDialog):
         <style>
             body { font-family: 'Times New Roman', Times, serif; color: #000; background: #fff; margin: 40px; line-height: 2.0; }
             h1 { color: #000; text-align: center; font-weight: bold; margin-bottom: 24px; border: none; }
-            h2 { color: #000; font-weight: bold; margin-top: 32px; page-break-before: always; text-align: center; }
-            h2:first-of-type { page-break-before: avoid; }
+            h2 { color: #000; page-break-before: always; page-break-after: always; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-weight: bold; font-size: 48px; }
             h3 { color: #000; font-weight: bold; font-style: italic; }
             table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12px; border-top: 2px solid #000; border-bottom: 2px solid #000; }
             th, td { text-align: left; padding: 5px 10px; border-bottom: none; }
@@ -147,8 +145,7 @@ class ReportDialog(QDialog):
         <style>
             body { font-family: 'Times New Roman', Times, serif; color: #000; background: #fff; margin: 40px; line-height: 1.2; font-size: 14px; }
             h1 { color: #000; text-align: center; font-size: 24px; margin-bottom: 24px; border: none; }
-            h2 { color: #000; font-variant: small-caps; text-align: center; margin-top: 24px; page-break-before: always; border: none; font-size: 16px; letter-spacing: 1px; }
-            h2:first-of-type { page-break-before: avoid; }
+            h2 { color: #000; font-variant: small-caps; border: none; letter-spacing: 1px; page-break-before: always; page-break-after: always; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-weight: bold; font-size: 48px; }
             h3 { color: #000; font-style: italic; font-size: 14px; margin-top: 16px; }
             table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12px; border-top: 2px solid #000; border-bottom: 2px solid #000; }
             th, td { text-align: center; padding: 4px; border-bottom: none; }
@@ -167,8 +164,7 @@ class ReportDialog(QDialog):
         <style>
             body { font-family: Arial, sans-serif; color: #014D64; background: #D5E4EB; margin: 40px; line-height: 1.6; }
             h1 { color: #DB444B; border-bottom: 4px solid #DB444B; padding-bottom: 8px; font-weight: bold; }
-            h2 { color: #01A2D9; margin-top: 32px; page-break-before: always; }
-            h2:first-of-type { page-break-before: avoid; }
+            h2 { color: #01A2D9; page-break-before: always; page-break-after: always; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-weight: bold; font-size: 48px; }
             h3 { color: #014D64; }
             table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12px; background: #fff; }
             th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #6794A7; }
@@ -187,8 +183,7 @@ class ReportDialog(QDialog):
         <style>
             body { font-family: Arial, sans-serif; color: #333333; background: #FFFFFF; margin: 40px; line-height: 1.6; }
             h1 { color: #E64B35; border-bottom: 2px solid #333333; padding-bottom: 8px; font-weight: bold; }
-            h2 { color: #4DBBD5; margin-top: 32px; page-break-before: always; border-bottom: 1px solid #CCCCCC; padding-bottom: 4px; }
-            h2:first-of-type { page-break-before: avoid; }
+            h2 { color: #4DBBD5; border-bottom: 1px solid #CCCCCC; padding-bottom: 4px; page-break-before: always; page-break-after: always; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-weight: bold; font-size: 48px; }
             h3 { color: #333333; }
             table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12px; border-bottom: 2px solid #333333; border-top: 2px solid #333333; }
             th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #EEEEEE; }
@@ -207,8 +202,7 @@ class ReportDialog(QDialog):
         <style>
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #222222; background: #FFFFFF; margin: 40px; line-height: 1.5; }
             h1 { color: #3B4992; border-bottom: 1px solid #3B4992; padding-bottom: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-            h2 { color: #EE0000; margin-top: 32px; page-break-before: always; }
-            h2:first-of-type { page-break-before: avoid; }
+            h2 { color: #EE0000; page-break-before: always; page-break-after: always; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-weight: bold; font-size: 48px; }
             h3 { color: #222222; }
             table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12px; }
             th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #DDDDDD; }
@@ -227,8 +221,7 @@ class ReportDialog(QDialog):
         <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #E2E8F0; background: #0F172A; margin: 40px; line-height: 1.6; }
             h1 { color: #F8FAFC; border-bottom: 3px solid #3B82F6; padding-bottom: 8px; }
-            h2 { color: #60A5FA; margin-top: 32px; page-break-before: always; }
-            h2:first-of-type { page-break-before: avoid; }
+            h2 { color: #60A5FA; page-break-before: always; page-break-after: always; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-weight: bold; font-size: 48px; }
             h3 { color: #94A3B8; }
             table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 12px; }
             th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid #334155; }
@@ -242,7 +235,7 @@ class ReportDialog(QDialog):
             @media print { 
                 body { background: #fff !important; color: #000 !important; margin: 0; } 
                 h1 { color: #000 !important; border-color: #000 !important; }
-                h2 { color: #333 !important; }
+                h2 { color: #333 !important; page-break-before: always; page-break-after: always; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-weight: bold; font-size: 48px; }
                 th { background: #eee !important; color: #000 !important; border-color: #000 !important; }
                 td { border-color: #ccc !important; }
                 tr:nth-child(even) { background: #fff !important; }

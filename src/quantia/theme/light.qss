@@ -487,8 +487,15 @@ QCheckBox, QRadioButton {
 }
 
 QCheckBox::indicator {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+    background-color: #FFFFFF;
+    border: 1px solid #000000;
+    border-radius: 2px;
+}
+
+QCheckBox::indicator:checked {
+    image: url(check.svg);
 }
 
 QRadioButton::indicator {

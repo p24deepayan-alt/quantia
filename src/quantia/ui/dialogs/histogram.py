@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QMessageBox,
     QSpinBox,
+    QHBoxLayout,
     QVBoxLayout,
 )
 
@@ -48,11 +49,20 @@ class HistogramDialog(BaseAnalysisDialog):
         group_opts = QGroupBox("Plot Options")
         l_opts = QVBoxLayout(group_opts)
 
-        l_opts.addWidget(QLabel("Number of Bins:"))
+        bin_layout = QHBoxLayout()
+        bin_layout.addWidget(QLabel("Number of Bins:"))
         self.spn_bins = QSpinBox()
         self.spn_bins.setRange(5, 200)
         self.spn_bins.setValue(30)
-        l_opts.addWidget(self.spn_bins)
+        bin_layout.addWidget(self.spn_bins)
+        
+        self.chk_auto_bins = QCheckBox("Auto")
+        self.chk_auto_bins.setChecked(True)
+        self.chk_auto_bins.toggled.connect(lambda checked: self.spn_bins.setEnabled(not checked))
+        self.spn_bins.setEnabled(False)
+        bin_layout.addWidget(self.chk_auto_bins)
+        
+        l_opts.addLayout(bin_layout)
 
         self.chk_kde = QCheckBox("Overlay KDE Curve")
         self.chk_kde.setChecked(True)
@@ -75,18 +85,19 @@ class HistogramDialog(BaseAnalysisDialog):
 
     def _generate_matplotlib_code(self, var: str) -> str:
         style_name = self.cmb_style.currentText()
-        bins = self.spn_bins.value()
         kde = self.chk_kde.isChecked()
         rug = self.chk_rug.isChecked()
 
         style_code = generate_style_code(style_name)
+        
+        bins_arg = "bins='auto'" if self.chk_auto_bins.isChecked() else f"bins={self.spn_bins.value()}"
 
         code = [
             f"# Histogram: {var}",
             style_code,
             "",
             "fig, ax = plt.subplots(figsize=(8, 5))",
-            f"sns.histplot(data=df, x='{var}', bins={bins}, kde={kde}, ax=ax)",
+            f"sns.histplot(data=df, x='{var}', {bins_arg}, kde={kde}, ax=ax)",
         ]
 
         if rug:
@@ -108,13 +119,14 @@ class HistogramDialog(BaseAnalysisDialog):
 
     def _generate_plotly_code(self, var: str) -> str:
         style_name = self.cmb_style.currentText()
-        bins = self.spn_bins.value()
         kde = self.chk_kde.isChecked()
         rug = self.chk_rug.isChecked()
 
         style_code = generate_plotly_style_code(style_name)
 
         marginal = "'rug'" if rug else ("'violin'" if kde else "None")
+        
+        bins_arg = "" if self.chk_auto_bins.isChecked() else f"nbins={self.spn_bins.value()}, "
 
         code = [
             f"# Histogram (Plotly): {var}",
@@ -128,7 +140,7 @@ class HistogramDialog(BaseAnalysisDialog):
             "else:",
             f"    _plot_df = df[['{var}']].dropna()",
             "",
-            f"fig = px.histogram(_plot_df, x='{var}', nbins={bins}, marginal={marginal},",
+            f"fig = px.histogram(_plot_df, x='{var}', {bins_arg}marginal={marginal},",
             f"                   title='Distribution of {var}')",
         ]
 
@@ -140,7 +152,12 @@ class HistogramDialog(BaseAnalysisDialog):
             code.append(f"_data = _plot_df['{var}'].values")
             code.append(f"_kde = gaussian_kde(_data)")
             code.append(f"_x_range = np.linspace(_data.min(), _data.max(), 200)")
-            code.append(f"_kde_vals = _kde(_x_range) * len(_data) * (_data.max() - _data.min()) / {bins}")
+            if self.chk_auto_bins.isChecked():
+                code.append(f"_, _bins = np.histogram(_data, bins='auto')")
+                code.append(f"_bin_width = _bins[1] - _bins[0]")
+                code.append(f"_kde_vals = _kde(_x_range) * len(_data) * _bin_width")
+            else:
+                code.append(f"_kde_vals = _kde(_x_range) * len(_data) * (_data.max() - _data.min()) / {self.spn_bins.value()}")
             code.append(f"fig.add_trace(go.Scatter(x=_x_range, y=_kde_vals, mode='lines', name='KDE',")
             code.append(f"                        line=dict(width=2)))")
 

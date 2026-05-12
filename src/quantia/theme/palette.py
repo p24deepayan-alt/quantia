@@ -86,4 +86,11 @@ def get_stylesheet(theme: Theme) -> str:
     qss_file = _THEME_DIR / f"{theme.value}.qss"
     if not qss_file.exists():
         return ""
-    return qss_file.read_text(encoding="utf-8")
+    
+    qss = qss_file.read_text(encoding="utf-8")
+    
+    # Resolve relative SVG paths for PySide6
+    check_svg_path = (_THEME_DIR / "check.svg").as_posix()
+    qss = qss.replace("url(check.svg)", f"url({check_svg_path})")
+    
+    return qss
