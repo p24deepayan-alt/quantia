@@ -7,7 +7,7 @@ for full interactive exploration: zoom, pan, hover, and export.
 from __future__ import annotations
 
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QUrl, Qt
 
 
 def _webengine_available() -> bool:
@@ -27,6 +27,9 @@ class InteractivePlotlyDialog(QDialog):
         self.setWindowTitle("Interactive Plot (Plotly)")
         self.resize(900, 700)
         self.setModal(False)
+        
+        # Ensure dialog is destroyed when closed to prevent memory leaks
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)

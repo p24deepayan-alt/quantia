@@ -280,6 +280,9 @@ class WorkflowScene(QGraphicsScene):
         """Delete all selected items, including their edges."""
         for item in self.selectedItems():
             if isinstance(item, BaseLogicNode):
+                # Ensure data is cleared before removal
+                item.clear_data()
+                
                 # Remove connected edges
                 for edge in item.in_port.edges[:]:
                     edge.source_port.remove_edge(edge)
@@ -295,6 +298,12 @@ class WorkflowScene(QGraphicsScene):
                 if item.dest_port:
                     item.dest_port.remove_edge(item)
                 self.removeItem(item)
+
+    def clear_all_data(self) -> None:
+        """Clear cached DataFrames from all nodes in the scene."""
+        for item in self.items():
+            if isinstance(item, BaseLogicNode):
+                item.clear_data()
 
     def serialize(self) -> dict:
         """Serialize the scene to a dictionary."""

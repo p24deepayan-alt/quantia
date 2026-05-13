@@ -259,9 +259,25 @@ class ResultsViewWidget(QWidget):
         view.setHtml(html)
 
     def _close_tab(self, index: int) -> None:
+        widget = self._tabs.widget(index)
+        if widget:
+            # Prune figure cache if this was a text browser with images
+            if isinstance(widget, QTextBrowser):
+                doc = widget.document()
+                for b64 in list(self._registered_figures.keys()):
+                    if b64 in doc.toHtml():
+                        del self._registered_figures[b64]
+            
+            widget.deleteLater()
         self._tabs.removeTab(index)
 
     def clear_all(self) -> None:
+        # Properly delete all tab widgets to free C++ memory
+        for i in range(self._tabs.count()):
+            widget = self._tabs.widget(i)
+            if widget:
+                widget.deleteLater()
+        
         self._tabs.clear()
         self._registered_figures.clear()
 

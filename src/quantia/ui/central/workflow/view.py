@@ -127,6 +127,10 @@ class WorkflowTab(QWidget):
         self.btn_run.setToolTip("Execute the workflow and generate script")
         self.btn_run.clicked.connect(self._run_workflow)
         
+        self.btn_clear_data = QPushButton("Clear Results")
+        self.btn_clear_data.setToolTip("Free memory by clearing cached node data")
+        self.btn_clear_data.clicked.connect(self._clear_node_data)
+        
         self.btn_clear = QPushButton("Clear Canvas")
         self.btn_clear.clicked.connect(self._clear_workflow)
         
@@ -137,6 +141,7 @@ class WorkflowTab(QWidget):
         self.btn_load.clicked.connect(self._load_workflow)
         
         toolbar.addWidget(self.btn_run)
+        toolbar.addWidget(self.btn_clear_data)
         toolbar.addWidget(self.btn_save)
         toolbar.addWidget(self.btn_load)
         toolbar.addWidget(self.btn_clear)
@@ -186,6 +191,11 @@ class WorkflowTab(QWidget):
         self.scene.clear()
         self.scene._drawing_edge = None
         self.scene._start_port = None
+
+    def _clear_node_data(self) -> None:
+        """Manually flush cached DataFrames from all nodes."""
+        self.scene.clear_all_data()
+        QMessageBox.information(self, "Memory Flushed", "Intermediate workflow data has been cleared.")
 
     def _save_workflow(self) -> None:
         path, _ = QFileDialog.getSaveFileName(self, "Save Workflow", str(get_quantia_root()), "JSON Files (*.json)")

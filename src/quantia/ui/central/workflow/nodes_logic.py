@@ -19,6 +19,12 @@ class BaseLogicNode(NodeItem):
         self.output_df: pd.DataFrame | None = None
         self._code: str = ""
         
+    def clear_data(self) -> None:
+        """Free memory by clearing the cached DataFrame."""
+        self.output_df = None
+        # We keep the _code so the node can still be inspected, 
+        # but it would need to be re-run to get output_df back.
+
     def run_logic(self, input_dfs: list[pd.DataFrame]) -> None:
         """Process inputs and set self.output_df and self._code."""
         pass

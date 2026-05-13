@@ -170,9 +170,16 @@ class PlotViewWidget(QWidget):
             widget.figure.savefig(path, dpi=150, bbox_inches="tight")
 
     def _close_tab(self, index: int) -> None:
+        widget = self._tabs.widget(index)
+        if widget:
+            widget.deleteLater()
         self._tabs.removeTab(index)
 
     def clear_all(self) -> None:
+        for i in range(self._tabs.count()):
+            widget = self._tabs.widget(i)
+            if widget:
+                widget.deleteLater()
         self._tabs.clear()
 
     def get_all_html(self) -> str:

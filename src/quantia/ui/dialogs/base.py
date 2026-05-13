@@ -50,6 +50,9 @@ class BaseAnalysisDialog(QDialog):
         self.setWindowTitle(title)
         self.setMinimumSize(700, 500)
         self._df = df
+        
+        # Ensure dialog is destroyed when closed to prevent memory leaks
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         from PySide6.QtWidgets import QApplication
         from quantia.app import QuantiaApp

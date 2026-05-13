@@ -92,6 +92,10 @@ class ConsolePanel(QDockWidget):
         self._output.setReadOnly(True)
         self._output.setFont(QFont("Fira Code", 12))
         self._output.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        
+        # Limit the history to prevent memory leaks from huge text buffers
+        self._output.document().setMaximumBlockCount(5000)
+        
         layout.addWidget(self._output)
         self.setWidget(container)
 

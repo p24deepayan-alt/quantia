@@ -5,6 +5,7 @@ from __future__ import annotations
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 from PySide6.QtWidgets import QDialog, QVBoxLayout
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 class InteractivePlotDialog(QDialog):
@@ -15,6 +16,9 @@ class InteractivePlotDialog(QDialog):
         self.setWindowTitle("Interactive Plot")
         self.resize(800, 600)
         self.setModal(False) # Non-modal so user can look at multiple plots
+        
+        # Ensure dialog is destroyed when closed to prevent memory leaks
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
