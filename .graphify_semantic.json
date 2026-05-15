@@ -1,0 +1,2903 @@
+{
+  "nodes": [
+    {
+      "id": "app_QuantiaApp",
+      "label": "QuantiaApp",
+      "file_type": "code",
+      "source_file": "src/quantia/app.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "main_main",
+      "label": "main",
+      "file_type": "code",
+      "source_file": "src/quantia/__main__.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "palette_Theme",
+      "label": "Theme",
+      "file_type": "code",
+      "source_file": "src/quantia/theme/palette.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "palette_get_stylesheet",
+      "label": "get_stylesheet",
+      "file_type": "code",
+      "source_file": "src/quantia/theme/palette.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "data_model_PandasTableModel",
+      "label": "PandasTableModel",
+      "file_type": "code",
+      "source_file": "src/quantia/core/data_model.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "settings_SettingsManager",
+      "label": "SettingsManager",
+      "file_type": "code",
+      "source_file": "src/quantia/core/settings.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "workspace_Workspace",
+      "label": "Workspace",
+      "file_type": "code",
+      "source_file": "src/quantia/core/workspace.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "document_Document",
+      "label": "Document",
+      "file_type": "code",
+      "source_file": "src/quantia/core/report/document.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "document_Block",
+      "label": "Block",
+      "file_type": "code",
+      "source_file": "src/quantia/core/report/document.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "document_Page",
+      "label": "Page",
+      "file_type": "code",
+      "source_file": "src/quantia/core/report/document.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "generator_ReportGenerator",
+      "label": "ReportGenerator",
+      "file_type": "code",
+      "source_file": "src/quantia/core/report/generator.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "models_ReportConfig",
+      "label": "ReportConfig",
+      "file_type": "code",
+      "source_file": "src/quantia/core/report/models.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "models_ReportBlock",
+      "label": "ReportBlock",
+      "file_type": "code",
+      "source_file": "src/quantia/core/report/models.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "serializer_ReportSerializer",
+      "label": "ReportSerializer",
+      "file_type": "code",
+      "source_file": "src/quantia/persistence/report/serializer.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "fix_plotly_script",
+      "label": "fix_plotly.py",
+      "file_type": "code",
+      "source_file": "fix_plotly.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "patch_dialogs_script",
+      "label": "patch_dialogs.py",
+      "file_type": "code",
+      "source_file": "patch_dialogs.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_stats_dialogs_script",
+      "label": "test_stats_dialogs.py",
+      "file_type": "code",
+      "source_file": "test_stats_dialogs.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "check_fonts_script",
+      "label": "check_fonts.ps1",
+      "file_type": "code",
+      "source_file": "check_fonts.ps1",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "install_fonts_script",
+      "label": "install_fonts.ps1",
+      "file_type": "code",
+      "source_file": "install_fonts.ps1",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "install_heros_script",
+      "label": "install_heros.ps1",
+      "file_type": "code",
+      "source_file": "install_heros.ps1",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "final_font_check_script",
+      "label": "final_font_check.ps1",
+      "file_type": "code",
+      "source_file": "final_font_check.ps1",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "check_heros_name_script",
+      "label": "check_heros_name.ps1",
+      "file_type": "code",
+      "source_file": "check_heros_name.ps1",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "icons_feather_icon",
+      "label": "feather_icon",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/icons.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "main_window_MainWindow",
+      "label": "MainWindow",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "menu_bar_QuantiaMenuBar",
+      "label": "QuantiaMenuBar",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/menu_bar.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "status_bar_QuantiaStatusBar",
+      "label": "QuantiaStatusBar",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/status_bar.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "toolbar_QuantiaToolbar",
+      "label": "QuantiaToolbar",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/toolbar.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "data_view_ShiftScrollFilter",
+      "label": "ShiftScrollFilter",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/data_view.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "data_view_DataViewWidget",
+      "label": "DataViewWidget",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/data_view.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "interactive_plot_InteractivePlotDialog",
+      "label": "InteractivePlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/interactive_plot.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plotly_styles_PLOTLY_STYLES",
+      "label": "PLOTLY_STYLES",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/plotly_styles.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plotly_view_InteractivePlotlyDialog",
+      "label": "InteractivePlotlyDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/plotly_view.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plot_styles_PLOT_STYLES",
+      "label": "PLOT_STYLES",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/plot_styles.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plot_view_PlotViewWidget",
+      "label": "PlotViewWidget",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/plot_view.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "report_maker_ReportStudioWindow",
+      "label": "ReportStudioWindow",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_maker.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "report_maker_ReportMakerWidget",
+      "label": "ReportMakerWidget",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_maker.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "results_view_ResultsViewWidget",
+      "label": "ResultsViewWidget",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/results_view.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "script_editor_PythonHighlighter",
+      "label": "PythonHighlighter",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/script_editor.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "script_editor_CodeEditor",
+      "label": "CodeEditor",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/script_editor.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "script_editor_ScriptEditorWidget",
+      "label": "ScriptEditorWidget",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/script_editor.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "canvas_ReportCanvasScene",
+      "label": "ReportCanvasScene",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_canvas/canvas.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "canvas_ReportCanvasView",
+      "label": "ReportCanvasView",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_canvas/canvas.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "items_PageItem",
+      "label": "PageItem",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "items_ResizeHandle",
+      "label": "ResizeHandle",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "items_BaseBlockItem",
+      "label": "BaseBlockItem",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "items_PlotBlockItem",
+      "label": "PlotBlockItem",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "items_TextBlockItem",
+      "label": "TextBlockItem",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "items_TableBlockItem",
+      "label": "TableBlockItem",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "engine_WorkflowEngine",
+      "label": "WorkflowEngine",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/workflow/engine.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "wf_items_PortItem",
+      "label": "PortItem",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/workflow/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "wf_items_EdgeItem",
+      "label": "EdgeItem",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/workflow/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "wf_items_NodeItem",
+      "label": "NodeItem",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/workflow/items.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "nodes_logic_BaseLogicNode",
+      "label": "BaseLogicNode",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/workflow/nodes_logic.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "scene_WorkflowScene",
+      "label": "WorkflowScene",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/workflow/scene.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "view_WorkflowGraphicsView",
+      "label": "WorkflowGraphicsView",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/workflow/view.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "view_WorkflowTab",
+      "label": "WorkflowTab",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/central/workflow/view.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "anova_models_AnovaModelComparisonDialog",
+      "label": "AnovaModelComparisonDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/anova_models.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "barchart_BarChartDialog",
+      "label": "BarChartDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/barchart.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "base_BaseAnalysisDialog",
+      "label": "BaseAnalysisDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/base.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "boxplot_BoxPlotDialog",
+      "label": "BoxPlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/boxplot.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "chi_square_ChiSquareDialog",
+      "label": "ChiSquareDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/chi_square.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_BaseClassificationDialog",
+      "label": "BaseClassificationDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_RandomForestDialog",
+      "label": "RandomForestDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_GradientBoostingDialog",
+      "label": "GradientBoostingDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_DecisionTreeDialog",
+      "label": "DecisionTreeDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_SVMDialog",
+      "label": "SVMDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_KNNDialog",
+      "label": "KNNDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_LDADialog",
+      "label": "LDADialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_QDADialog",
+      "label": "QDADialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_NaiveBayesDialog",
+      "label": "NaiveBayesDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "classification_LogisticRegressionMLDialog",
+      "label": "LogisticRegressionMLDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "clean_data_CleanDataDialog",
+      "label": "CleanDataDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/clean_data.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "clustering_BaseClusteringDialog",
+      "label": "BaseClusteringDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "clustering_KMeansDialog",
+      "label": "KMeansDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "clustering_HierarchicalDialog",
+      "label": "HierarchicalDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "clustering_DBSCANDialog",
+      "label": "DBSCANDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "clustering_GMMDialog",
+      "label": "GMMDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "command_palette_CommandPaletteDialog",
+      "label": "CommandPaletteDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/command_palette.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concat_cols_ConcatColsDialog",
+      "label": "ConcatColsDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/concat_cols.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "correlation_CorrelationDialog",
+      "label": "CorrelationDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/correlation.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "density2d_Density2DPlotDialog",
+      "label": "Density2DPlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/density2d.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "descriptive_DescriptiveStatsDialog",
+      "label": "DescriptiveStatsDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/descriptive.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "filter_data_FilterDataDialog",
+      "label": "FilterDataDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/filter_data.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "find_replace_FindReplaceDialog",
+      "label": "FindReplaceDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/find_replace.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "heatmap_HeatmapDialog",
+      "label": "HeatmapDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/heatmap.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "help_UserManualDialog",
+      "label": "UserManualDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/help.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "help_GuidedWizardDialog",
+      "label": "GuidedWizardDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/help.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "histogram_HistogramDialog",
+      "label": "HistogramDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/histogram.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "if_else_IfElseDialog",
+      "label": "IfElseDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/if_else.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "linechart_LineChartDialog",
+      "label": "LineChartDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/linechart.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "logistic_regression_LogisticRegressionDialog",
+      "label": "LogisticRegressionDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/logistic_regression.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "merge_join_MergeJoinDialog",
+      "label": "MergeJoinDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/merge_join.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "model_compare_ModelComparisonDialog",
+      "label": "ModelComparisonDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/model_compare.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "nonparametric_NonParametricDialog",
+      "label": "NonParametricDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/nonparametric.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pairplot_PairPlotDialog",
+      "label": "PairPlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/pairplot.py"
+    },
+    {
+      "id": "pca_PCADialog",
+      "label": "PCADialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/pca.py"
+    },
+    {
+      "id": "piechart_PieChartDialog",
+      "label": "PieChartDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/piechart.py"
+    },
+    {
+      "id": "pivot_table_PivotTableDialog",
+      "label": "PivotTableDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/pivot_table.py"
+    },
+    {
+      "id": "preferences_PreferencesDialog",
+      "label": "PreferencesDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/preferences.py"
+    },
+    {
+      "id": "qqplot_QQPlotDialog",
+      "label": "QQPlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/qqplot.py"
+    },
+    {
+      "id": "regression_LinearRegressionDialog",
+      "label": "LinearRegressionDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/regression.py"
+    },
+    {
+      "id": "report_ReportDialog",
+      "label": "ReportDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/report.py"
+    },
+    {
+      "id": "ridgeplot_RidgePlotDialog",
+      "label": "RidgePlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/ridgeplot.py"
+    },
+    {
+      "id": "scatter_ScatterPlotDialog",
+      "label": "ScatterPlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/scatter.py"
+    },
+    {
+      "id": "string_format_StringFormatDialog",
+      "label": "StringFormatDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/string_format.py"
+    },
+    {
+      "id": "stripplot_StripPlotDialog",
+      "label": "StripPlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/stripplot.py"
+    },
+    {
+      "id": "text_extract_TextExtractDialog",
+      "label": "TextExtractDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/text_extract.py"
+    },
+    {
+      "id": "transform_TransformDataDialog",
+      "label": "TransformDataDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/transform.py"
+    },
+    {
+      "id": "treemap_TreemapDialog",
+      "label": "TreemapDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/treemap.py"
+    },
+    {
+      "id": "tree_regression_BaseTreeRegressionDialog",
+      "label": "BaseTreeRegressionDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "id": "tree_regression_DecisionTreeRegressorDialog",
+      "label": "DecisionTreeRegressorDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "id": "tree_regression_RandomForestRegressorDialog",
+      "label": "RandomForestRegressorDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "id": "tree_regression_LinearRegressionMLDialog",
+      "label": "LinearRegressionMLDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "id": "tree_regression_RidgeDialog",
+      "label": "RidgeDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "id": "tree_regression_LassoDialog",
+      "label": "LassoDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "id": "tree_regression_ElasticNetDialog",
+      "label": "ElasticNetDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "id": "ttest_TTestDialog",
+      "label": "TTestDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/ttest.py"
+    },
+    {
+      "id": "type_convert_TypeConvertDialog",
+      "label": "TypeConvertDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/type_convert.py"
+    },
+    {
+      "id": "violinplot_ViolinPlotDialog",
+      "label": "ViolinPlotDialog",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/dialogs/violinplot.py"
+    },
+    {
+      "id": "variable_list_VariableListPanel",
+      "label": "VariableListPanel",
+      "file_type": "code",
+      "source_file": "src/quantia/ui/panels/variable_list.py"
+    },
+    {
+      "id": "codegen_get_gpu_import",
+      "label": "get_gpu_import",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/codegen.py"
+    },
+    {
+      "id": "settings_ComputeMode",
+      "label": "ComputeMode",
+      "file_type": "code",
+      "source_file": "src/quantia/core/settings.py"
+    },
+    {
+      "id": "gpu_is_nvidia_gpu_available",
+      "label": "is_nvidia_gpu_available",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/gpu.py"
+    },
+    {
+      "id": "gpu_get_gpu_info",
+      "label": "get_gpu_info",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/gpu.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "gpu_get_cuda_version",
+      "label": "get_cuda_version",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/gpu.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "paths_get_quantia_root",
+      "label": "get_quantia_root",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "paths_get_plots_dir",
+      "label": "get_plots_dir",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "paths_get_exports_dir",
+      "label": "get_exports_dir",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "paths_get_workspaces_dir",
+      "label": "get_workspaces_dir",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "paths_get_scripts_dir",
+      "label": "get_scripts_dir",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "worker_WorkerSignals",
+      "label": "WorkerSignals",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/worker.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "worker_ScriptWorker",
+      "label": "ScriptWorker",
+      "file_type": "code",
+      "source_file": "src/quantia/utils/worker.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_path_utils_test_directories_exist",
+      "label": "test_directories_exist",
+      "file_type": "code",
+      "source_file": "tests/test_path_utils.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "polars_backend",
+      "label": "Polars Backend",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "polars_rationale",
+      "label": "Faster reads, lower memory, lazy evaluation",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pyside6_framework",
+      "label": "PySide6 Framework",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pyside6_rationale",
+      "label": "Native look-and-feel, LGPL",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "html_results_output",
+      "label": "HTML Results Output",
+      "file_type": "document",
+      "source_file": "CONTRIBUTING.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "html_results_rationale",
+      "label": "Styled consistently, discoverable by report, theme-aware",
+      "file_type": "document",
+      "source_file": "CONTRIBUTING.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "check_svg",
+      "label": "Checkmark Icon",
+      "file_type": "image",
+      "source_file": "src/quantia/theme/check.svg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "contributor_covenant_2_1",
+      "label": "Contributor Covenant 2.1",
+      "file_type": "document",
+      "source_file": "CODE_OF_CONDUCT.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "quantia_coc",
+      "label": "Quantia Code of Conduct",
+      "file_type": "document",
+      "source_file": "CODE_OF_CONDUCT.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "main_main",
+      "target": "app_QuantiaApp",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/__main__.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_main",
+      "target": "palette_Theme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/__main__.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_QuantiaApp",
+      "target": "palette_Theme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/app.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_QuantiaApp",
+      "target": "palette_get_stylesheet",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/app.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "generator_ReportGenerator",
+      "target": "document_Document",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/core/report/generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "generator_ReportGenerator",
+      "target": "document_Block",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/core/report/generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "serializer_ReportSerializer",
+      "target": "document_Document",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/persistence/report/serializer.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "serializer_ReportSerializer",
+      "target": "document_Page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/persistence/report/serializer.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "serializer_ReportSerializer",
+      "target": "document_Block",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/persistence/report/serializer.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "fix_plotly_script",
+      "target": "patch_dialogs_script",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "fix_plotly.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "document_Document",
+      "target": "models_ReportConfig",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "src/quantia/core/report/document.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "document_Block",
+      "target": "models_ReportBlock",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "src/quantia/core/report/document.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "menu_bar_QuantiaMenuBar",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "toolbar_QuantiaToolbar",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "status_bar_QuantiaStatusBar",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "data_view_DataViewWidget",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "script_editor_ScriptEditorWidget",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "results_view_ResultsViewWidget",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "plot_view_PlotViewWidget",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "view_WorkflowTab",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "main_window_MainWindow",
+      "target": "report_maker_ReportStudioWindow",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "menu_bar_QuantiaMenuBar",
+      "target": "icons_feather_icon",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/menu_bar.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "toolbar_QuantiaToolbar",
+      "target": "icons_feather_icon",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/toolbar.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "data_view_DataViewWidget",
+      "target": "icons_feather_icon",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/data_view.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "data_view_DataViewWidget",
+      "target": "data_view_ShiftScrollFilter",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/data_view.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "plot_view_PlotViewWidget",
+      "target": "interactive_plot_InteractivePlotDialog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/plot_view.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "plot_view_PlotViewWidget",
+      "target": "plotly_view_InteractivePlotlyDialog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/plot_view.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "plot_view_PlotViewWidget",
+      "target": "icons_feather_icon",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/plot_view.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "report_maker_ReportStudioWindow",
+      "target": "report_maker_ReportMakerWidget",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_maker.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "report_maker_ReportMakerWidget",
+      "target": "canvas_ReportCanvasScene",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_maker.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "report_maker_ReportMakerWidget",
+      "target": "canvas_ReportCanvasView",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_maker.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "report_maker_ReportMakerWidget",
+      "target": "icons_feather_icon",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_maker.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "canvas_ReportCanvasScene",
+      "target": "items_PageItem",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_canvas/canvas.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "canvas_ReportCanvasScene",
+      "target": "items_BaseBlockItem",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_canvas/canvas.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "items_PlotBlockItem",
+      "target": "items_BaseBlockItem",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "items_TextBlockItem",
+      "target": "items_BaseBlockItem",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "items_TableBlockItem",
+      "target": "items_BaseBlockItem",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_canvas/items.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "script_editor_ScriptEditorWidget",
+      "target": "script_editor_CodeEditor",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/script_editor.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "script_editor_CodeEditor",
+      "target": "script_editor_PythonHighlighter",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/script_editor.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "view_WorkflowTab",
+      "target": "engine_WorkflowEngine",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/view.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "view_WorkflowTab",
+      "target": "scene_WorkflowScene",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/view.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "view_WorkflowTab",
+      "target": "view_WorkflowGraphicsView",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/view.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "engine_WorkflowEngine",
+      "target": "scene_WorkflowScene",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/engine.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "engine_WorkflowEngine",
+      "target": "nodes_logic_BaseLogicNode",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/engine.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "scene_WorkflowScene",
+      "target": "wf_items_NodeItem",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/scene.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "scene_WorkflowScene",
+      "target": "wf_items_PortItem",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/scene.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "scene_WorkflowScene",
+      "target": "wf_items_EdgeItem",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/scene.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "scene_WorkflowScene",
+      "target": "nodes_logic_BaseLogicNode",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/scene.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "nodes_logic_BaseLogicNode",
+      "target": "wf_items_NodeItem",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/nodes_logic.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "plotly_styles_PLOTLY_STYLES",
+      "target": "plot_styles_PLOT_STYLES",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/quantia/ui/central/plotly_styles.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "anova_models_AnovaModelComparisonDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/anova_models.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "barchart_BarChartDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/barchart.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "boxplot_BoxPlotDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/boxplot.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "chi_square_ChiSquareDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/chi_square.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_BaseClassificationDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_RandomForestDialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_GradientBoostingDialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_DecisionTreeDialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_SVMDialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_KNNDialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_LDADialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_QDADialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_NaiveBayesDialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "classification_LogisticRegressionMLDialog",
+      "target": "classification_BaseClassificationDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "clean_data_CleanDataDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/clean_data.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "clustering_BaseClusteringDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "clustering_KMeansDialog",
+      "target": "clustering_BaseClusteringDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "clustering_HierarchicalDialog",
+      "target": "clustering_BaseClusteringDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "clustering_DBSCANDialog",
+      "target": "clustering_BaseClusteringDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "clustering_GMMDialog",
+      "target": "clustering_BaseClusteringDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/clustering.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concat_cols_ConcatColsDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/concat_cols.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "correlation_CorrelationDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/correlation.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "density2d_Density2DPlotDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/density2d.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "descriptive_DescriptiveStatsDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/descriptive.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "filter_data_FilterDataDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/filter_data.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "find_replace_FindReplaceDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/find_replace.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "heatmap_HeatmapDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/heatmap.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "histogram_HistogramDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/histogram.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "if_else_IfElseDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/if_else.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "linechart_LineChartDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/linechart.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "logistic_regression_LogisticRegressionDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/logistic_regression.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "merge_join_MergeJoinDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/merge_join.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "model_compare_ModelComparisonDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/model_compare.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "nonparametric_NonParametricDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/nonparametric.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "logistic_regression_LogisticRegressionDialog",
+      "target": "classification_LogisticRegressionMLDialog",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "src/quantia/ui/dialogs/logistic_regression.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "pairplot_PairPlotDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/pairplot.py"
+    },
+    {
+      "source": "pca_PCADialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/pca.py"
+    },
+    {
+      "source": "pca_PCADialog",
+      "target": "codegen_get_gpu_import",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/pca.py"
+    },
+    {
+      "source": "piechart_PieChartDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/piechart.py"
+    },
+    {
+      "source": "pivot_table_PivotTableDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/pivot_table.py"
+    },
+    {
+      "source": "preferences_PreferencesDialog",
+      "target": "settings_SettingsManager",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/preferences.py"
+    },
+    {
+      "source": "preferences_PreferencesDialog",
+      "target": "settings_ComputeMode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/preferences.py"
+    },
+    {
+      "source": "preferences_PreferencesDialog",
+      "target": "gpu_is_nvidia_gpu_available",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/preferences.py"
+    },
+    {
+      "source": "qqplot_QQPlotDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/qqplot.py"
+    },
+    {
+      "source": "regression_LinearRegressionDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/regression.py"
+    },
+    {
+      "source": "ridgeplot_RidgePlotDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/ridgeplot.py"
+    },
+    {
+      "source": "scatter_ScatterPlotDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/scatter.py"
+    },
+    {
+      "source": "string_format_StringFormatDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/string_format.py"
+    },
+    {
+      "source": "stripplot_StripPlotDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/stripplot.py"
+    },
+    {
+      "source": "text_extract_TextExtractDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/text_extract.py"
+    },
+    {
+      "source": "transform_TransformDataDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/transform.py"
+    },
+    {
+      "source": "treemap_TreemapDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/treemap.py"
+    },
+    {
+      "source": "tree_regression_BaseTreeRegressionDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_DecisionTreeRegressorDialog",
+      "target": "tree_regression_BaseTreeRegressionDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_RandomForestRegressorDialog",
+      "target": "tree_regression_BaseTreeRegressionDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_RandomForestRegressorDialog",
+      "target": "codegen_get_gpu_import",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_LinearRegressionMLDialog",
+      "target": "tree_regression_BaseTreeRegressionDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_LinearRegressionMLDialog",
+      "target": "codegen_get_gpu_import",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_LinearRegressionMLDialog",
+      "target": "regression_LinearRegressionDialog",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_RidgeDialog",
+      "target": "tree_regression_BaseTreeRegressionDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_RidgeDialog",
+      "target": "codegen_get_gpu_import",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_LassoDialog",
+      "target": "tree_regression_BaseTreeRegressionDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_LassoDialog",
+      "target": "codegen_get_gpu_import",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_ElasticNetDialog",
+      "target": "tree_regression_BaseTreeRegressionDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "tree_regression_ElasticNetDialog",
+      "target": "codegen_get_gpu_import",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    },
+    {
+      "source": "ttest_TTestDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/ttest.py"
+    },
+    {
+      "source": "type_convert_TypeConvertDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/type_convert.py"
+    },
+    {
+      "source": "violinplot_ViolinPlotDialog",
+      "target": "base_BaseAnalysisDialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/violinplot.py"
+    },
+    {
+      "source": "variable_list_VariableListPanel",
+      "target": "icons_feather_icon",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/panels/variable_list.py"
+    },
+    {
+      "source": "codegen_get_gpu_import",
+      "target": "settings_SettingsManager",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/codegen.py"
+    },
+    {
+      "source": "codegen_get_gpu_import",
+      "target": "settings_ComputeMode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/codegen.py"
+    },
+    {
+      "source": "gpu_get_gpu_info",
+      "target": "gpu_is_nvidia_gpu_available",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/gpu.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "gpu_get_cuda_version",
+      "target": "gpu_is_nvidia_gpu_available",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/gpu.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "paths_get_plots_dir",
+      "target": "paths_get_quantia_root",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "paths_get_exports_dir",
+      "target": "paths_get_quantia_root",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "paths_get_workspaces_dir",
+      "target": "paths_get_quantia_root",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "paths_get_scripts_dir",
+      "target": "paths_get_quantia_root",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/paths.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "worker_ScriptWorker",
+      "target": "worker_WorkerSignals",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/utils/worker.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_path_utils_test_directories_exist",
+      "target": "paths_get_quantia_root",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_path_utils.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_path_utils_test_directories_exist",
+      "target": "paths_get_exports_dir",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_path_utils.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_path_utils_test_directories_exist",
+      "target": "paths_get_plots_dir",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_path_utils.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_path_utils_test_directories_exist",
+      "target": "paths_get_workspaces_dir",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_path_utils.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_path_utils_test_directories_exist",
+      "target": "paths_get_scripts_dir",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_path_utils.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "polars_rationale",
+      "target": "polars_backend",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "pyside6_rationale",
+      "target": "pyside6_framework",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "html_results_rationale",
+      "target": "html_results_output",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CONTRIBUTING.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "quantia_coc",
+      "target": "contributor_covenant_2_1",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_OF_CONDUCT.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "font_management_scripts",
+      "label": "Font Management Scripts",
+      "nodes": [
+        "check_fonts_script",
+        "install_fonts_script",
+        "install_heros_script",
+        "final_font_check_script",
+        "check_heros_name_script"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "install_fonts.ps1"
+    },
+    {
+      "id": "report_document_models",
+      "label": "Report Document Models",
+      "nodes": [
+        "document_Document",
+        "document_Page",
+        "document_Block"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "src/quantia/core/report/document.py"
+    },
+    {
+      "id": "main_window_tabs",
+      "label": "Main Window Tabs",
+      "nodes": [
+        "main_window_MainWindow",
+        "data_view_DataViewWidget",
+        "script_editor_ScriptEditorWidget",
+        "results_view_ResultsViewWidget",
+        "plot_view_PlotViewWidget",
+        "view_WorkflowTab"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/main_window.py"
+    },
+    {
+      "id": "report_canvas_items",
+      "label": "Report Canvas Items",
+      "nodes": [
+        "items_BaseBlockItem",
+        "items_PlotBlockItem",
+        "items_TextBlockItem",
+        "items_TableBlockItem"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/report_canvas/items.py"
+    },
+    {
+      "id": "workflow_graphics_items",
+      "label": "Workflow Graphics Items",
+      "nodes": [
+        "wf_items_NodeItem",
+        "wf_items_PortItem",
+        "wf_items_EdgeItem"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/central/workflow/items.py"
+    },
+    {
+      "id": "analysis_dialogs",
+      "label": "Analysis Dialogs",
+      "nodes": [
+        "anova_models_AnovaModelComparisonDialog",
+        "barchart_BarChartDialog",
+        "boxplot_BoxPlotDialog",
+        "chi_square_ChiSquareDialog",
+        "classification_BaseClassificationDialog",
+        "clean_data_CleanDataDialog",
+        "clustering_BaseClusteringDialog",
+        "concat_cols_ConcatColsDialog",
+        "correlation_CorrelationDialog",
+        "density2d_Density2DPlotDialog",
+        "descriptive_DescriptiveStatsDialog",
+        "filter_data_FilterDataDialog",
+        "find_replace_FindReplaceDialog",
+        "heatmap_HeatmapDialog",
+        "histogram_HistogramDialog",
+        "if_else_IfElseDialog",
+        "linechart_LineChartDialog",
+        "logistic_regression_LogisticRegressionDialog",
+        "merge_join_MergeJoinDialog",
+        "model_compare_ModelComparisonDialog",
+        "nonparametric_NonParametricDialog"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/base.py"
+    },
+    {
+      "id": "classification_models",
+      "label": "Classification Models",
+      "nodes": [
+        "classification_RandomForestDialog",
+        "classification_GradientBoostingDialog",
+        "classification_DecisionTreeDialog",
+        "classification_SVMDialog",
+        "classification_KNNDialog",
+        "classification_LDADialog",
+        "classification_QDADialog",
+        "classification_NaiveBayesDialog",
+        "classification_LogisticRegressionMLDialog"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/classification.py"
+    },
+    {
+      "id": "clustering_models",
+      "label": "Clustering Models",
+      "nodes": [
+        "clustering_KMeansDialog",
+        "clustering_HierarchicalDialog",
+        "clustering_DBSCANDialog",
+        "clustering_GMMDialog"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/clustering.py"
+    },
+    {
+      "id": "analysis_dialogs",
+      "label": "Analysis Dialogs",
+      "nodes": [
+        "pairplot_PairPlotDialog",
+        "pca_PCADialog",
+        "piechart_PieChartDialog",
+        "pivot_table_PivotTableDialog",
+        "qqplot_QQPlotDialog",
+        "regression_LinearRegressionDialog",
+        "ridgeplot_RidgePlotDialog",
+        "scatter_ScatterPlotDialog",
+        "string_format_StringFormatDialog",
+        "stripplot_StripPlotDialog",
+        "text_extract_TextExtractDialog",
+        "transform_TransformDataDialog",
+        "treemap_TreemapDialog",
+        "tree_regression_BaseTreeRegressionDialog",
+        "ttest_TTestDialog",
+        "type_convert_TypeConvertDialog",
+        "violinplot_ViolinPlotDialog"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ""
+    },
+    {
+      "id": "tree_regression_dialogs",
+      "label": "Tree Regression Dialogs",
+      "nodes": [
+        "tree_regression_DecisionTreeRegressorDialog",
+        "tree_regression_RandomForestRegressorDialog",
+        "tree_regression_LinearRegressionMLDialog",
+        "tree_regression_RidgeDialog",
+        "tree_regression_LassoDialog",
+        "tree_regression_ElasticNetDialog"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/quantia/ui/dialogs/tree_regression.py"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

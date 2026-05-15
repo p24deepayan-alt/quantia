@@ -116,6 +116,7 @@ class QuantiaMenuBar(QMenuBar):
     # Report
     generate_report = Signal()
     export_script = Signal()
+    open_report_studio = Signal()
 
     # Help
     user_manual = Signal()
@@ -276,6 +277,8 @@ class QuantiaMenuBar(QMenuBar):
 
     def _build_report_menu(self, ic: str) -> None:
         menu = self.addMenu("&Report")
+        self._add(menu, "Open Report Studio…", self.open_report_studio, "layout", ic, QKeySequence("Ctrl+R"))
+        menu.addSeparator()
         self._add(menu, "Generate Report (HTML/PDF)…", self.generate_report, "file-text", ic)
         self._add(menu, "Export Script (.py)…", self.export_script, "code", ic)
 

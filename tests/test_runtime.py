@@ -26,12 +26,11 @@ def test_main_window_startup(qtbot):
     assert window.windowTitle() == "Quantia — Untitled"
     
     # Check that tabs are present
-    assert window._tabs.count() == 6
+    assert window._tabs.count() == 5
     assert window._tabs.tabText(0) == "Data View"
-    assert window._tabs.tabText(5) == "Dashboard Builder"
 
 def test_load_data_updates_ui(qtbot, dummy_df):
-    """Test that loading data updates the variable panel and dashboard tab."""
+    """Test that loading data updates the variable panel and report maker."""
     window = MainWindow()
     qtbot.addWidget(window)
     
@@ -42,9 +41,8 @@ def test_load_data_updates_ui(qtbot, dummy_df):
     # Check that the variable list populated
     assert window._variable_panel._tree.topLevelItemCount() == 3
     
-    # Check that dashboard tab combo boxes updated
-    # Dash panel 1 x-combo box should have "-- None --" + 3 columns
-    assert window._dashboard_tab.plot_configs[0]["x"].count() == 4
+    # We no longer instantiate the report maker window implicitly on startup
+    assert window._report_studio_window is None
 
 def test_dialog_instantiation(qtbot, dummy_df):
     """Test that various dialogs can be instantiated without errors."""

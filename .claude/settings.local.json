@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(powershell *)",
+      "PowerShell(& 'C:\\\\Users\\\\p24de\\\\Documents\\\\Projects\\\\quantia\\\\graphify-out\\\\upgrade_physics.ps1')"
     ]
   }
 }

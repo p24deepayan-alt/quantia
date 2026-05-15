@@ -74,7 +74,7 @@ from quantia.ui.dialogs.violinplot import ViolinPlotDialog
 from quantia.ui.dialogs.linechart import LineChartDialog
 from quantia.ui.dialogs.heatmap import HeatmapDialog
 from quantia.ui.dialogs.correlation import CorrelationDialog
-from quantia.ui.central.dashboard_tab import DashboardTabWidget
+from quantia.ui.central.report_maker import ReportStudioWindow
 from quantia.ui.dialogs.anova_models import AnovaModelComparisonDialog
 from quantia.ui.dialogs.chi_square import ChiSquareDialog
 from quantia.ui.dialogs.qqplot import QQPlotDialog
@@ -163,9 +163,7 @@ class MainWindow(QMainWindow):
         self._plot_view = PlotViewWidget()
         self._tabs.addTab(self._plot_view, feather_icon("pie-chart", "#000000", 14), "Plots")
 
-        # Dashboard tab
-        self._dashboard_tab = DashboardTabWidget()
-        self._tabs.addTab(self._dashboard_tab, feather_icon("layout", "#000000", 14), "Dashboard Builder")
+        self._report_studio_window: ReportStudioWindow | None = None
 
         self.setCentralWidget(self._tabs)
         
@@ -286,10 +284,8 @@ class MainWindow(QMainWindow):
         self._menu_bar.export_data.connect(self._export_data)
         self._menu_bar.export_script.connect(self._export_script)
         self._menu_bar.generate_report.connect(self._generate_report)
+        self._menu_bar.open_report_studio.connect(self._show_report_studio)
         self._menu_bar.toggle_theme.connect(self._toggle_theme)
-
-        # Dashboard tab
-        self._dashboard_tab.code_generated.connect(self._handle_generated_code)
 
         # Toolbar
         self._toolbar.import_data.connect(self._import_any)
@@ -326,7 +322,8 @@ class MainWindow(QMainWindow):
         self._menu_bar.refresh_icons(text_color)
         self._variable_panel.refresh_theme(new_theme)
         self._plot_view.refresh_theme(new_theme)
-        self._dashboard_tab.refresh_theme(new_theme)
+        if self._report_studio_window:
+            self._report_studio_window.refresh_theme(new_theme)
         
         # 2. Update Central Tabs Icons
         self._tabs.setTabIcon(0, feather_icon("grid", text_color, 14))
@@ -334,7 +331,6 @@ class MainWindow(QMainWindow):
         self._tabs.setTabIcon(2, feather_icon("list", text_color, 14))
         self._tabs.setTabIcon(3, feather_icon("share-2", text_color, 14))
         self._tabs.setTabIcon(4, feather_icon("pie-chart", text_color, 14))
-        self._tabs.setTabIcon(5, feather_icon("layout", text_color, 14))
 
         # 3. Update Matplotlib global style
         import matplotlib.pyplot as plt
@@ -518,7 +514,8 @@ class MainWindow(QMainWindow):
         self._status_bar.set_dataset_info(len(df), len(df.columns))
         col_info = self._data_view.model.column_info()
         self._variable_panel.set_variables(col_info)
-        self._dashboard_tab.update_columns(df.columns)
+        if self._report_studio_window:
+            self._report_studio_window.set_dataframe(df)
 
     def _on_variable_selected(self, var_name: str) -> None:
         df = self._data_view.get_dataframe()
@@ -687,6 +684,20 @@ class MainWindow(QMainWindow):
         from quantia.ui.dialogs.report import ReportDialog
         dialog = ReportDialog(self._data_view.get_dataframe(), self._script_editor.editor.get_all_text(), self._results_view.get_all_html(), self._plot_view.get_all_html(), self)
         dialog.exec()
+
+    def _show_report_studio(self) -> None:
+        if self._report_studio_window is None:
+            self._report_studio_window = ReportStudioWindow(self)
+            self._report_studio_window.report_maker.code_generated.connect(self._handle_generated_code)
+            self._report_studio_window.set_dataframe(self._data_view.get_dataframe())
+            from PySide6.QtWidgets import QApplication
+            from quantia.app import QuantiaApp
+            app = QApplication.instance()
+            if isinstance(app, QuantiaApp):
+                self._report_studio_window.refresh_theme(app.get_current_theme())
+        self._report_studio_window.show()
+        self._report_studio_window.raise_()
+        self._report_studio_window.activateWindow()
 
     def _show_preferences(self) -> None:
         if PreferencesDialog(self).exec():

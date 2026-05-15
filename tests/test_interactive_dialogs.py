@@ -31,8 +31,8 @@ def test_interactive_plotly_dialog_instantiation(qtbot):
 
 def test_imports_contain_qt():
     """Verify that the files actually import Qt now."""
-    import src.quantia.ui.central.interactive_plot as ip
-    import src.quantia.ui.central.plotly_view as pv
+    import quantia.ui.central.interactive_plot as ip
+    import quantia.ui.central.plotly_view as pv
     
     assert hasattr(ip, 'Qt')
     assert hasattr(pv, 'Qt')
